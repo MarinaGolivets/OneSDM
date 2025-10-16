@@ -1,0 +1,14 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+# Exclude linting config
+^\.lintr$
+# Exclude ignore file
+^\.ignore$
+
+# Exclude development files
+^.*\.code-workspace$
+LICENSE\.md$
+README\.Rmd$
+README\.html$
+_pkgdown\.yml$
+cspell\.json$
