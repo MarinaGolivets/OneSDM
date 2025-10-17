@@ -49,5 +49,5 @@ issues, have suggestions, or want to add new features, please:
   tracker](https://github.com/marinaGolivets/onesdm/issues).
 - **Submit pull requests** with bug fixes or enhancements via the
   [GitHub repository](https://github.com/marinaGolivets/onesdm).
-- **Contact me** directly at `elgabbas[at]outlook[dot]com` or
+- **Contact us** directly at `elgabbas[at]outlook[dot]com` or
   `marina.golivets[at]ufz[dot]de` for collaboration ideas or questions.
