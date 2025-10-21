@@ -7,7 +7,7 @@
 #' @param easin_ids Character vector. One or more EASIN species IDs.
 #'   Each ID should start with 'R' followed by five digits (e.g. "R00544").
 #'   This cannot be `NULL`. Species IDs can be found on the [EASIN
-#'   website](https://easin.jrc.ec.europa.eu/apixg/home/geoqueries/) by
+#'   website](https://easin.jrc.ec.europa.eu/spexplorer/search/) by
 #'   searching for a species and locating the "EASIN ID" in the species
 #'   details section. Can also be set via the `onestop_easin_ids` option.
 #' @param model_dir Character. Path to the modelling directory where data and
