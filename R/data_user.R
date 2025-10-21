@@ -28,13 +28,13 @@
 #' @examples
 #' \dontrun{
 #'   coords <- data.frame(lon = c(10, 20), lat = c(50, 60))
-#'   process_user_data(coords, model_dir = "path/to/model_dir")
+#'   prepare_user_data(coords, model_dir = "path/to/model_dir")
 #' }
 #'
 #' @export
 #' @author Ahmed El-Gabbas
 
-process_user_data <- function(coordinates = NULL, model_dir = NULL) {
+prepare_user_data <- function(coordinates = NULL, model_dir = NULL) {
 
   longitude <- latitude <- NULL
 

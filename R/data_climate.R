@@ -57,13 +57,13 @@
 #'
 #' @examples
 #' \dontrun{
-#'   process_climate()
+#'   prepare_climate()
 #' }
 #'
 #' @author Ahmed El-Gabbas
 #' @export
 
-process_climate <- function(
+prepare_climate <- function(
     agg_factors = c(5L, 10L, 20L), n_cores = 20L, min_land_percent = 20L,
     path_chelsa_tif = NULL, temp_dir = NULL, predictor_pattern = "bio|npp") {
 

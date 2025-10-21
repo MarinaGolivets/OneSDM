@@ -27,7 +27,9 @@
 #'   90L)` for global extent).
 #' @param max_uncertainty Numeric. Maximum allowed spatial uncertainty in
 #'   kilometers (default: 10).
-#'
+#' @param overwrite Logical. If `TRUE`, overwrite existing cleaned GBIF data
+#'   file in the model directory. Default is `FALSE`. Can also be set via
+#'   `onestop_gbif_overwrite` option.
 #' @details The function performs the following steps:
 #' - Validates input parameters and environment.
 #' - Checks for existing processed data to avoid redundant downloads/requests.
@@ -53,17 +55,17 @@
 #'
 #' @examples
 #' \dontrun{
-#' process_gbif_data(
+#' prepare_gbif_data(
 #'   gbif_ids = c("1234567", "7654321"), model_dir = "path/to/model_dir")
 #' }
 #'
 #' @export
 #' @author Ahmed El-Gabbas
 
-process_gbif_data <- function(
+prepare_gbif_data <- function(
     gbif_ids = NULL, model_dir = NULL, verbose = TRUE, start_year = 1981L,
     r_environ = ".Renviron", boundaries = c(-180L, 180L, -90L, 90L),
-    max_uncertainty = 10L) {
+    max_uncertainty = 10L, overwrite = FALSE) {
 
   .start_gbif_time <- lubridate::now(tzone = "CET")
 
@@ -89,6 +91,8 @@ process_gbif_data <- function(
     boundaries, "onestop_gbif_boundaries", c("numeric", "integer"))
   max_uncertainty <- ecokit::assign_from_options(
     max_uncertainty, "onestop_gbif_max_uncertainty", c("numeric", "integer"))
+  overwrite <- ecokit::assign_from_options(
+    overwrite, "onestop_gbif_overwrite", "logical")
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   ## Check boundaries ------
@@ -230,11 +234,18 @@ process_gbif_data <- function(
     ecokit::check_data(path_gbif_data, warning = FALSE))
 
   if (all_okay) {
+    if (!overwrite) {
+      ecokit::cat_time(
+        paste0(
+          "GBIF data files already exist at: ", crayon::blue(path_gbif_data)),
+        cat_timestamp = FALSE, verbose = verbose)
+      return(invisible(output_list))
+    }
     ecokit::cat_time(
       paste0(
-        "GBIF data file already exists at: ", crayon::blue(path_gbif_data)),
+        "GBIF data files already exist. ",
+        "Overwriting as per the `overwrite = TRUE` argument."),
       cat_timestamp = FALSE, verbose = verbose)
-    return(invisible(output_list))
   }
 
   fs::dir_create(path_data)

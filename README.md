@@ -34,7 +34,7 @@ the `devtools` package:
 if (!require("devtools")) install.packages("devtools")
 
 # Install OneSDM from GitHub
-devtools::install_github("MarinaGolivets/onesdm", dependencies = TRUE)
+devtools::install_github("MarinaGolivets/OneSDM", dependencies = TRUE)
 ```
 
 <br/>
@@ -46,8 +46,8 @@ stages. We welcome contributions from the community! If you encounter
 issues, have suggestions, or want to add new features, please:
 
 - **Report issues** or suggest features on the [GitHub issue
-  tracker](https://github.com/marinaGolivets/onesdm/issues).
+  tracker](https://github.com/MarinaGolivets/OneSDM/issues).
 - **Submit pull requests** with bug fixes or enhancements via the
-  [GitHub repository](https://github.com/marinaGolivets/onesdm).
+  [GitHub repository](https://github.com/MarinaGolivets/OneSDM).
 - **Contact us** directly at `elgabbas[at]outlook[dot]com` or
   `marina.golivets[at]ufz[dot]de` for collaboration ideas or questions.

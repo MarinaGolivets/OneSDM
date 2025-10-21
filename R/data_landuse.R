@@ -57,13 +57,13 @@
 #' Scientific Data, 9, 125. <https://doi.org/10.1038/s41597-022-01208-6>
 #' @examples
 #' \dontrun{
-#' process_landuse()
+#' prepare_landuse()
 #' }
 #'
 #' @author Ahmed El-Gabbas
 #' @export
 
-process_landuse <- function(
+prepare_landuse <- function(
     agg_factors = c(5L, 10L, 20L), n_cores = 20L,
     climate_scenarios = c("SSP1_RCP26", "SSP3_RCP70", "SSP5_RCP85"),
     climate_years = c(2025L, 2055L, 2085L), temp_dir = NULL) {
