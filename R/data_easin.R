@@ -133,14 +133,14 @@ process_easin_data <- function(
   # Check easin_ids
   if (is.null(easin_ids)) {
     ecokit::stop_ctx(
-      "easin_ids can not be NULL. Please provide at least one EASIN ID.",
+      "easin_ids cannot be NULL. Please provide at least one EASIN ID.",
       cat_timestamp = FALSE
     )
   }
   if (!all(stringr::str_detect(easin_ids, "^R\\d{5}$"))) {
     #nolint
     ecokit::stop_ctx(
-      "All easin_ids must be in the format 'RXXXXX' where X is an integer.",
+      "All easin_ids must be in the format 'RXXXXX', where X is an integer.",
       easin_ids = easin_ids,
       cat_timestamp = FALSE
     )
