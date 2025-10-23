@@ -6,11 +6,13 @@
 #'
 #' @param coordinates A data frame or matrix containing longitude and latitude
 #'   values. Must have exactly two columns. If not provided directly, the
-#'   function will attempt to retrieve it from the `onestop_coordinates` option.
+#'   function will attempt to retrieve it from the `onesdm_coordinates` option.
 #' @param model_dir Character. Path to the modelling directory where data and
 #'   fitted models will be saved. This can not be `NULL` and should be the same
 #'   directory used for the same species data. This can also be set via the
-#'   `onestop_model_dir` option.
+#'   `onesdm_model_dir` option.
+#' @param return_data Logical. If `TRUE`, the function returns the processed
+#'   spatial object instead of the file path. Default is `FALSE`.
 #'
 #' @details The function performs the following steps:
 #' - Validates that `coordinates` has at least one row and exactly two columns.
@@ -22,8 +24,16 @@
 #'   EPSG:4326).
 #' - Saves the resulting spatial object as `data/user_coordinates.RData` in
 #'   `model_dir`.
+#' - Function default arguments can be set globally using the `options()`
+#' function. Users can set these options at the start of their R session to
+#' avoid repeatedly specifying them in function calls. The following options
+#' correspond to the function arguments:
+#'   - `onesdm_coordinates`: for the `coordinates` argument.
+#'   - `onesdm_model_dir`: for the `model_dir` argument.
 #'
-#' @return (Invisibly) The file path to the saved `user_coordinates.RData` file.
+#' @return If `return_data` is `TRUE`, the function returns the processed
+#'   spatial object of class `sf`. If `FALSE`, it returns the file path where
+#'   the data is saved (invisible).
 #'
 #' @examples
 #' \dontrun{
@@ -34,7 +44,8 @@
 #' @export
 #' @author Ahmed El-Gabbas
 
-prepare_user_data <- function(coordinates = NULL, model_dir = NULL) {
+prepare_user_data <- function(
+    coordinates = NULL, model_dir = NULL, return_data = FALSE) {
 
   longitude <- latitude <- NULL
 
@@ -43,9 +54,9 @@ prepare_user_data <- function(coordinates = NULL, model_dir = NULL) {
   # # ********************************************************************** #
 
   coordinates <- ecokit::assign_from_options(
-    coordinates, "onestop_coordinates", c("data.frame", "matrix"))
+    coordinates, "onesdm_coordinates", c("data.frame", "matrix"))
   model_dir <- ecokit::assign_from_options(
-    model_dir, "onestop_model_dir", "character")
+    model_dir, "onesdm_model_dir", "character")
 
   # # ********************************************************************** #
   # Checking function arguments -------
@@ -113,7 +124,7 @@ prepare_user_data <- function(coordinates = NULL, model_dir = NULL) {
     ecokit::stop_ctx(
       paste0(
         "The model_dir argument must be provided either directly or via the ",
-        "`onestop_model_dir` option."),
+        "`onesdm_model_dir` option."),
       cat_timestamp = FALSE)
   }
 
@@ -132,6 +143,9 @@ prepare_user_data <- function(coordinates = NULL, model_dir = NULL) {
   # Save processed coordinates
   save(user_coordinates, file = path_user_coordinates)
 
-  return(invisible(path_user_coordinates))
-
+  if (return_data) {
+    return(user_coordinates)
+  } else {
+    return(invisible(path_user_coordinates))
+  }
 }

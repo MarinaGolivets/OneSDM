@@ -13,3 +13,5 @@ README\.html$
 _pkgdown\.yml$
 cspell\.json$
 test/
+path/
+climate_data*/

@@ -86,8 +86,7 @@ prepare_landuse <- function(
   # Temporary directory for intermediate files
   if (is.null(temp_dir)) {
     temp_dir <- fs::path(
-      fs::path_temp(),
-      paste0("onestop_landuse_", as.integer(Sys.time())))
+      fs::path_temp(), paste0("onesdm_landuse_", as.integer(Sys.time())))
     on.exit(try(fs::dir_delete(temp_dir), silent = TRUE), add = TRUE)
   }
   fs::dir_create(temp_dir)
@@ -174,10 +173,8 @@ prepare_landuse <- function(
     # Zenodo record: https://zenodo.org/record/4584775
     landuse_file <- "Global PFT-based land projection dataset under SSPs-RCPs.zip" #nolint
     landuse_file <- ecokit::zenodo_download_file(
-      "4584775", file_name = landuse_file, dest_file = file_landuse_raw
-      # ,
-      # timeout = 1800L # XXXXX
-      )
+      "4584775", file_name = landuse_file, dest_file = file_landuse_raw,
+      timeout = 1800L)
 
     ecokit::cat_time(
       "Checking that downloaded land-use zip file is valid", level = 1L)

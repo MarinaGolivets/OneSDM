@@ -4,20 +4,25 @@
 \alias{prepare_user_data}
 \title{Process and Validate User Observation Coordinates}
 \usage{
-prepare_user_data(coordinates = NULL, model_dir = NULL)
+prepare_user_data(coordinates = NULL, model_dir = NULL, return_data = FALSE)
 }
 \arguments{
 \item{coordinates}{A data frame or matrix containing longitude and latitude
 values. Must have exactly two columns. If not provided directly, the
-function will attempt to retrieve it from the \code{onestop_coordinates} option.}
+function will attempt to retrieve it from the \code{onesdm_coordinates} option.}
 
 \item{model_dir}{Character. Path to the modelling directory where data and
 fitted models will be saved. This can not be \code{NULL} and should be the same
 directory used for the same species data. This can also be set via the
-\code{onestop_model_dir} option.}
+\code{onesdm_model_dir} option.}
+
+\item{return_data}{Logical. If \code{TRUE}, the function returns the processed
+spatial object instead of the file path. Default is \code{FALSE}.}
 }
 \value{
-(Invisibly) The file path to the saved \code{user_coordinates.RData} file.
+If \code{return_data} is \code{TRUE}, the function returns the processed
+spatial object of class \code{sf}. If \code{FALSE}, it returns the file path where
+the data is saved (invisible).
 }
 \description{
 This function processes a set of user-provided geographic coordinates,
@@ -36,6 +41,14 @@ within valid ranges (longitude: \verb{[-180, 180]}, latitude: \verb{[-90, 90]}).
 EPSG:4326).
 \item Saves the resulting spatial object as \code{data/user_coordinates.RData} in
 \code{model_dir}.
+\item Function default arguments can be set globally using the \code{options()}
+function. Users can set these options at the start of their R session to
+avoid repeatedly specifying them in function calls. The following options
+correspond to the function arguments:
+\itemize{
+\item \code{onesdm_coordinates}: for the \code{coordinates} argument.
+\item \code{onesdm_model_dir}: for the \code{model_dir} argument.
+}
 }
 }
 \examples{

@@ -7,14 +7,15 @@
 prepare_easin_data(
   easin_ids = NULL,
   model_dir = NULL,
-  timeout = 300L,
+  timeout = 600L,
   n_search = 1000L,
   n_attempts = 10L,
   sleep_time = 5L,
   exclude_gbif = TRUE,
   verbose = TRUE,
   start_year = 1981L,
-  overwrite = FALSE
+  overwrite = FALSE,
+  return_data = FALSE
 )
 }
 \arguments{
@@ -22,50 +23,54 @@ prepare_easin_data(
 should start with 'R' followed by five digits (e.g. "R00544"). This cannot
 be \code{NULL}. Species IDs can be found on the \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website} by searching
 for a species and locating the "EASIN ID" in the species details section.
-Can also be set via the \code{onestop_easin_ids} option.}
+Can also be set via the \code{onesdm_easin_ids} option.}
 
 \item{model_dir}{Character. Path to the modelling directory where data and
 fitted models will be saved. This cannot be \code{NULL} and must the same
 directory used for the same species data. This can also be set via the
-\code{onestop_model_dir} option.}
+\code{onesdm_model_dir} option.}
 
 \item{timeout}{Integer. Timeout (in seconds) for each download attempt.
-Default is 300L. Can also be set via the \code{onestop_easin_timeout} option.
+Default is \code{600L}. Can also be set via the \code{onesdm_easin_timeout} option.
 Note: This timeout only applies to the download of each chunk, not the
 entire download process.}
 
 \item{n_search}{Integer. Number of records to request per API call (chunk
-size). Default is 1000L, which is the maximum allowed by the EASIN API. Can
-also be set via the \code{onestop_easin_n_search} option.}
+size). Default is \code{1000L}, which is the maximum allowed by the EASIN API.
+Can also be set via the \code{onesdm_easin_n_search} option.}
 
 \item{n_attempts}{Integer. Maximum number of download attempts per chunk.
-Default is 10L. Can also be set via the \code{onestop_easin_n_attempts} option.}
+Default is \code{10L}. Can also be set via the \code{onesdm_easin_n_attempts} option.}
 
 \item{sleep_time}{Integer. Seconds to wait between chunk downloads. This
 helps avoid overwhelming the EASIN server. Default is 5L. Can also be set
-via the \code{onestop_easin_sleep_time} option.}
+via the \code{onesdm_easin_sleep_time} option.}
 
 \item{exclude_gbif}{Logical. If \code{TRUE} (default), exclude
 \href{https://www.gbif.org/}{GBIF} — the Global Biodiversity Information
 Facility — records from the download. Can also be set via the
-\code{onestop_easin_exclude_gbif} option.}
+\code{onesdm_easin_exclude_gbif} option.}
 
 \item{verbose}{Logical. If \code{TRUE} (default), print progress and information
 messages, including the URL of the currently processed chunk. Can also be
-set via the \code{onestop_easin_verbose} option.}
+set via the \code{onesdm_easin_verbose} option.}
 
 \item{start_year}{Integer. Include only records from this year onward. The
-default is 1981L. Can also be set via the \code{onestop_start_year} option.}
+default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
+Can also be set via the \code{onesdm_start_year} option.}
 
 \item{overwrite}{Logical. If \code{TRUE}, overwrite existing cleaned EASIN data
 file in the model directory. Default is \code{FALSE}. Can also be set via
-\code{onestop_easin_overwrite} option.}
+\code{onesdm_easin_overwrite} option.}
+
+\item{return_data}{Logical. If \code{TRUE}, returns the processed EASIN data as an
+\code{sf} object in addition to saving it. Default is \code{FALSE}.}
 }
 \value{
-(Invisibly) the path to the saved \code{.RData} file containing the
-cleaned EASIN data (\code{data/easin_data.RData}) in the specified \code{model_dir}.
-The function saves an empty tibble if no cleaned data is available after
-processing.
+Invisibly returns the file path to the saved cleaned EASIN data
+\code{easin_data.RData} file in the \code{data} subdirectory of \code{model_dir}, unless
+\code{return_data} is \code{TRUE}, in which case it returns the cleaned EASIN data as
+an \code{sf} object.
 }
 \description{
 Downloads, combines, cleans, and saves occurrence data for given
@@ -83,11 +88,61 @@ download if found.
 \item The function applies several cleaning steps; e.g. filtering out records
 with low coordinate precision, equal longitude / latitude, or near centroids,
 capitals, biodiversity institutions, and GBIF headquarters.
+\item Function default arguments can be set globally using the \code{options()}
+function. Users can set these options at the start of their R session to
+avoid repeatedly specifying them in function calls. The following options
+correspond to the function arguments:
+\itemize{
+\item \code{onesdm_easin_ids}: Character vector of EASIN species IDs.
+\item \code{onesdm_model_dir}: Character. Path to the modelling directory.
+\item \code{onesdm_easin_timeout}: Integer. Timeout (in seconds) for each download
+attempt.
+\item \code{onesdm_easin_n_search}: Integer. Number of records to request per API
+call.
+\item \code{onesdm_easin_n_attempts}: Integer. Maximum number of download attempts
+per chunk.
+\item \code{onesdm_easin_sleep_time}: Integer. Seconds to wait between chunk
+downloads.
+\item \code{onesdm_easin_exclude_gbif}: Logical. Whether to exclude GBIF records.
+\item \code{onesdm_easin_verbose}: Logical. Whether to print progress messages.
+\item \code{onesdm_start_year}: Integer. Minimum year for records to include.
+\item \code{onesdm_easin_overwrite}: Logical. Whether to overwrite existing cleaned
+data.
+}
+\item Example of setting options:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{options(
+  onesdm_easin_ids = c("R00042", "R00544"),
+  onesdm_easin_exclude_gbif = TRUE,
+  onesdm_easin_overwrite = TRUE,
+  onesdm_model_dir = "path/to/model_dir"
+)
+}\if{html}{\out{</div>}}
 }
 }
 \examples{
 \dontrun{
-  prepare_easin_data(easin_ids = "R00042", model_dir = "path/to/model_dir")
+ require(fs)
+
+ # Prepare EASIN data for species with EASIN ID "R00042": Acacia karroo Hayne
+ temp_model_dir <- fs::path_temp("onesdm_model_dir")
+ easin_data <- prepare_easin_data(
+   easin_ids = "R00042", model_dir = temp_model_dir, return_data = TRUE)
+
+ print(easin_data)
+
+ # # ||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+ # Prepare EASIN data, using argument values from `options`
+ temp_model_dir_2 <- fs::path_temp("onesdm_model_dir")
+ options(
+    onesdm_easin_ids = c("R00042", "R00544"),
+    onesdm_easin_exclude_gbif = TRUE,
+    onesdm_easin_overwrite = TRUE,
+    onesdm_model_dir = temp_model_dir_2)
+
+ prepare_easin_data()
+
 }
 
 }

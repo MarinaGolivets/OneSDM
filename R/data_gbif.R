@@ -9,27 +9,34 @@
 #'   spatial and temporal filtering, uncertainty thresholds, and boundary
 #'   constraints.
 #'
-#' @param gbif_ids Character vector of GBIF taxon keys (as numeric strings) to
-#'   query. If `NULL`, attempts to retrieve from the `onestop_gbif_ids` option.
+#' @param gbif_ids Character or numeric vector of GBIF taxon keys (as numeric
+#'   strings) to query. If `NULL`, attempts to retrieve from the
+#'   `onesdm_gbif_ids` option.
 #' @param model_dir Character. Path to the modelling directory where data and
 #'   fitted models will be saved. This can not be `NULL` and should be the same
 #'   directory used for the same species data. This can also be set via the
-#'   `onestop_model_dir` option.
-#' @param verbose Logical. If `TRUE`, prints progress and status messages.
-#' @param start_year Integer. Minimum year for occurrence records (default:
-#'   1981).
+#'   `onesdm_model_dir` option.
+#' @param verbose Logical. If `TRUE` (default), prints progress and status
+#'   messages. Can also be set via the `onesdm_gbif_verbose` option.
+#' @param start_year Integer. Include only records from this year onward. The
+#'   default is `1981L`, to match the temporal coverage of CHELSA climate data.
+#'   Can also be set via the `onesdm_start_year` option.
 #' @param r_environ Character. Path to `.Renviron` file containing GBIF
 #'   credentials (default: ".Renviron"). If `NULL`, attempts to retrieve from
-#'   the `onestop_r_environ` option. See [ecokit::check_gbif()] for more
-#'   details.
+#'   the `onesdm_r_environ` option. See [ecokit::check_gbif()] for more details.
 #' @param boundaries Numeric vector of length 4. Spatial boundaries as (left,
 #'   right, bottom, top) in decimal degrees (default: `c(-180L, 180L, -90L,
-#'   90L)` for global extent).
+#'   90L)` for global extent). Can also be set via `onesdm_gbif_boundaries`
+#'   option.
 #' @param max_uncertainty Numeric. Maximum allowed spatial uncertainty in
-#'   kilometers (default: 10).
+#'   kilometers. Default is `10L`. Can also be set via
+#'   `onesdm_gbif_max_uncertainty` option.
 #' @param overwrite Logical. If `TRUE`, overwrite existing cleaned GBIF data
 #'   file in the model directory. Default is `FALSE`. Can also be set via
-#'   `onestop_gbif_overwrite` option.
+#'   `onesdm_gbif_overwrite` option.
+#' @param return_data Logical. If `TRUE`, returns the processed GBIF data as an
+#'   `sf` object in addition to saving it. Default is `FALSE`.
+#'
 #' @details The function performs the following steps:
 #' - Validates input parameters and environment.
 #' - Checks for existing processed data to avoid redundant downloads/requests.
@@ -42,8 +49,41 @@
 #'   - Applies additional cleaning using the `CoordinateCleaner` package.
 #' - Converts the cleaned data to an `sf` object and saves it.
 #'
-#' @return (Invisibly) A named list with paths to the request, status, raw data,
-#'   and processed data files:
+#' - Function default arguments can be set globally using the `options()`
+#'   function. Users can set these options at the start of their R session to
+#'   avoid repeatedly specifying them in function calls. The following options
+#'   correspond to the function arguments:
+#'   - `onesdm_gbif_ids`: Character vector of GBIF taxon keys.
+#'   - `onesdm_model_dir`: Character. Path to the modelling directory.
+#'   - `onesdm_gbif_verbose`: Logical. Verbosity of GBIF data extraction.
+#'   - `onesdm_start_year`: Integer. Start year for GBIF records.
+#'   - `onesdm_r_environ`: Character. Path to `.Renviron` file for GBIF
+#'   credentials.
+#'   - `onesdm_gbif_boundaries`: Numeric vector of length 4 for spatial
+#'   boundaries of the data extraction in decimal degrees (left, right, bottom,
+#'   top).
+#'   - `onesdm_gbif_max_uncertainty`: Numeric. Maximum allowed spatial
+#'   uncertainty in km.
+#'   - `onesdm_gbif_overwrite`: Logical. Whether to overwrite existing GBIF
+#'   data.
+#' - Example of setting options:
+#'   ```r
+#'   options(
+#'     onesdm_gbif_ids = c("1234567", "7654321"),
+#'     onesdm_model_dir = "path/to/model_dir",
+#'     onesdm_gbif_verbose = TRUE,
+#'     onesdm_start_year = 1981L,
+#'     onesdm_r_environ = ".Renviron",
+#'     onesdm_gbif_boundaries = c(-180L, 180L, -90L, 90L),
+#'     onesdm_gbif_max_uncertainty = 10L,
+#'     onesdm_gbif_overwrite = FALSE
+#'   )
+#'   ```
+
+#'
+#' @return If `return_data` is `TRUE`, return the cleaned GBIF data as an `sf`
+#'   object. Otherwise, returns (invisibly) a named list with paths to the saved
+#'   GBIF data files:
 #' - `gbif_request`: Path to the saved GBIF request object
 #'   (`data/gbif_request.RData`).
 #' - `gbif_status`: Path to the saved GBIF status object
@@ -65,7 +105,7 @@
 prepare_gbif_data <- function(
     gbif_ids = NULL, model_dir = NULL, verbose = TRUE, start_year = 1981L,
     r_environ = ".Renviron", boundaries = c(-180L, 180L, -90L, 90L),
-    max_uncertainty = 10L, overwrite = FALSE) {
+    max_uncertainty = 10L, overwrite = FALSE, return_data = FALSE) {
 
   .start_gbif_time <- lubridate::now(tzone = "CET")
 
@@ -79,20 +119,21 @@ prepare_gbif_data <- function(
   # # ********************************************************************** #
 
   gbif_ids <- ecokit::assign_from_options(
-    gbif_ids, "onestop_gbif_ids", "character")
+    gbif_ids, "onesdm_gbif_ids", c("character", "numeric", "integer"))
   model_dir <- ecokit::assign_from_options(
-    model_dir, "onestop_model_dir", "character")
-  verbose <- ecokit::assign_from_options(verbose, "onestop_verbose", "logical")
+    model_dir, "onesdm_model_dir", "character")
+  verbose <- ecokit::assign_from_options(
+    verbose, "onesdm_gbif_verbose", "logical")
   start_year <- ecokit::assign_from_options(
-    start_year, "onestop_start_year", c("numeric", "integer"))
+    start_year, "onesdm_start_year", c("numeric", "integer"))
   r_environ <- ecokit::assign_from_options(
-    r_environ, "onestop_r_environ", "character")
+    r_environ, "onesdm_r_environ", "character")
   boundaries <- ecokit::assign_from_options(
-    boundaries, "onestop_gbif_boundaries", c("numeric", "integer"))
+    boundaries, "onesdm_gbif_boundaries", c("numeric", "integer"))
   max_uncertainty <- ecokit::assign_from_options(
-    max_uncertainty, "onestop_gbif_max_uncertainty", c("numeric", "integer"))
+    max_uncertainty, "onesdm_gbif_max_uncertainty", c("numeric", "integer"))
   overwrite <- ecokit::assign_from_options(
-    overwrite, "onestop_gbif_overwrite", "logical")
+    overwrite, "onesdm_gbif_overwrite", "logical")
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   ## Check boundaries ------
@@ -145,13 +186,17 @@ prepare_gbif_data <- function(
     ecokit::stop_ctx(
       paste0(
         "The model_dir argument must be provided either directly or via the ",
-        "onestop_model_dir option."),
+        "onesdm_model_dir option."),
       cat_timestamp = FALSE)
   }
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   ## Check gbif_ids ------
   # # ||||||||||||||||||||||||||||||||||||||||| #
+
+  if (is.character(gbif_ids)) {
+    gbif_ids <- as.integer(gbif_ids)
+  }
 
   if (!all(stringr::str_detect(gbif_ids, "^\\d+$"))) { #nolint
     ecokit::stop_ctx(
@@ -177,7 +222,7 @@ prepare_gbif_data <- function(
     toString()
 
   ecokit::cat_time(
-    "The following GBIF IDs will be processed:",
+    "The following GBIF ID(s) will be processed:",
     cat_timestamp = FALSE, level = 1L, verbose = verbose)
   ecokit::cat_time(
     gbif_ids_names, cat_timestamp = FALSE, level = 2L, verbose = verbose)
@@ -187,28 +232,57 @@ prepare_gbif_data <- function(
   # # ********************************************************************** #
 
   if (verbose) {
+
     ecokit::cat_time(
-      crayon::bold("GBIF data extraction parameters:"),
+      crayon::italic("\nGBIF data extraction parameters:"),
       cat_timestamp = FALSE, cat_bold = TRUE, cat_red = TRUE)
+
+    gbif_user <- Sys.getenv("GBIF_USER")
+    if (is.null(gbif_user)) {
+      gbif_user <- getOption("GBIF_USER")
+    }
+    gbif_email <- Sys.getenv("GBIF_EMAIL")
+    if (is.null(gbif_email)) {
+      gbif_email <- getOption("GBIF_EMAIL")
+    }
+    gbif_details <- paste0(gbif_user, " - ", gbif_email)
     ecokit::cat_time(
-      paste0(crayon::bold("GBIF IDs: "), gbif_ids_names),
+      paste0(crayon::italic("GBIF user details: "), crayon::blue(gbif_details)),
+      level = 1L, cat_timestamp = FALSE)
+
+    ecokit::cat_time(
+      paste0(crayon::italic("GBIF ID(s): "), crayon::blue(gbif_ids_names)),
       level = 1L, cat_timestamp = FALSE)
     ecokit::cat_time(
-      paste0(crayon::bold("Modelling directory: "), model_dir),
-      level = 1L, cat_timestamp = FALSE)
-    ecokit::cat_time(
-      paste0(crayon::bold("Start year: "), start_year),
-      level = 1L, cat_timestamp = FALSE)
-    ecokit::cat_time(
-      paste0(crayon::bold(".Renviron file: "), r_environ),
-      level = 1L, cat_timestamp = FALSE)
-    ecokit::cat_time(
-      paste0(crayon::bold("boundaries: "), toString(boundaries)),
+      paste0(crayon::italic("Modelling directory: "), crayon::blue(model_dir)),
       level = 1L, cat_timestamp = FALSE)
     ecokit::cat_time(
       paste0(
-        crayon::bold("Maximum allowed spatial uncertainty: "),
-        max_uncertainty, " km"),
+        crayon::italic("Modelling directory (absolute): "),
+        crayon::blue(fs::path_abs(model_dir))),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(crayon::italic("Start year: "), crayon::blue(start_year)),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(crayon::italic(".Renviron file: "), crayon::blue(r_environ)),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(
+        crayon::italic("boundaries: "), crayon::blue(toString(boundaries))),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(
+        crayon::italic("Overwrite saved data: "), crayon::blue(overwrite)),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(
+        crayon::italic("Return processed data: "), crayon::blue(return_data)),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(
+        crayon::italic("Maximum allowed spatial uncertainty: "),
+        crayon::blue(max_uncertainty), " km"),
       level = 1L, cat_timestamp = FALSE)
     ecokit::cat_time(
       "\nExtracting GBIF data", cat_timestamp = FALSE,
@@ -239,7 +313,14 @@ prepare_gbif_data <- function(
         paste0(
           "GBIF data files already exist at: ", crayon::blue(path_gbif_data)),
         cat_timestamp = FALSE, verbose = verbose)
-      return(invisible(output_list))
+
+      if (return_data) {
+        ecokit::cat_time(
+          "Loading GBIF data", cat_timestamp = FALSE, verbose = verbose)
+        return(invisible(ecokit::load_as(path_gbif_data)))
+      } else {
+        return(invisible(output_list))
+      }
     }
     ecokit::cat_time(
       paste0(
@@ -258,9 +339,10 @@ prepare_gbif_data <- function(
     path_gbif_request, warning = FALSE) &&
     ecokit::check_data(path_gbif_status, warning = FALSE)
 
-  if (request_status_okay) {
+  if (request_status_okay && !overwrite) {
 
-    ecokit::cat_time("Loading GBIF request data", verbose = verbose)
+    ecokit::cat_time(
+      "Loading GBIF request data", verbose = verbose, cat_timestamp = FALSE)
     gbif_request <- ecokit::load_as(path_gbif_request)
     gbif_status <- ecokit::load_as(path_gbif_status)
 
@@ -269,8 +351,8 @@ prepare_gbif_data <- function(
     .start_time_request <- lubridate::now(tzone = "CET")
 
     ecokit::cat_time(
-      "Requesting GBIF data; this could take some time depends on the data",
-      verbose = verbose)
+      "Requesting GBIF data (this could take some time depends on the data)",
+      verbose = verbose, cat_timestamp = FALSE)
 
     excluded_basis_of_record <- c("FOSSIL_SPECIMEN", "LIVING_SPECIMEN")
     data_boundary <- ecokit::boundary_to_wkt(
@@ -299,7 +381,8 @@ prepare_gbif_data <- function(
     ## Save data request -------
     # # ||||||||||||||||||||||||||||||||||||||||| #
 
-    ecokit::cat_time("Save data request", level = 1L, verbose = verbose)
+    ecokit::cat_time(
+      "Save data request", level = 1L, verbose = verbose, cat_timestamp = FALSE)
     save(gbif_request, file = path_gbif_request)
 
     # # ||||||||||||||||||||||||||||||||||||||||| #
@@ -307,8 +390,9 @@ prepare_gbif_data <- function(
     # # ||||||||||||||||||||||||||||||||||||||||| #
 
     ecokit::cat_time(
-      "Waiting for data to be ready", level = 1L, verbose = verbose)
-    gbif_status <- rgbif::occ_download_wait(gbif_request)
+      "Waiting for data to be ready .... ", level = 1L,
+      verbose = verbose, cat_timestamp = FALSE)
+    gbif_status <- rgbif::occ_download_wait(gbif_request, quiet = TRUE)
 
     ecokit::cat_diff(
       init_time = .start_time_request,
@@ -318,17 +402,15 @@ prepare_gbif_data <- function(
     # Save status details ------
     # # ||||||||||||||||||||||||||||||||||||||||| #
 
-    ecokit::cat_time("Save status details", level = 1L)
+    ecokit::cat_time(
+      "Save status details", level = 1L, cat_timestamp = FALSE,
+      verbose = verbose)
     save(gbif_status, file = fs::path(path_data, "gbif_status.RData"))
 
     ecokit::cat_time(
       "Data is ready - status summary:", ... = "\n",
-      level = 1L, verbose = verbose)
+      level = 1L, verbose = verbose, cat_timestamp = FALSE)
     print(rgbif::occ_download_meta(key = gbif_status$key))
-
-    ecokit::cat_diff(
-      init_time = .start_time_request,
-      prefix = "\nRequesting GBIF data was finished in ", verbose = verbose)
 
   }
 
@@ -336,7 +418,7 @@ prepare_gbif_data <- function(
   # Download GBIF data -------
   # # ********************************************************************** #
 
-  if (ecokit::check_zip(path_gbif_data_raw, warning = FALSE)) {
+  if (ecokit::check_zip(path_gbif_data_raw, warning = FALSE) && !overwrite) {
 
     ecokit::cat_time(
       paste0(
@@ -346,7 +428,8 @@ prepare_gbif_data <- function(
 
   } else {
 
-    ecokit::cat_time("Download GBIF data")
+    ecokit::cat_time("\nDownload GBIF data", cat_timestamp = FALSE,
+      verbose = verbose)
     .start_time_download <- lubridate::now(tzone = "CET")
 
     # download file to path_gbif_data_raw
@@ -363,11 +446,11 @@ prepare_gbif_data <- function(
   # Data processing -------
   # # ********************************************************************** #
 
-  if (!ecokit::check_data(path_gbif_data, warning = FALSE)) {
+  if (!ecokit::check_data(path_gbif_data, warning = FALSE) || overwrite) {
 
     ecokit::cat_time(
       "Processing GBIF data as `sf` object",
-      verbose = verbose, level = 1L, cat_timestamp = FALSE)
+      verbose = verbose, cat_timestamp = FALSE)
 
     # # ||||||||||||||||||||||||||||||||||||||||| #
     ## Reading GBIF data -------
@@ -511,9 +594,11 @@ prepare_gbif_data <- function(
     ecokit::cat_time(
       paste0(
         "A total of ",
-        format(n_rows_cleaned, big.mark = ",", scientific = FALSE),
+        crayon::underline(
+          format(n_rows_cleaned, big.mark = ",", scientific = FALSE)),
         " observations were kept after cleaning from the initial ",
-        format(n_rows_raw, big.mark = ",", scientific = FALSE),
+        crayon::underline(
+          format(n_rows_raw, big.mark = ",", scientific = FALSE)),
         " observations."),
       cat_timestamp = FALSE, level = 1L, verbose = verbose)
 
@@ -536,8 +621,8 @@ prepare_gbif_data <- function(
 
     ecokit::cat_diff(
       init_time = .start_time_download,
-      prefix = "\nDownloading GBIF data was finished in ", verbose = verbose)
-
+      prefix = "\nDownloading GBIF data was finished in ", verbose = verbose,
+      level = 1L, cat_timestamp = FALSE)
   }
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
@@ -546,17 +631,24 @@ prepare_gbif_data <- function(
 
   ecokit::cat_diff(
     init_time = .start_gbif_time,
-    prefix = "\nExtracting GBIF data was finished in ", verbose = verbose)
+    prefix = "\nExtracting GBIF data was finished in ", verbose = verbose,
+    level = 1L, cat_timestamp = FALSE)
 
   ecokit::cat_time(
     paste0(
-      "A total of ", nrow(gbif_data),
-      " filtered observations were extracted for GBIF IDs: ",
-      toString(unique(gbif_data$speciesKey))),
+      "A total of ",
+      crayon::underline(
+        format(nrow(gbif_data), big.mark = ",", scientific = FALSE)),
+      " filtered observations were extracted for GBIF ID(s): ",
+      crayon::blue(toString(unique(gbif_data$speciesKey)))),
     cat_timestamp = FALSE, level = 1L, verbose = verbose)
 
   # # ********************************************************************** #
 
-  return(invisible(output_list))
+  if (return_data) {
+    return(invisible(gbif_data))
+  } else {
+    return(invisible(output_list))
+  }
 
 }

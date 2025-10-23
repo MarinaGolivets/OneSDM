@@ -80,7 +80,7 @@ prepare_climate <- function(
   if (is.null(temp_dir)) {
     temp_dir <- fs::path(
       fs::path_temp(),
-      paste0("onestop_chelsa_", as.integer(Sys.time())))
+      paste0("onesdm_chelsa_", as.integer(Sys.time())))
     on.exit(try(fs::dir_delete(temp_dir), silent = TRUE), add = TRUE)
   }
   fs::dir_create(temp_dir)

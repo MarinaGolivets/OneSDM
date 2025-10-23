@@ -12,41 +12,50 @@ prepare_gbif_data(
   r_environ = ".Renviron",
   boundaries = c(-180L, 180L, -90L, 90L),
   max_uncertainty = 10L,
-  overwrite = FALSE
+  overwrite = FALSE,
+  return_data = FALSE
 )
 }
 \arguments{
-\item{gbif_ids}{Character vector of GBIF taxon keys (as numeric strings) to
-query. If \code{NULL}, attempts to retrieve from the \code{onestop_gbif_ids} option.}
+\item{gbif_ids}{Character or numeric vector of GBIF taxon keys (as numeric
+strings) to query. If \code{NULL}, attempts to retrieve from the
+\code{onesdm_gbif_ids} option.}
 
 \item{model_dir}{Character. Path to the modelling directory where data and
 fitted models will be saved. This can not be \code{NULL} and should be the same
 directory used for the same species data. This can also be set via the
-\code{onestop_model_dir} option.}
+\code{onesdm_model_dir} option.}
 
-\item{verbose}{Logical. If \code{TRUE}, prints progress and status messages.}
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress and status
+messages. Can also be set via the \code{onesdm_gbif_verbose} option.}
 
-\item{start_year}{Integer. Minimum year for occurrence records (default:
-1981).}
+\item{start_year}{Integer. Include only records from this year onward. The
+default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
+Can also be set via the \code{onesdm_start_year} option.}
 
 \item{r_environ}{Character. Path to \code{.Renviron} file containing GBIF
 credentials (default: ".Renviron"). If \code{NULL}, attempts to retrieve from
-the \code{onestop_r_environ} option. See \code{\link[ecokit:check_gbif]{ecokit::check_gbif()}} for more
-details.}
+the \code{onesdm_r_environ} option. See \code{\link[ecokit:check_gbif]{ecokit::check_gbif()}} for more details.}
 
 \item{boundaries}{Numeric vector of length 4. Spatial boundaries as (left,
-right, bottom, top) in decimal degrees (default: \code{c(-180L, 180L, -90L, 90L)} for global extent).}
+right, bottom, top) in decimal degrees (default: \code{c(-180L, 180L, -90L, 90L)} for global extent). Can also be set via \code{onesdm_gbif_boundaries}
+option.}
 
 \item{max_uncertainty}{Numeric. Maximum allowed spatial uncertainty in
-kilometers (default: 10).}
+kilometers. Default is \code{10L}. Can also be set via
+\code{onesdm_gbif_max_uncertainty} option.}
 
 \item{overwrite}{Logical. If \code{TRUE}, overwrite existing cleaned GBIF data
 file in the model directory. Default is \code{FALSE}. Can also be set via
-\code{onestop_gbif_overwrite} option.}
+\code{onesdm_gbif_overwrite} option.}
+
+\item{return_data}{Logical. If \code{TRUE}, returns the processed GBIF data as an
+\code{sf} object in addition to saving it. Default is \code{FALSE}.}
 }
 \value{
-(Invisibly) A named list with paths to the request, status, raw data,
-and processed data files:
+If \code{return_data} is \code{TRUE}, return the cleaned GBIF data as an \code{sf}
+object. Otherwise, returns (invisibly) a named list with paths to the saved
+GBIF data files:
 \itemize{
 \item \code{gbif_request}: Path to the saved GBIF request object
 (\code{data/gbif_request.RData}).
@@ -81,6 +90,38 @@ of record, and spatial boundaries.
 \item Applies additional cleaning using the \code{CoordinateCleaner} package.
 }
 \item Converts the cleaned data to an \code{sf} object and saves it.
+\item Function default arguments can be set globally using the \code{options()}
+function. Users can set these options at the start of their R session to
+avoid repeatedly specifying them in function calls. The following options
+correspond to the function arguments:
+\itemize{
+\item \code{onesdm_gbif_ids}: Character vector of GBIF taxon keys.
+\item \code{onesdm_model_dir}: Character. Path to the modelling directory.
+\item \code{onesdm_gbif_verbose}: Logical. Verbosity of GBIF data extraction.
+\item \code{onesdm_start_year}: Integer. Start year for GBIF records.
+\item \code{onesdm_r_environ}: Character. Path to \code{.Renviron} file for GBIF
+credentials.
+\item \code{onesdm_gbif_boundaries}: Numeric vector of length 4 for spatial
+boundaries of the data extraction in decimal degrees (left, right, bottom,
+top).
+\item \code{onesdm_gbif_max_uncertainty}: Numeric. Maximum allowed spatial
+uncertainty in km.
+\item \code{onesdm_gbif_overwrite}: Logical. Whether to overwrite existing GBIF
+data.
+}
+\item Example of setting options:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{options(
+  onesdm_gbif_ids = c("1234567", "7654321"),
+  onesdm_model_dir = "path/to/model_dir",
+  onesdm_gbif_verbose = TRUE,
+  onesdm_start_year = 1981L,
+  onesdm_r_environ = ".Renviron",
+  onesdm_gbif_boundaries = c(-180L, 180L, -90L, 90L),
+  onesdm_gbif_max_uncertainty = 10L,
+  onesdm_gbif_overwrite = FALSE
+)
+}\if{html}{\out{</div>}}
 }
 }
 \examples{

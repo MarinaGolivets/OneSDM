@@ -6,4 +6,8 @@
 .vscode/
 docs
 *.html
+*.tif
+*.RData
 test/
+path/
+climate_data*/
