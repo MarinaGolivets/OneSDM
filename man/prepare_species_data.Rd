@@ -32,10 +32,10 @@ Can also be set via the \code{onesdm_easin_ids} option. For more details, see
 strings) to query. If \code{NULL}, attempts to retrieve from the
 \code{onesdm_gbif_ids} option. For more details, see \code{\link[=prepare_gbif_data]{prepare_gbif_data()}}.}
 
-\item{coordinates}{A data frame or matrix containing longitude and latitude
-values. Must have exactly two columns. If not provided directly, the
-function will attempt to retrieve it from the \code{onesdm_coordinates} option.
-See \code{\link[=prepare_user_data]{prepare_user_data()}} for more details.}
+\item{coordinates}{A data frame or matrix containing user-provided longitude
+and latitude values. Must have exactly two columns. If not provided
+directly, the function will attempt to retrieve it from the
+\code{onesdm_coordinates} option. See \code{\link[=prepare_user_data]{prepare_user_data()}} for more details.}
 
 \item{model_dir}{Character. Directory path where model outputs will be saved.
 Can be set via the \code{onesdm_model_dir} option. A subdirectory \code{data} will be
@@ -49,9 +49,10 @@ mask layers matching the specified resolution. The same directory should be
 used in case of modelling multiple species to ensure consistency. Default
 is \code{NULL}.}
 
-\item{resolution}{Numeric. Spatial resolution in kilometers (valid values are
-5, 10, or 20). Can be set via the \code{onesdm_resolution} option. Default is
-\code{NULL}.}
+\item{resolution}{Numeric. Spatial resolution. valid values are 5, 10, or 20
+for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
+arc-minutes) respectively. Can be set via the \code{onesdm_resolution} option.
+Default is \code{NULL}.}
 
 \item{verbose}{Logical. If \code{TRUE} (default), prints progress messages. Can be
 set via the \code{onesdm_verbose} option.}
@@ -73,9 +74,8 @@ details, see \code{\link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf()}}.}
 \item{outlier_resolution}{Numeric. Spatial resolution for outlier detection
 calculations. Can be set via the \code{onesdm_outlier_resolution} option. Only
 used if \code{outlier_dist_km} is greater than 0. A coarser resolution can speed
-up calculations. Must be between 0.01 and the value of the \code{resolution}
-parameter. See \code{\link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf()}} for more details. Default is
-0.125.}
+up calculations. See \code{\link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf()}} for more details. Default
+is 0.125.}
 
 \item{outlier_n_cores}{Integer. Number of CPU cores to use for outlier
 detection. Can be set via the \code{onesdm_outlier_n_cores} option. Only used if

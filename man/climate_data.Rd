@@ -5,7 +5,7 @@
 \alias{climate_data}
 \title{Climate Data}
 \format{
-\subsection{\code{climate_data} A tibble 9 columns:}{
+\subsection{\code{climate_data} A tibble 11 columns:}{
 \itemize{
 \item \code{climate_scenario}: Character. The climate scenario. Valid values:
 \code{current}, \code{ssp126}, \code{ssp370}, \code{ssp585}.
@@ -29,7 +29,13 @@ small letters)).
 "1981_2010_res_10/bio1.tif").
 \item \code{file_size_mb}: Double. The size of the climate data file in megabytes.
 \item \code{resolution}: Integer. The resolution of the climate data file. Valid
-values are 5, 10, and 20.
+values are \code{5}, \code{10}, and \code{20}.
+\item \code{out_dir}: Character. The output directory for the climate data file.
+e.g. ("\verb{res_5/1981_2010}"). This would be relative to the \code{climate_dir}
+argument.
+\item \code{out_file}: Character. The output file path for the climate data file.
+e.g. ("\verb{res_5/1981_2010/bio1.tif}"). This would be relative to the
+\code{climate_dir} argument.
 }
 }
 }

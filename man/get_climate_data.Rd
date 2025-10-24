@@ -15,12 +15,15 @@ get_climate_data(
 )
 }
 \arguments{
-\item{climate_dir}{Character scalar. Destination directory where climate data
-files will be saved. The directory will be created if it does not exist.
-This cannot be \code{NULL}.}
+\item{climate_dir}{Character. Destination directory where climate data files
+will be saved. Can be set via the \code{onesdm_climate_dir} option. The same
+directory should be used in case of modelling multiple species to ensure
+consistency. Default is \code{NULL}.}
 
-\item{resolution}{Integer scalar. Spatial resolution; one of \code{5L}, \code{10L}, or
-\code{20L}.}
+\item{resolution}{Numeric. Spatial resolution. Valid values are 5, 10, or 20
+for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
+arc-minutes) respectively. Can be set via the \code{onesdm_resolution} option.
+Default is \code{10L}.}
 
 \item{climate_scenario}{Character scalar. Climate scenario; one of \code{current},
 \code{ssp126}, \code{ssp370}, \code{ssp585}.}
@@ -55,10 +58,15 @@ integrity.
 matching the requested parameter combination, ensures a single OSF directory,
 lists files via the \code{osfr} package, and joins metadata to obtain download
 links.
-\item GeoTIFF files are downloaded with \code{\link[httr:GET]{httr::GET()}} (with a maximum timeout of
-5 minutes per file) into a mirrored subdirectory structure under the
-\code{climate_dir}. Each file is validated as a GeoTIFF using
-\code{\link[ecokit:check_tiff]{ecokit::check_tiff()}}. Failed downloads are reported.
+\item GeoTIFF files are downloaded, if not already available and valid, using
+\code{\link[httr:GET]{httr::GET()}} (with a maximum timeout of 5 minutes per file) into a mirrored
+subdirectory structure under the \code{climate_dir}. Output files follow the
+pattern: \verb{<climate_dir>/res_<resolution>/1981_2010/var_name.tif} for current
+climate, and
+\verb{<climate_dir>/res_<resolution>/<year>_<climate_scenario>_<climate_model>/var_name.tif} # nolint
+for future climate.
+\item Each file is validated as a GeoTIFF using \code{\link[ecokit:check_tiff]{ecokit::check_tiff()}}. Failed
+downloads are reported.
 \item Input validation is strict; any invalid values, missing combinations, or
 inconsistent OSF directory layouts will trigger informative errors.
 }
@@ -71,6 +79,8 @@ ecokit::load_packages(fs, terra)
 tmp_dir <- fs::path_temp("onesdm_climate123")
 fs::dir_create(tmp_dir)
 
+# |||||||||||||||||||||||||
+
 # Example usage of get_climate_data
 get_climate_data(
   climate_dir = tmp_dir,
@@ -82,13 +92,43 @@ get_climate_data(
   verbose = TRUE)
 
 # List downloaded files in the subdirectory of combination of parameters
+print(list.dirs(tmp_dir))
+
 list_files <- list.files(
-  fs::path(tmp_dir, "1981_2010_res_20"), full.names = TRUE)
+  fs::path(tmp_dir, "res_20", "1981_2010"), full.names = TRUE)
 print(list_files)
 
 # Load the downloaded files as a SpatRaster stack
 terra::rast(list_files)
 
+# |||||||||||||||||||||||||
+
+# Example using future climate data set using options to set defaults
+
+options(
+  onesdm_climate_dir = tmp_dir, onesdm_resolution = 20L,
+  onesdm_verbose = TRUE)
+get_climate_data(
+  climate_scenario = "ssp585", climate_model = "ukesm1",
+  year = "2071-2100", var_names = c("bio5", "bio6", "npp"))
+
+# List downloaded files in the subdirectory of combination of parameters
+print(list.dirs(tmp_dir))
+
+# Load the downloaded files as a SpatRaster stack
+list_files_future <- list.files(
+  fs::path(tmp_dir, "res_20", "2071_2100_ssp585_ukesm1"),
+ full.names = TRUE)
+
+print(list_files_future)
+
+# Load the downloaded files as a SpatRaster stack
+terra::rast(list_files_future)
+
+# |||||||||||||||||||||||||
+
+# Clean up temporary directory after use
+fs::dir_delete(tmp_dir)
 }
 
 }

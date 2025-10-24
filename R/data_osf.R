@@ -6,9 +6,10 @@
 #' Open Science Framework (OSF) storage. It can either return a `SpatRaster`
 #' object directly or saved to a specified path.
 #'
-#' @param resolution Integer. The aggregation factor or resolution for the mask
-#'   layer. Valid options are: `5L`, `10L`, or `20L` for resolutions of ~ 5km, ~
-#'   10km, or ~ 20km respectively. Default is `10L`.
+#' @param resolution Numeric. Spatial resolution. Valid values are 5, 10, or 20
+#'   for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
+#'   arc-minutes) respectively. Can be set via the `onesdm_resolution` option.
+#'   Default is `NULL`.
 #' @param climate_dir Character. Directory where climate data and mask layers
 #'   are stored. If `NULL` (default), a temporary file is created.
 #' @param verbose Logical. Should a download progress bar be shown? Default is
@@ -148,11 +149,14 @@ load_mask_layer <- function(
 #' local directories as needed, downloads the files, and verifies their
 #' integrity.
 #'
-#' @param climate_dir Character scalar. Destination directory where climate data
-#'   files will be saved. The directory will be created if it does not exist.
-#'   This cannot be `NULL`.
-#' @param resolution Integer scalar. Spatial resolution; one of `5L`, `10L`, or
-#'   `20L`.
+#' @param climate_dir Character. Destination directory where climate data files
+#'   will be saved. Can be set via the `onesdm_climate_dir` option. The same
+#'   directory should be used in case of modelling multiple species to ensure
+#'   consistency. Default is `NULL`.
+#' @param resolution Numeric. Spatial resolution. Valid values are 5, 10, or 20
+#'   for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
+#'   arc-minutes) respectively. Can be set via the `onesdm_resolution` option.
+#'   Default is `10L`.
 #' @param climate_scenario Character scalar. Climate scenario; one of `current`,
 #'   `ssp126`, `ssp370`, `ssp585`.
 #' @param climate_model Character scalar. Abbreviation of Global Circulation
@@ -169,10 +173,14 @@ load_mask_layer <- function(
 #' matching the requested parameter combination, ensures a single OSF directory,
 #' lists files via the `osfr` package, and joins metadata to obtain download
 #' links.
-#' - GeoTIFF files are downloaded with [httr::GET()] (with a maximum timeout of
-#' 5 minutes per file) into a mirrored subdirectory structure under the
-#' `climate_dir`. Each file is validated as a GeoTIFF using
-#' [ecokit::check_tiff()]. Failed downloads are reported.
+#' - GeoTIFF files are downloaded, if not already available and valid, using
+#' [httr::GET()] (with a maximum timeout of 5 minutes per file) into a mirrored
+#' subdirectory structure under the `climate_dir`. Output files follow the
+#' pattern: `<climate_dir>/res_<resolution>/1981_2010/var_name.tif` for current
+#' climate, and `<climate_dir>/res_<resolution>/<year>_<climate_scenario>_`
+#' `<climate_model>/var_name.tif` for future climate.
+#' - Each file is validated as a GeoTIFF using [ecokit::check_tiff()]. Failed
+#' downloads are reported.
 #' - Input validation is strict; any invalid values, missing combinations, or
 #' inconsistent OSF directory layouts will trigger informative errors.
 #'
@@ -192,6 +200,8 @@ load_mask_layer <- function(
 #' tmp_dir <- fs::path_temp("onesdm_climate123")
 #' fs::dir_create(tmp_dir)
 #'
+#' # |||||||||||||||||||||||||
+#'
 #' # Example usage of get_climate_data
 #' get_climate_data(
 #'   climate_dir = tmp_dir,
@@ -203,13 +213,43 @@ load_mask_layer <- function(
 #'   verbose = TRUE)
 #'
 #' # List downloaded files in the subdirectory of combination of parameters
+#' print(list.dirs(tmp_dir))
+#'
 #' list_files <- list.files(
-#'   fs::path(tmp_dir, "1981_2010_res_20"), full.names = TRUE)
+#'   fs::path(tmp_dir, "res_20", "1981_2010"), full.names = TRUE)
 #' print(list_files)
 #'
 #' # Load the downloaded files as a SpatRaster stack
 #' terra::rast(list_files)
 #'
+#' # |||||||||||||||||||||||||
+#'
+#' # Example using future climate data set using options to set defaults
+#'
+#' options(
+#'   onesdm_climate_dir = tmp_dir, onesdm_resolution = 20L,
+#'   onesdm_verbose = TRUE)
+#' get_climate_data(
+#'   climate_scenario = "ssp585", climate_model = "ukesm1",
+#'   year = "2071-2100", var_names = c("bio5", "bio6", "npp"))
+#'
+#' # List downloaded files in the subdirectory of combination of parameters
+#' print(list.dirs(tmp_dir))
+#'
+#' # Load the downloaded files as a SpatRaster stack
+#' list_files_future <- list.files(
+#'   fs::path(tmp_dir, "res_20", "2071_2100_ssp585_ukesm1"),
+#'  full.names = TRUE)
+#'
+#' print(list_files_future)
+#'
+#' # Load the downloaded files as a SpatRaster stack
+#' terra::rast(list_files_future)
+#'
+#' # |||||||||||||||||||||||||
+#'
+#' # Clean up temporary directory after use
+#' fs::dir_delete(tmp_dir)
 #' }
 #'
 #' @author Ahmed El-Gabbas
@@ -220,8 +260,8 @@ get_climate_data <- function(
     climate_scenario = "current", climate_model = "current",
     year = "1981-2010", var_names = NULL, verbose = TRUE) {
 
-  osf_path <- download_link <- download_file <- meta <- download_dir <-
-    osf_dir <- name <- climate_model_abb <- var_name <- NULL
+  osf_path <- download_link <- out_dir <- meta <- out_file <-
+    name <- climate_model_abb <- var_name <- NULL
 
   ecokit::check_args("verbose", "logical")
 
@@ -409,7 +449,7 @@ get_climate_data <- function(
   # # ********************************************************************** #
 
   ecokit::cat_time(
-    "Prepare climate data download links",
+    "Preparing climate data download links",
     cat_timestamp = FALSE, verbose = verbose)
 
   download_links <- dplyr::filter(
@@ -434,11 +474,12 @@ get_climate_data <- function(
       # directory name at the OSF project
       osf_dir = dirname(osf_path),
       # local directory to save the downloaded file
-      download_dir = fs::path(climate_dir, osf_dir),
+      out_dir = fs::path(climate_dir, out_dir),
       # full local path to save the downloaded file
-      download_file = fs::path(download_dir, basename(osf_path)),
+      out_file = fs::path(climate_dir, out_file),
       # file name to match with OSF files
-      name = paste0(var_name, ".tif"))
+      name = paste0(var_name, ".tif"),
+      out_okay = purrr::map_lgl(out_file, ecokit::check_tiff, warning = FALSE))
 
   if (!all(var_names %in% download_links$var_name)) {
     ecokit::stop_ctx(
@@ -449,8 +490,15 @@ get_climate_data <- function(
       cat_timestamp = FALSE)
   }
 
+  if (all(download_links$out_okay)) {
+    ecokit::cat_time(
+      "All requested climate data files are already downloaded and valid.",
+      cat_timestamp = FALSE, verbose = verbose)
+    return(invisible(NULL))
+  }
+
   # Create download directories
-  fs::dir_create(unique(download_links$download_dir))
+  fs::dir_create(unique(download_links$out_dir))
 
   # # ********************************************************************** #
   # Extract download links ------
@@ -473,8 +521,7 @@ get_climate_data <- function(
     osfr::osf_ls_files(n_max = 1000L, type = "file")
 
   ecokit::cat_time(
-    "Download climate data files", cat_timestamp = FALSE, verbose = verbose)
-
+    "Downloading climate data files", cat_timestamp = FALSE, verbose = verbose)
 
   # Ensure unique names before joining
   if (any(duplicated(download_links$name))) {
@@ -499,7 +546,7 @@ get_climate_data <- function(
     dplyr::mutate(
       download_link = purrr::map_chr(meta, ~ .x$links$download),
       download_check = purrr::map2_lgl(
-        .x = download_link, .y = download_file,
+        .x = download_link, .y = out_file,
         .f = ~ {
           ecokit::cat_time(
             crayon::blue(stringr::str_remove(basename(.y), ".tif")),

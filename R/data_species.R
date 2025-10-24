@@ -20,10 +20,10 @@
 #' @param gbif_ids Character or numeric vector of GBIF taxon keys (as numeric
 #'   strings) to query. If `NULL`, attempts to retrieve from the
 #'   `onesdm_gbif_ids` option. For more details, see [prepare_gbif_data()].
-#' @param coordinates A data frame or matrix containing longitude and latitude
-#'   values. Must have exactly two columns. If not provided directly, the
-#'   function will attempt to retrieve it from the `onesdm_coordinates` option.
-#'   See [prepare_user_data()] for more details.
+#' @param coordinates A data frame or matrix containing user-provided longitude
+#'   and latitude values. Must have exactly two columns. If not provided
+#'   directly, the function will attempt to retrieve it from the
+#'   `onesdm_coordinates` option. See [prepare_user_data()] for more details.
 #' @param model_dir Character. Directory path where model outputs will be saved.
 #'   Can be set via the `onesdm_model_dir` option. A subdirectory `data` will be
 #'   created within this directory to store processed species data. A separate
@@ -34,9 +34,10 @@
 #'   mask layers matching the specified resolution. The same directory should be
 #'   used in case of modelling multiple species to ensure consistency. Default
 #'   is `NULL`.
-#' @param resolution Numeric. Spatial resolution in kilometers (valid values are
-#'   5, 10, or 20). Can be set via the `onesdm_resolution` option. Default is
-#'   `NULL`.
+#' @param resolution Numeric. Spatial resolution. valid values are 5, 10, or 20
+#'   for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
+#'   arc-minutes) respectively. Can be set via the `onesdm_resolution` option.
+#'   Default is `NULL`.
 #' @param verbose Logical. If `TRUE` (default), prints progress messages. Can be
 #'   set via the `onesdm_verbose` option.
 #' @param exclude_extents List. A list of `SpatExtent` objects (created using
@@ -53,9 +54,8 @@
 #' @param outlier_resolution Numeric. Spatial resolution for outlier detection
 #'   calculations. Can be set via the `onesdm_outlier_resolution` option. Only
 #'   used if `outlier_dist_km` is greater than 0. A coarser resolution can speed
-#'   up calculations. Must be between 0.01 and the value of the `resolution`
-#'   parameter. See [ecokit::nearest_dist_sf()] for more details. Default is
-#'   0.125.
+#'   up calculations. See [ecokit::nearest_dist_sf()] for more details. Default
+#'   is 0.125.
 #' @param outlier_n_cores Integer. Number of CPU cores to use for outlier
 #'   detection. Can be set via the `onesdm_outlier_n_cores` option. Only used if
 #'   `outlier_dist_km` is greater than 0. Default is `6L`.

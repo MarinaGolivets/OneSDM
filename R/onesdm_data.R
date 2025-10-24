@@ -3,7 +3,7 @@
 #' A dataset containing information about climate data files available for
 #' download from OSF.
 #'
-#' @format ## `climate_data` A tibble 9 columns:
+#' @format ## `climate_data` A tibble 11 columns:
 #' - `climate_scenario`: Character. The climate scenario. Valid values:
 #'   `current`, `ssp126`, `ssp370`, `ssp585`.
 #' - `climate_model`: Character. The climate model. Valid values: `current`,
@@ -26,7 +26,14 @@
 #'   "1981_2010_res_10/bio1.tif").
 #' - `file_size_mb`: Double. The size of the climate data file in megabytes.
 #' - `resolution`: Integer. The resolution of the climate data file. Valid
-#'   values are 5, 10, and 20.
+#'   values are `5`, `10`, and `20`.
+#' - `out_dir`: Character. The output directory for the climate data file.
+#'   e.g. ("`res_5/1981_2010`"). This would be relative to the `climate_dir`
+#'   argument.
+#' - `out_file`: Character. The output file path for the climate data file.
+#'   e.g. ("`res_5/1981_2010/bio1.tif`"). This would be relative to the
+#'   `climate_dir` argument.
+
 #' @examples
 #' #' # View the climate data
 #' data("climate_data")

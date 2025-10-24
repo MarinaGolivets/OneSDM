@@ -14,9 +14,10 @@ load_mask_layer(
 )
 }
 \arguments{
-\item{resolution}{Integer. The aggregation factor or resolution for the mask
-layer. Valid options are: \code{5L}, \code{10L}, or \code{20L} for resolutions of ~ 5km, ~
-10km, or ~ 20km respectively. Default is \code{10L}.}
+\item{resolution}{Numeric. Spatial resolution. Valid values are 5, 10, or 20
+for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
+arc-minutes) respectively. Can be set via the \code{onesdm_resolution} option.
+Default is \code{NULL}.}
 
 \item{climate_dir}{Character. Directory where climate data and mask layers
 are stored. If \code{NULL} (default), a temporary file is created.}
