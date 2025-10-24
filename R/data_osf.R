@@ -161,8 +161,8 @@ load_mask_layer <- function(
 #'   `ssp126`, `ssp370`, `ssp585`.
 #' @param climate_model Character scalar. Abbreviation of Global Circulation
 #'   Models; one of `current`, `gfdl`, `ipsl`, `mpi`, `mri`, `ukesm1`.
-#' @param year Character scalar. Time period; one of `1981-2010`, `2011-2040`,
-#'   `2041-2070`, `2071-2100`.
+#' @param year Character scalar. Time period; one of `1981_2010`, `2011_2040`,
+#'   `2041_2070`, `2071_2100`.
 #' @param var_names Character vector of climate variable codes to download. See
 #'   [OneSDM::climate_data] for the list of valid variable names.
 #' @param verbose Logical scalar. If `TRUE`, prints progress and informative
@@ -208,7 +208,7 @@ load_mask_layer <- function(
 #'   resolution = 20L,
 #'   climate_scenario = "current",
 #'   climate_model = "current",
-#'   year = "1981-2010",
+#'   year = "1981_2010",
 #'   var_names = c("bio1", "bio12"),
 #'   verbose = TRUE)
 #'
@@ -231,7 +231,7 @@ load_mask_layer <- function(
 #'   onesdm_verbose = TRUE)
 #' get_climate_data(
 #'   climate_scenario = "ssp585", climate_model = "ukesm1",
-#'   year = "2071-2100", var_names = c("bio5", "bio6", "npp"))
+#'   year = "2071_2100", var_names = c("bio5", "bio6", "npp"))
 #'
 #' # List downloaded files in the subdirectory of combination of parameters
 #' print(list.dirs(tmp_dir))
@@ -258,7 +258,7 @@ load_mask_layer <- function(
 get_climate_data <- function(
     climate_dir = NULL, resolution = 10L,
     climate_scenario = "current", climate_model = "current",
-    year = "1981-2010", var_names = NULL, verbose = TRUE) {
+    year = "1981_2010", var_names = NULL, verbose = TRUE) {
 
   osf_path <- download_link <- out_dir <- meta <- out_file <-
     name <- climate_model_abb <- var_name <- NULL
@@ -365,7 +365,7 @@ get_climate_data <- function(
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## years ----
-  valid_years <- c("1981-2010", "2011-2040", "2041-2070", "2071-2100")
+  valid_years <- c("1981_2010", "2011_2040", "2041_2070", "2071_2100")
   if (length(year) != 1L || !is.character(year)) {
     ecokit::stop_ctx(
       paste0(
@@ -592,7 +592,7 @@ get_climate_data <- function(
 #   climate_dir = NULL, resolution = 10L,
 #   climate_scenario = "current",
 #   # pft
-#   # year = "1981-2010", verbose = TRUE
+#   # year = "1981_2010", verbose = TRUE
 #   # climate_model = "current",
 #   # , var_names = NULL,
 # ) {

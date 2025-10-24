@@ -9,7 +9,7 @@ get_climate_data(
   resolution = 10L,
   climate_scenario = "current",
   climate_model = "current",
-  year = "1981-2010",
+  year = "1981_2010",
   var_names = NULL,
   verbose = TRUE
 )
@@ -31,8 +31,8 @@ Default is \code{10L}.}
 \item{climate_model}{Character scalar. Abbreviation of Global Circulation
 Models; one of \code{current}, \code{gfdl}, \code{ipsl}, \code{mpi}, \code{mri}, \code{ukesm1}.}
 
-\item{year}{Character scalar. Time period; one of \code{1981-2010}, \code{2011-2040},
-\code{2041-2070}, \code{2071-2100}.}
+\item{year}{Character scalar. Time period; one of \verb{1981_2010}, \verb{2011_2040},
+\verb{2041_2070}, \verb{2071_2100}.}
 
 \item{var_names}{Character vector of climate variable codes to download. See
 \link{climate_data} for the list of valid variable names.}
@@ -62,9 +62,8 @@ links.
 \code{\link[httr:GET]{httr::GET()}} (with a maximum timeout of 5 minutes per file) into a mirrored
 subdirectory structure under the \code{climate_dir}. Output files follow the
 pattern: \verb{<climate_dir>/res_<resolution>/1981_2010/var_name.tif} for current
-climate, and
-\verb{<climate_dir>/res_<resolution>/<year>_<climate_scenario>_<climate_model>/var_name.tif} # nolint
-for future climate.
+climate, and \verb{<climate_dir>/res_<resolution>/<year>_<climate_scenario>_}
+\verb{<climate_model>/var_name.tif} for future climate.
 \item Each file is validated as a GeoTIFF using \code{\link[ecokit:check_tiff]{ecokit::check_tiff()}}. Failed
 downloads are reported.
 \item Input validation is strict; any invalid values, missing combinations, or
@@ -87,7 +86,7 @@ get_climate_data(
   resolution = 20L,
   climate_scenario = "current",
   climate_model = "current",
-  year = "1981-2010",
+  year = "1981_2010",
   var_names = c("bio1", "bio12"),
   verbose = TRUE)
 
@@ -110,7 +109,7 @@ options(
   onesdm_verbose = TRUE)
 get_climate_data(
   climate_scenario = "ssp585", climate_model = "ukesm1",
-  year = "2071-2100", var_names = c("bio5", "bio6", "npp"))
+  year = "2071_2100", var_names = c("bio5", "bio6", "npp"))
 
 # List downloaded files in the subdirectory of combination of parameters
 print(list.dirs(tmp_dir))

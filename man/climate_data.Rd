@@ -14,8 +14,8 @@
 \code{UKESM1-0-LL}.
 \item \code{climate_model_abb}: Character. The abbreviated climate model name. Valid
 values are: \code{current}, \code{gfdl}, \code{ipsl}, \code{mpi}, \code{mri}, and \code{ukesm1}.
-\item \code{year}: Character. The year ranges. Valid values are: \code{1981-2010},
-\code{2011-2040}, \code{2041-2070}, and \code{2071-2100}.
+\item \code{year}: Character. The year ranges. Valid values are: \verb{1981_2010},
+\verb{2011_2040}, \verb{2041_2070}, and \verb{2071_2100}.
 \item \code{var_name}: Character. The variable name. Valid values: \code{bio1}, \code{bio2},
 \code{bio3}, \code{bio4}, \code{bio5}, \code{bio6}, \code{bio7}, \code{bio8}, \code{bio9}, \code{bio10}, \code{bio11},
 \code{bio12}, \code{bio13}, \code{bio14}, \code{bio15}, \code{bio16}, \code{bio17}, \code{bio18}, \code{bio19},
