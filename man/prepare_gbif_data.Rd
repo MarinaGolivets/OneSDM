@@ -42,7 +42,7 @@ right, bottom, top) in decimal degrees (default: \code{c(-180L, 180L, -90L, 90L)
 option.}
 
 \item{max_uncertainty}{Numeric. Maximum allowed spatial uncertainty in
-kilometers. Default is \code{10L}. Can also be set via
+kilometres. Default is \code{10L}. Can also be set via
 \code{onesdm_gbif_max_uncertainty} option.}
 
 \item{overwrite}{Logical. If \code{TRUE}, overwrite existing cleaned GBIF data

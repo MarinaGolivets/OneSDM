@@ -27,11 +27,10 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Load mask layer as `SpatRaster` object
-#' mask <- load_mask_layer(resolution = 10L)
-#'
-#' # Save mask layer to file
-#' load_mask_layer(resolution = 20L, climate_dir = NULL)
+#'   require(terra)
+#'   # Load mask layer as `SpatRaster` object
+#'   mask <- load_mask_layer(resolution = 10L)
+#'   print(mask)
 #' }
 #'
 #' @export
@@ -140,6 +139,9 @@ load_mask_layer <- function(
   }
 }
 
+# # ********************************************************************** #
+# # ********************************************************************** #
+
 
 # get_climate_data ------
 
@@ -152,24 +154,27 @@ load_mask_layer <- function(
 #' local directories as needed, downloads the files, and verifies their
 #' integrity.
 #'
-#' @param climate_dir Character. Destination directory where climate data files
-#'   will be saved. Can be set via the `onesdm_climate_dir` option. The same
-#'   directory should be used in case of modelling multiple species to ensure
-#'   consistency. Default is `NULL`.
+#' @param climate_dir Character. Destination directory where climate and land
+#'   use data files will be saved. Can be set via the `onesdm_climate_dir`
+#'   option. The same directory should be used in case of modelling multiple
+#'   species to ensure consistency. Default is `NULL`.
 #' @param resolution Numeric. Spatial resolution. Valid values are 5, 10, or 20
 #'   for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
 #'   arc-minutes) respectively. Can be set via the `onesdm_resolution` option.
 #'   Default is `10L`.
 #' @param climate_scenario Character scalar. Climate scenario; one of `current`,
-#'   `ssp126`, `ssp370`, `ssp585`.
+#'   `ssp126`, `ssp370`, `ssp585`. Default is `"current"`.
 #' @param climate_model Character scalar. Abbreviation of Global Circulation
-#'   Models; one of `current`, `gfdl`, `ipsl`, `mpi`, `mri`, `ukesm1`.
+#'   Models; one of `current`, `gfdl`, `ipsl`, `mpi`, `mri`, `ukesm1`. Default
+#'   is `"current"`.
 #' @param year Character scalar. Time period; one of `1981_2010`, `2011_2040`,
-#'   `2041_2070`, `2071_2100`.
+#'   `2041_2070`, `2071_2100`. Default is `"1981_2010"`.
 #' @param var_names Character vector of climate variable codes to download. See
-#'   [OneSDM::climate_data] for the list of valid variable names.
-#' @param verbose Logical scalar. If `TRUE`, prints progress and informative
-#'   messages.
+#'   [OneSDM::climate_data] for the list of valid variable names. Can be set via
+#'   the `onesdm_var_names` option. This parameter has no default and must be
+#'   provided.
+#' @param verbose Logical scalar. If `TRUE` (default), prints progress and
+#'   informative messages.
 #'
 #' @details
 #' - The function filters the [OneSDM::climate_data] data to identify files
@@ -187,8 +192,8 @@ load_mask_layer <- function(
 #' - Input validation is strict; any invalid values, missing combinations, or
 #' inconsistent OSF directory layouts will trigger informative errors.
 #'
-#' @return Invisibly returns `NULL`. On success, the requested `.tif` files are
-#'   written to disk.
+#' @return Returns invisibly a tibble with metadata of the downloaded climate
+#'   data files, including their local paths.
 #'
 #' @seealso
 #' - [OneSDM::climate_data] for the metadata table used to resolve files.
@@ -197,62 +202,62 @@ load_mask_layer <- function(
 #'
 #' @examples
 #' \dontrun{
-#' ecokit::load_packages(fs, terra)
+#'   ecokit::load_packages(fs, terra)
 #'
-#' # Create a temporary directory for climate data
-#' tmp_dir <- fs::path_temp("onesdm_climate123")
-#' fs::dir_create(tmp_dir)
+#'   # Create a temporary directory for climate data
+#'   tmp_dir <- fs::path_temp("onesdm_climate")
+#'   fs::dir_create(tmp_dir)
 #'
-#' # |||||||||||||||||||||||||
+#'   # |||||||||||||||||||||||||
 #'
-#' # Example usage of get_climate_data
-#' get_climate_data(
-#'   climate_dir = tmp_dir,
-#'   resolution = 20L,
-#'   climate_scenario = "current",
-#'   climate_model = "current",
-#'   year = "1981_2010",
-#'   var_names = c("bio1", "bio12"),
-#'   verbose = TRUE)
+#'   # Example usage of get_climate_data
+#'   get_climate_data(
+#'     climate_dir = tmp_dir,
+#'     resolution = 20L,
+#'     climate_scenario = "current",
+#'     climate_model = "current",
+#'     year = "1981_2010",
+#'     var_names = c("bio1", "bio12"),
+#'     verbose = TRUE)
 #'
-#' # List downloaded files in the subdirectory of combination of parameters
-#' print(list.dirs(tmp_dir))
+#'   # List downloaded files in the subdirectory of combination of parameters
+#'   print(list.dirs(tmp_dir))
 #'
-#' list_files <- list.files(
-#'   fs::path(tmp_dir, "res_20", "1981_2010"), full.names = TRUE)
-#' print(list_files)
+#'   list_files <- list.files(
+#'     fs::path(tmp_dir, "res_20", "1981_2010"), full.names = TRUE)
+#'   print(list_files)
 #'
-#' # Load the downloaded files as a SpatRaster stack
-#' terra::rast(list_files)
+#'   # Load the downloaded files as a SpatRaster stack
+#'   terra::rast(list_files)
 #'
-#' # |||||||||||||||||||||||||
+#'   # |||||||||||||||||||||||||
 #'
-#' # Example using future climate data set using options to set defaults
+#'   # Example using future climate data set using options to set defaults
 #'
-#' options(
-#'   onesdm_climate_dir = tmp_dir, onesdm_resolution = 20L,
-#'   onesdm_verbose = TRUE)
-#' get_climate_data(
-#'   climate_scenario = "ssp585", climate_model = "ukesm1",
-#'   year = "2071_2100", var_names = c("bio5", "bio6", "npp"))
+#'   options(
+#'     onesdm_climate_dir = tmp_dir, onesdm_resolution = 20L,
+#'     onesdm_verbose = TRUE)
+#'   get_climate_data(
+#'     climate_scenario = "ssp585", climate_model = "ukesm1",
+#'     year = "2071_2100", var_names = c("bio5", "bio6", "npp"))
 #'
-#' # List downloaded files in the subdirectory of combination of parameters
-#' print(list.dirs(tmp_dir))
+#'   # List downloaded files in the subdirectory of combination of parameters
+#'   print(list.dirs(tmp_dir))
 #'
-#' # Load the downloaded files as a SpatRaster stack
-#' list_files_future <- list.files(
-#'   fs::path(tmp_dir, "res_20", "2071_2100_ssp585_ukesm1"),
-#'  full.names = TRUE)
+#'   # Load the downloaded files as a SpatRaster stack
+#'   list_files_future <- list.files(
+#'     fs::path(tmp_dir, "res_20", "2071_2100_ssp585", "ukesm1"),
+#'     recursive = TRUE, pattern = "\\.tif$", full.names = TRUE)
 #'
-#' print(list_files_future)
+#'   print(list_files_future)
 #'
-#' # Load the downloaded files as a SpatRaster stack
-#' terra::rast(list_files_future)
+#'   # Load the downloaded files as a SpatRaster stack
+#'   terra::rast(list_files_future)
 #'
-#' # |||||||||||||||||||||||||
+#'   # |||||||||||||||||||||||||
 #'
-#' # Clean up temporary directory after use
-#' fs::dir_delete(tmp_dir)
+#'   # Clean up temporary directory after use
+#'   fs::dir_delete(tmp_dir)
 #' }
 #'
 #' @author Ahmed El-Gabbas
@@ -274,6 +279,11 @@ get_climate_data <- function(
 
   ecokit::check_packages(
     c("crayon", "dplyr", "fs", "httr", "osfr", "purrr", "stringr", "terra"))
+
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  # Load climate data tibble
+  climate_data_0 <- OneSDM::climate_data
 
   # # ********************************************************************** #
   # Validate inputs ------
@@ -298,10 +308,10 @@ get_climate_data <- function(
     ecokit::stop_ctx(
       paste0(
         "`climate_dir` must be provided as a character string ",
-        "indicating the directory to save the climate data files."),
+        "indicating the directory to save the climate and land use ",
+        "data files."),
       cat_timestamp = FALSE)
   }
-  # ecokit::check_args("climate_dir", "character")
   if (!fs::dir_exists(climate_dir)) {
     ecokit::cat_time(
       paste0(
@@ -314,7 +324,9 @@ get_climate_data <- function(
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## resolution ----
-  valid_resolutions <- c(5L, 10L, 20L)
+
+  valid_resolutions <- unique(climate_data_0$resolution)
+
   if (length(resolution) != 1L || !is.numeric(resolution)) {
     ecokit::stop_ctx(
       paste0(
@@ -333,7 +345,8 @@ get_climate_data <- function(
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## climate models ----
-  valid_models <- c("current", "gfdl", "ipsl", "mpi", "mri", "ukesm1")
+
+  valid_models <- unique(climate_data_0$climate_model_abb)
   if (length(climate_model) != 1L || !is.character(climate_model)) {
     ecokit::stop_ctx(
       paste0(
@@ -352,7 +365,8 @@ get_climate_data <- function(
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## climate scenarios ----
-  valid_scenarios <- c("current", "ssp126", "ssp370", "ssp585")
+
+  valid_scenarios <- unique(climate_data_0$climate_scenario)
   if (length(climate_scenario) != 1L || !is.character(climate_scenario)) {
     ecokit::stop_ctx(
       paste0(
@@ -371,7 +385,8 @@ get_climate_data <- function(
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## years ----
-  valid_years <- c("1981_2010", "2011_2040", "2041_2070", "2071_2100")
+
+  valid_years <- unique(climate_data_0$year)
   if (length(year) != 1L || !is.character(year)) {
     ecokit::stop_ctx(
       paste0(
@@ -390,12 +405,8 @@ get_climate_data <- function(
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## var_names ----
-  valid_var_names <- c(
-    "bio1", "bio2", "bio3", "bio4", "bio5", "bio6", "bio7", "bio8", "bio9",
-    "bio10", "bio11", "bio12", "bio13", "bio14", "bio15", "bio16", "bio17",
-    "bio18", "bio19", "fcf", "fgd", "gdd0", "gdd10", "gdd5", "gddlgd0",
-    "gddlgd10", "gddlgd5", "gdgfgd0", "gdgfgd10", "gdgfgd5", "gsl", "gsp",
-    "gst", "lgd", "ngd0", "ngd10", "ngd5", "npp", "scd", "swe")
+
+  valid_var_names <- unique(climate_data_0$var_name)
   if (is.null(var_names)) {
     ecokit::stop_ctx(
       paste0(
@@ -459,7 +470,7 @@ get_climate_data <- function(
     cat_timestamp = FALSE, verbose = verbose)
 
   download_links <- dplyr::filter(
-    OneSDM::climate_data,
+    climate_data_0,
     resolution == !!resolution,
     climate_scenario == !!climate_scenario,
     climate_model_abb == !!climate_model,
@@ -500,7 +511,7 @@ get_climate_data <- function(
     ecokit::cat_time(
       "All requested climate data files are already downloaded and valid.",
       cat_timestamp = FALSE, verbose = verbose)
-    return(invisible(NULL))
+    return(invisible(download_links))
   }
 
   # Create download directories
@@ -586,21 +597,481 @@ get_climate_data <- function(
     "All climate data files downloaded successfully.",
     cat_timestamp = FALSE, verbose = verbose)
 
-  return(invisible(NULL))
+  return(invisible(download_links))
 
 }
 
+# # ********************************************************************** #
+# # ********************************************************************** #
 
-# download_landuse_data ------
+# get_landuse_data ------
 
-# download_landuse_data <- function(
-    #
-#   climate_dir = NULL, resolution = 10L,
-#   climate_scenario = "current",
-#   # pft
-#   # year = "1981_2010", verbose = TRUE
-#   # climate_model = "current",
-#   # , var_names = NULL,
-# ) {
-#
-# }
+#' Download Land Use Data from OneSDM OSF Project
+#'
+#' @description Downloads selected land use data files from the OneSDM Open
+#'   Science Framework (OSF) storage based on spatial resolution, climate
+#'   scenario, climate model, time period, and Plant Functional Type (PFT)
+#'   names. The function validates input parameters, checks for existing files,
+#'   and downloads only missing or corrupted files.
+#'
+#' @param climate_dir Character. Destination directory where climate and land
+#'   use data files will be saved. Can be set via the `onesdm_climate_dir`
+#'   option. The same directory should be used in case of modelling multiple
+#'   species to ensure consistency. Default is `NULL`.
+#' @param resolution Numeric. Spatial resolution. Valid values are 5, 10, or 20
+#'   for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
+#'   arc-minutes) respectively. Can be set via the `onesdm_resolution` option.
+#'   Default is `10L`.
+#' @param climate_scenario Character scalar. Climate scenario; one of `current`,
+#'   `ssp126`, `ssp370`, `ssp585`. Default is `"current"`.
+#' @param year Character scalar. Time period; one of `1981_2010`, `2011_2040`,
+#'   `2041_2070`, `2071_2100`. Default is `"1981_2010"`.
+#' @param pft_type Character string. Plant functional type category. Has to be
+#'   one of "`cross-walk`" (default) "`original`"; see [OneSDM::landuse_data]
+#'   for details. This can be set via the `onesdm_pft_type` option.
+#' @param pft_id Numeric vector. One or more plant functional type identifiers
+#'   to download. Must be valid for the specified `pft_type`: 1-20 for `pft_type
+#'   == "original"`, and 1-12 for `pft_type == "cross-walk"`; See
+#'   [OneSDM::landuse_data] for details. Can be set via the `onesdm_pft_id`
+#'   option. This parameter has no default and must be provided.
+#' @param verbose Logical scalar. If `TRUE` (default), prints progress and
+#'   informative messages.
+#' @return Invisibly returns a tibble containing metadata about the downloaded
+#'   files, including local file paths, OSF paths, download links, and
+#'   validation status.
+#'
+#' @details The function performs the following steps:
+#' - Validates all input parameters against available options
+#' - Checks if requested files already exist locally and are valid
+#' - Creates necessary output directories
+#' - Connects to the OneSDM OSF project and downloads only missing or corrupted
+#'   files
+#' - Validates downloaded files using TIFF format checks
+#'
+#' @examples
+#' \dontrun{
+#'   ecokit::load_packages(fs, terra)
+#'
+#'   # Create a temporary directory for land use data
+#'   tmp_dir <- fs::path_temp("onesdm_landuse")
+#'   fs::dir_create(tmp_dir)
+#'
+#'   # |||||||||||||||||||||||||
+#'
+#'   # Example usage of get_landuse_data
+#'   get_landuse_data(
+#'     climate_dir = tmp_dir,
+#'     resolution = 20L,
+#'     climate_scenario = "current",
+#'     year = "1981_2010",
+#'     pft_type = "cross-walk",
+#'     pft_id = c(2, 4, 12),
+#'     verbose = TRUE)
+#'
+#'   # List downloaded files in the subdirectory of combination of parameters
+#'   print(list.dirs(tmp_dir))
+#'
+#'   list_files <- list.files(
+#'     fs::path(tmp_dir, "res_20", "1981_2010"), full.names = TRUE)
+#'   print(list_files)
+#'
+#'   # Load the downloaded files as a SpatRaster stack
+#'   terra::rast(list_files)
+#'
+#'   # |||||||||||||||||||||||||
+#'
+#'   # Example using future land use data set using options to set defaults
+#'
+#'   options(
+#'     onesdm_climate_dir = tmp_dir, onesdm_resolution = 20L,
+#'     onesdm_verbose = TRUE,
+#'     onesdm_pft_type = "original",
+#'     onesdm_pft_id = c(1, 14, 18))
+#'
+#'   get_landuse_data(climate_scenario = "ssp585", year = "2071_2100")
+#'
+#'   # List downloaded files in the subdirectory of combination of parameters
+#'   print(list.dirs(tmp_dir))
+#'
+#'   # Load the downloaded files as a SpatRaster stack
+#'   list_files_future <- list.files(
+#'     fs::path(tmp_dir, "res_20", "2071_2100_ssp585"),
+#'     recursive = TRUE, pattern = "\\.tif$", full.names = TRUE)
+#'
+#'   print(list_files_future)
+#'
+#'   # Load the downloaded files as a SpatRaster stack
+#'   terra::rast(list_files_future)
+#'
+#'   # |||||||||||||||||||||||||
+#'
+#'   # Clean up temporary directory after use
+#'   fs::dir_delete(tmp_dir)
+#' }
+#'
+#' @author Ahmed El-Gabbas
+#' @export
+
+get_landuse_data <- function(
+    climate_dir = NULL, resolution = 10L, climate_scenario = "current",
+    year = "1981_2010", pft_type = "cross-walk", pft_id = NULL,
+    verbose = TRUE) {
+
+  osf_path <- download_link <- out_dir <- meta <- out_file <- name <- NULL
+
+  ecokit::check_args("verbose", "logical")
+
+  ecokit::info_chunk(
+    "Download land use files from OneSDM OSF project",
+    line_char_rep = 65L, verbose = verbose)
+
+  ecokit::check_packages(
+    c("crayon", "dplyr", "fs", "httr", "osfr", "purrr", "stringr", "terra"))
+
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  # Load land use data tibble
+  landuse_data_0 <- OneSDM::landuse_data
+
+  # # ********************************************************************** #
+  # Validate inputs ------
+  # # ********************************************************************** #
+
+  climate_dir <- ecokit::assign_from_options(
+    climate_dir, "onesdm_climate_dir", "character")
+  resolution <- ecokit::assign_from_options(
+    resolution, "onesdm_resolution", c("numeric", "integer"))
+  pft_type <- ecokit::assign_from_options(
+    pft_type, "onesdm_pft_type", "character")
+  pft_id <- ecokit::assign_from_options(
+    pft_id, "onesdm_pft_id", c("numeric", "integer"))
+
+  ecokit::cat_time(
+    "Validate inputs for land use data download",
+    cat_timestamp = FALSE, verbose = verbose)
+
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  ## climate_dir -----
+
+  if (is.null(climate_dir)) {
+    ecokit::stop_ctx(
+      paste0(
+        "`climate_dir` must be provided as a character string ",
+        "indicating the directory to save the climate and land ",
+        "use data files."),
+      cat_timestamp = FALSE)
+  }
+
+  if (!fs::dir_exists(climate_dir)) {
+    ecokit::cat_time(
+      paste0(
+        "Creating climate data directory at: ",
+        crayon::blue(climate_dir)),
+      cat_timestamp = FALSE, verbose = verbose)
+    fs::dir_create(climate_dir)
+  }
+
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  ## resolution ----
+
+  valid_resolutions <- unique(landuse_data_0$resolution)
+
+  if (length(resolution) != 1L || !is.numeric(resolution)) {
+    ecokit::stop_ctx(
+      paste0(
+        "`resolution` must be a single numeric value. ",
+        "Provided: ", toString(resolution), "."),
+      cat_timestamp = FALSE)
+  }
+
+  if (!resolution %in% valid_resolutions) {
+    ecokit::stop_ctx(
+      paste0(
+        "Invalid `resolution`: ", resolution, ".\n",
+        "Valid options are: ", toString(valid_resolutions), "."),
+      cat_timestamp = FALSE)
+  }
+
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  ## climate scenarios ----
+
+  valid_scenarios <- unique(landuse_data_0$climate_scenario)
+
+  if (length(climate_scenario) != 1L || !is.character(climate_scenario)) {
+    ecokit::stop_ctx(
+      paste0(
+        "`climate_scenario` must be a single character string. ",
+        "Provided: ", toString(climate_scenario), "."),
+      cat_timestamp = FALSE)
+  }
+
+  if (!climate_scenario %in% valid_scenarios) {
+    ecokit::stop_ctx(
+      paste0(
+        "Invalid `climate_scenario`: ", climate_scenario, ".\n",
+        "Valid options are: ", toString(valid_scenarios), "."),
+      cat_timestamp = FALSE)
+  }
+
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  ## years ----
+
+  valid_years <- unique(landuse_data_0$year)
+
+  if (length(year) != 1L || !is.character(year)) {
+    ecokit::stop_ctx(
+      paste0(
+        "`year` must be a single character string. ",
+        "Provided: ", toString(year), "."),
+      cat_timestamp = FALSE)
+  }
+
+  if (!year %in% valid_years) {
+    ecokit::stop_ctx(
+      paste0(
+        "Invalid `year`: ", year, ".\nValid options are: ",
+        toString(valid_years), "."),
+      cat_timestamp = FALSE)
+  }
+
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  ## pft_type ----
+
+  valid_pft_types <- unique(landuse_data_0$pft_type)
+
+  if (length(pft_type) != 1L || !is.character(pft_type)) {
+    ecokit::stop_ctx(
+      paste0(
+        "`pft_type` must be a single character string. ",
+        "Provided: ", toString(pft_type), "."),
+      cat_timestamp = FALSE)
+  }
+
+  if (!pft_type %in% valid_pft_types) {
+    ecokit::stop_ctx(
+      paste0(
+        "Invalid `pft_type`: ", pft_type, ".\nValid options are: ",
+        toString(valid_pft_types), "."),
+      cat_timestamp = FALSE)
+  }
+
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  ## pft_id ----
+
+  valid_pft_ids <- dplyr::filter(landuse_data_0, pft_type == !!pft_type) %>%
+    dplyr::pull(pft_id) %>%
+    unique()
+
+  if (is.null(pft_id)) {
+    ecokit::stop_ctx(
+      paste0(
+        "`pft_id` must be provided as a numeric vector.\n",
+        "Valid options are: ", toString(valid_pft_ids), "."),
+      cat_timestamp = FALSE)
+  }
+
+  if (!all(pft_id %in% valid_pft_ids)) {
+    ecokit::stop_ctx(
+      paste0(
+        "Invalid `pft_id` values: ",
+        toString(pft_id[!pft_id %in% valid_pft_ids]), ".\n",
+        "Valid options are: ", toString(valid_pft_ids), "."),
+      cat_timestamp = FALSE)
+  }
+
+  # # ********************************************************************** #
+
+  # Get filtered land use data for printing
+  download_links <- dplyr::filter(
+    landuse_data_0, pft_type == !!pft_type, pft_id %in% !!pft_id,
+    climate_scenario == !!climate_scenario, year == !!year,
+    resolution == !!resolution)
+
+  if (nrow(download_links) == 0L) {
+    ecokit::stop_ctx(
+      "No land use data files found for the specified parameter combination.",
+      cat_timestamp = FALSE,
+      resolution = resolution, climate_scenario = climate_scenario,
+      year = year, pft = toString(download_links$pft_name),
+      pft_id = toString(pft_id), pft_type = pft_type)
+  }
+
+  # # ********************************************************************** #
+  # Print function arguments ------
+  # # ********************************************************************** #
+
+  if (verbose) {
+    ecokit::cat_time(
+      "Function arguments for land use data download", cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(
+        crayon::italic("Climate directory: "), crayon::blue(climate_dir)),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(
+        crayon::italic("Climate directory (absolute): "),
+        crayon::blue(fs::path_abs(climate_dir))),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(crayon::italic("resolution: "), crayon::blue(resolution)),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(
+        crayon::italic("climate scenario: "), crayon::blue(climate_scenario)),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(crayon::italic("climate year: "), crayon::blue(year)),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(crayon::italic("Land use type: "), crayon::blue(pft_type)),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      paste0(
+        crayon::italic("land use id(s): "), crayon::blue(toString(pft_id))),
+      level = 1L, cat_timestamp = FALSE)
+    ecokit::cat_time(
+      crayon::italic("Land use pft(s): "),
+      level = 1L, cat_timestamp = FALSE)
+    stringr::str_wrap(toString(download_links$pft_name), 50L) %>%
+      stringr::str_split("\n", simplify = TRUE) %>%
+      purrr::walk(
+        ~ ecokit::cat_time(crayon::blue(.x), level = 2L, cat_timestamp = FALSE))
+  }
+
+  # # ********************************************************************** #
+  # Filter land use data to get files to download ------
+  # # ********************************************************************** #
+
+  ecokit::cat_time(
+    "Preparing land use data download links",
+    cat_timestamp = FALSE, verbose = verbose)
+
+  download_links <- download_links %>%
+    dplyr::mutate(
+      # directory name at the OSF project
+      osf_dir = dirname(osf_path),
+      # local directory to save the downloaded file
+      out_dir = fs::path(climate_dir, out_dir),
+      # full local path to save the downloaded file
+      out_file = fs::path(climate_dir, out_file),
+      # file name to match with OSF files
+      name = basename(osf_path),
+      out_okay = purrr::map_lgl(out_file, ecokit::check_tiff, warning = FALSE))
+
+  if (all(download_links$out_okay)) {
+    ecokit::cat_time(
+      "All requested land use data files are already downloaded and valid.",
+      cat_timestamp = FALSE, verbose = verbose)
+    return(invisible(download_links))
+  }
+
+  # Create download directories
+  fs::dir_create(unique(download_links$out_dir))
+
+  # # ********************************************************************** #
+  # Extract download links ------
+  # # ********************************************************************** #
+
+  # Ensure a single unique OSF directory
+  osf_dir_unique <- unique(download_links$osf_dir)
+
+  if (length(osf_dir_unique) != 1L) {
+    ecokit::stop_ctx(
+      paste0(
+        "Expected a single unique OSF directory but found: ",
+        toString(osf_dir_unique), "."),
+      cat_timestamp = FALSE)
+  }
+
+  # Get list of files in the specified OSF directory
+  osf_l_files <- osfr::osf_retrieve_node("jvns4") %>%
+    osfr::osf_ls_files(n_max = 1000L, type = "folder") %>%
+    dplyr::filter(name == osf_dir_unique) %>%
+    osfr::osf_ls_files(n_max = 1000L, type = "file") %>%
+    dplyr::filter(name %in% download_links$name)
+
+  ecokit::cat_time(
+    "Downloading land use data files",
+    cat_timestamp = FALSE, verbose = verbose)
+
+  # Ensure unique names before joining
+  if (any(duplicated(download_links$name))) {
+    ecokit::stop_ctx(
+      paste0(
+        "Duplicate names found in requested download links: ",
+        toString(download_links$name[duplicated(download_links$name)]), "."),
+      cat_timestamp = FALSE)
+  }
+
+  if (any(duplicated(osf_l_files$name))) {
+    ecokit::stop_ctx(
+      paste0(
+        "Duplicate names found in OSF files: ",
+        toString(osf_l_files$name[duplicated(osf_l_files$name)]), "."),
+      cat_timestamp = FALSE)
+  }
+
+  download_links <- download_links %>%
+    # left join to get the metadata including download links
+    dplyr::left_join(
+      dplyr::select(osf_l_files, -tidyselect::all_of("id")), by = "name") %>%
+    dplyr::mutate(
+      download_link = purrr::map_chr(meta, ~ .x$links$download),
+      download_check = purrr::map2_lgl(
+        .x = download_link, .y = out_file,
+        .f = ~ {
+
+          map_name <- stringr::str_remove(basename(.y), ".tif")
+
+          ecokit::cat_time(
+            crayon::blue(map_name), cat_timestamp = FALSE,
+            level = 1L, verbose = verbose)
+
+          if (!ecokit::check_tiff(.y, warning = FALSE)) {
+            # Write to temp file to change variable name before saving
+            temp_tif <- fs::file_temp(pattern = "landuse_", ext = ".tif")
+            httr::GET(
+              .x, httr::write_disk(path = temp_tif, overwrite = TRUE),
+              httr::timeout(300L))
+
+            # Rename the raster layer to match pft_name
+            lu_rast <- stats::setNames(terra::rast(temp_tif), map_name)
+            # save the renamed raster to the final location
+            terra::writeRaster(lu_rast, filename = .y, overwrite = TRUE)
+
+            # Clean up temp file
+            try(fs::file_delete(temp_tif), silent = TRUE)
+          }
+
+          if (!ecokit::check_tiff(.y, warning = FALSE)) {
+            return(FALSE)
+          }
+          return(TRUE)
+        },
+        .progress = verbose))
+
+  # # ********************************************************************** #
+  # Check download results ------
+  # # ********************************************************************** #
+
+  if (!all(download_links$download_check)) {
+    ecokit::stop_ctx(
+      paste0(
+        "Some land use data files failed to download: ",
+        toString(download_links$name[!download_links$download_check]), "."),
+      cat_timestamp = FALSE)
+  }
+
+  ecokit::cat_time(
+    "All land use data files downloaded successfully.",
+    cat_timestamp = FALSE, verbose = verbose)
+
+  return(invisible(download_links))
+
+}

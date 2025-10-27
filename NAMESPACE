@@ -2,6 +2,7 @@
 
 export("%>%")
 export(get_climate_data)
+export(get_landuse_data)
 export(load_mask_layer)
 export(prepare_climate)
 export(prepare_easin_data)

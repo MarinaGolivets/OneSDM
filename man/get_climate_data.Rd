@@ -15,10 +15,10 @@ get_climate_data(
 )
 }
 \arguments{
-\item{climate_dir}{Character. Destination directory where climate data files
-will be saved. Can be set via the \code{onesdm_climate_dir} option. The same
-directory should be used in case of modelling multiple species to ensure
-consistency. Default is \code{NULL}.}
+\item{climate_dir}{Character. Destination directory where climate and land
+use data files will be saved. Can be set via the \code{onesdm_climate_dir}
+option. The same directory should be used in case of modelling multiple
+species to ensure consistency. Default is \code{NULL}.}
 
 \item{resolution}{Numeric. Spatial resolution. Valid values are 5, 10, or 20
 for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
@@ -26,23 +26,26 @@ arc-minutes) respectively. Can be set via the \code{onesdm_resolution} option.
 Default is \code{10L}.}
 
 \item{climate_scenario}{Character scalar. Climate scenario; one of \code{current},
-\code{ssp126}, \code{ssp370}, \code{ssp585}.}
+\code{ssp126}, \code{ssp370}, \code{ssp585}. Default is \code{"current"}.}
 
 \item{climate_model}{Character scalar. Abbreviation of Global Circulation
-Models; one of \code{current}, \code{gfdl}, \code{ipsl}, \code{mpi}, \code{mri}, \code{ukesm1}.}
+Models; one of \code{current}, \code{gfdl}, \code{ipsl}, \code{mpi}, \code{mri}, \code{ukesm1}. Default
+is \code{"current"}.}
 
 \item{year}{Character scalar. Time period; one of \verb{1981_2010}, \verb{2011_2040},
-\verb{2041_2070}, \verb{2071_2100}.}
+\verb{2041_2070}, \verb{2071_2100}. Default is \code{"1981_2010"}.}
 
 \item{var_names}{Character vector of climate variable codes to download. See
-\link{climate_data} for the list of valid variable names.}
+\link{climate_data} for the list of valid variable names. Can be set via
+the \code{onesdm_var_names} option. This parameter has no default and must be
+provided.}
 
-\item{verbose}{Logical scalar. If \code{TRUE}, prints progress and informative
-messages.}
+\item{verbose}{Logical scalar. If \code{TRUE} (default), prints progress and
+informative messages.}
 }
 \value{
-Invisibly returns \code{NULL}. On success, the requested \code{.tif} files are
-written to disk.
+Returns invisibly a tibble with metadata of the downloaded climate
+data files, including their local paths.
 }
 \description{
 Downloads selected climate raster files (GeoTIFF) from the OneSDM Open
@@ -72,62 +75,62 @@ inconsistent OSF directory layouts will trigger informative errors.
 }
 \examples{
 \dontrun{
-ecokit::load_packages(fs, terra)
+  ecokit::load_packages(fs, terra)
 
-# Create a temporary directory for climate data
-tmp_dir <- fs::path_temp("onesdm_climate123")
-fs::dir_create(tmp_dir)
+  # Create a temporary directory for climate data
+  tmp_dir <- fs::path_temp("onesdm_climate")
+  fs::dir_create(tmp_dir)
 
-# |||||||||||||||||||||||||
+  # |||||||||||||||||||||||||
 
-# Example usage of get_climate_data
-get_climate_data(
-  climate_dir = tmp_dir,
-  resolution = 20L,
-  climate_scenario = "current",
-  climate_model = "current",
-  year = "1981_2010",
-  var_names = c("bio1", "bio12"),
-  verbose = TRUE)
+  # Example usage of get_climate_data
+  get_climate_data(
+    climate_dir = tmp_dir,
+    resolution = 20L,
+    climate_scenario = "current",
+    climate_model = "current",
+    year = "1981_2010",
+    var_names = c("bio1", "bio12"),
+    verbose = TRUE)
 
-# List downloaded files in the subdirectory of combination of parameters
-print(list.dirs(tmp_dir))
+  # List downloaded files in the subdirectory of combination of parameters
+  print(list.dirs(tmp_dir))
 
-list_files <- list.files(
-  fs::path(tmp_dir, "res_20", "1981_2010"), full.names = TRUE)
-print(list_files)
+  list_files <- list.files(
+    fs::path(tmp_dir, "res_20", "1981_2010"), full.names = TRUE)
+  print(list_files)
 
-# Load the downloaded files as a SpatRaster stack
-terra::rast(list_files)
+  # Load the downloaded files as a SpatRaster stack
+  terra::rast(list_files)
 
-# |||||||||||||||||||||||||
+  # |||||||||||||||||||||||||
 
-# Example using future climate data set using options to set defaults
+  # Example using future climate data set using options to set defaults
 
-options(
-  onesdm_climate_dir = tmp_dir, onesdm_resolution = 20L,
-  onesdm_verbose = TRUE)
-get_climate_data(
-  climate_scenario = "ssp585", climate_model = "ukesm1",
-  year = "2071_2100", var_names = c("bio5", "bio6", "npp"))
+  options(
+    onesdm_climate_dir = tmp_dir, onesdm_resolution = 20L,
+    onesdm_verbose = TRUE)
+  get_climate_data(
+    climate_scenario = "ssp585", climate_model = "ukesm1",
+    year = "2071_2100", var_names = c("bio5", "bio6", "npp"))
 
-# List downloaded files in the subdirectory of combination of parameters
-print(list.dirs(tmp_dir))
+  # List downloaded files in the subdirectory of combination of parameters
+  print(list.dirs(tmp_dir))
 
-# Load the downloaded files as a SpatRaster stack
-list_files_future <- list.files(
-  fs::path(tmp_dir, "res_20", "2071_2100_ssp585_ukesm1"),
- full.names = TRUE)
+  # Load the downloaded files as a SpatRaster stack
+  list_files_future <- list.files(
+    fs::path(tmp_dir, "res_20", "2071_2100_ssp585", "ukesm1"),
+    recursive = TRUE, pattern = "\\\\.tif$", full.names = TRUE)
 
-print(list_files_future)
+  print(list_files_future)
 
-# Load the downloaded files as a SpatRaster stack
-terra::rast(list_files_future)
+  # Load the downloaded files as a SpatRaster stack
+  terra::rast(list_files_future)
 
-# |||||||||||||||||||||||||
+  # |||||||||||||||||||||||||
 
-# Clean up temporary directory after use
-fs::dir_delete(tmp_dir)
+  # Clean up temporary directory after use
+  fs::dir_delete(tmp_dir)
 }
 
 }

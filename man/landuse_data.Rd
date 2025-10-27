@@ -7,28 +7,30 @@
 \format{
 \subsection{\code{landuse_data} A tibble 10 columns:}{
 \itemize{
-\item \code{pft_type}: Character. The type of plant functional type (PFT); one of
-"\code{original}" for the original PFTs as in the original land use data and
-"\code{cross-walk}" for the cross-walked PFTs as per the cross-walk table.
-\item \code{resolution}: Integer. The resolution of the land use data: \code{5}, \code{10},
+\item \strong{\code{pft_type}}: Character. The type of plant functional type (PFT); one of
+"\code{original}" for the PFTs classes in the original land use data and
+"\code{cross-walk}" for the grouped (cross-walked) PFTs.
+\item \strong{\code{resolution}}: Integer. The resolution of the land use data: \code{5}, \code{10},
 and \code{20}, for resolutions of approximately 10, 20, and 40 km (2.5, 5, and
 10 arc-minutes) respectively.
-\item \code{climate_scenario}: Character. The climate scenario: "\code{current}",
+\item \strong{\code{climate_scenario}}: Character. The climate scenario: "\code{current}",
 "\code{ssp126}", "\code{ssp370}", and "\code{ssp585}".
-\item \code{year}: Character. The year ranges: "\verb{1981_2010}", "\verb{2011_2040}",
+\item \strong{\code{year}}: Character. The year ranges: "\verb{1981_2010}", "\verb{2011_2040}",
 "\verb{2041_2070}", and "\verb{2071_2100}".
-\item \code{climate_name}: Character. The climate name: "\code{current}" and
-\verb{"<year}>_<climate_scenario>"` for future options.
-\item \code{id}: Integer. The PFT ID.
-\item \code{pft}: Character. The plant functional type name.
-\item \code{out_file}: Character. The output file path for the land use data
-files; e.g., "\code{res_20/ssp585_2071_2100/landuse_pft_cw_8_grasslands.tif}".
-This would be relative to the \code{landuse_dir} argument.
-\item \code{osf_path}: Character. The OSF path to the land use data file;
+\item \strong{\code{climate_name}}: Character. The climate name: "\code{current}" and
+\verb{"<climate_scenario>_<year}>"` for future options.
+\item \strong{\code{pft_id}}: Integer. The PFT ID: 1-20 for the original PFTs and 1-12 for
+the cross-walked PFTs.
+\item \strong{\code{pft_name}}: Character. The plant functional type name.
+\item \strong{\code{osf_path}}: Character. The OSF relative path to the land use data file;
 e.g., "\code{current_res_5/landuse_pft_1_water.tif}".
-\item \code{out_dir}: Character. The output directory for the land use data file;
-e.g. "\code{res_5/current}". This would be relative to the \code{landuse_dir}
-argument.
+\item \strong{\code{out_dir}}: Character. The output directory for the land use data file:
+"\verb{res_<resolution>/1981_2010}" for current options and
+"\verb{res_<resolution>/<year>_<climate_scenario>/}" for future options. This
+would be relative to the \code{landuse_dir} argument.
+\item \strong{\code{out_file}}: Character. The output file path for the land use data
+files: "\verb{<out_dir>/lu_(pft|pft_cw)_<pft_id>.tif}". This would be relative
+to the \code{landuse_dir} argument.
 }
 }
 }

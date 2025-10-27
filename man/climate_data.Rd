@@ -7,34 +7,37 @@
 \format{
 \subsection{\code{climate_data} A tibble 11 columns:}{
 \itemize{
-\item \code{climate_scenario}: Character. The climate scenario: "\code{current}",
+\item \strong{\code{climate_scenario}}: Character. The climate scenario: "\code{current}",
 "\code{ssp126}", "\code{ssp370}", and "\code{ssp585}".
-\item \code{climate_model}: Character. The climate model: "\code{current}", "\code{GFDL-ESM4}",
-"\code{IPSL-CM6A-LR}", "\code{MPI-ESM1-2-HR}", "\code{MRI-ESM2-0}", and "\code{UKESM1-0-LL}".
-\item \code{year}: Character. The year ranges: "\verb{1981_2010}", "\verb{2011_2040}",
+\item \strong{\code{climate_model}}: Character. The climate model: "\code{current}",
+"\code{GFDL-ESM4}", "\code{IPSL-CM6A-LR}", "\code{MPI-ESM1-2-HR}", "\code{MRI-ESM2-0}", and
+"\code{UKESM1-0-LL}".
+\item \strong{\code{year}}: Character. The year ranges: "\verb{1981_2010}", "\verb{2011_2040}",
 "\verb{2041_2070}", and "\verb{2071_2100}".
-\item \code{var_name}: Character. The variable name: "\code{bio1}", "\code{bio2}", "\code{bio3}",
+\item \strong{\code{var_name}}: Character. The variable name: "\code{bio1}", "\code{bio2}", "\code{bio3}",
 "\code{bio4}", "\code{bio5}", "\code{bio6}", "\code{bio7}", "\code{bio8}", "\code{bio9}", "\code{bio10}",
 "\code{bio11}", "\code{bio12}", "\code{bio13}", "\code{bio14}", "\code{bio15}", "\code{bio16}",
 "\code{bio17}", "\code{bio18}", "\code{bio19}", "\code{fcf}", "\code{fgd}", "\code{gdd0}", "\code{gdd5}",
 "\code{gdd10}", "\code{gddlgd0}", "\code{gddlgd5}", "\code{gddlgd10}", "\code{gdgfgd0}",
 "\code{gdgfgd5}", "\code{gdgfgd10}", "\code{gsl}", "\code{gsp}", "\code{gst}", "\code{lgd}", "\code{ngd0}",
 "\code{ngd5}", "\code{ngd10}", "\code{npp}", "\code{scd}", and "\code{swe}".
-\item \code{climate_name}: Character. The climate name; e.g., "\code{current}" and
+\item \strong{\code{climate_name}}: Character. The climate name; e.g., "\code{current}" and
 "<\code{year}>\emph{<\code{climate_scenario}>}<\code{climate_model_abb}>" for future options
 (all small letters).
-\item \code{climate_model_abb}: Character. The abbreviated climate model name:
+\item \strong{\code{climate_model_abb}}: Character. The abbreviated climate model name:
 "\code{current}", "\code{gfdl}", "\code{ipsl}", "\code{mpi}", "\code{mri}", and "\code{ukesm1}".
-\item \code{osf_path}: Character. The OSF path to the climate data file; e.g.,
-"\verb{1981_2010_res_10/bio1.tif}".
-\item \code{file_size_mb}: Double. The size of the climate data file in megabytes.
-\item \code{resolution}: Integer. The resolution of the climate data. Valid values
+\item \strong{\code{osf_path}}: Character. The relative OSF path to the climate data file;
+e.g., "\verb{1981_2010_res_10/bio1.tif}".
+\item \strong{\code{file_size_mb}}: Double. The size of the climate data file in megabytes.
+\item \strong{\code{resolution}}: Integer. The resolution of the climate data. Valid values
 are \code{5}, \code{10}, and \code{20}, for resolutions of approximately 10, 20, and 40 km
 (2.5, 5, and 10 arc-minutes) respectively.
-\item \code{out_dir}: Character. The output directory for the climate data file; e.g.
-"\verb{res_5/1981_2010}". This would be relative to the \code{climate_dir} argument.
-\item \code{out_file}: Character. The output file path for the climate data file;
-e.g., "\verb{res_5/1981_2010/bio1.tif}". This would be relative to the
+\item \strong{\code{out_dir}}: Character. The output directory for the climate data file;
+e.g., "\verb{res_<resolution>/1981_2010}" and
+"\verb{res_<resolution>/<year>_<climate_scenario>/<climate_model_abb>}" for
+future options. This would be relative to the \code{climate_dir} argument.
+\item \strong{\code{out_file}}: Character. The output file path for the climate data file;
+e.g., "\verb{<out_dir>/<var_name>.tif}". This would be relative to the
 \code{climate_dir} argument.
 }
 }

@@ -50,9 +50,9 @@ The function performs the following steps:
 \item Downloads land-use data from \href{https://10.0.20.161/zenodo.4584775}{Zenodo}
 \item Extracts files for climate scenarios (SSP1-RCP26, SSP3-RCP70, SSP5-RCP85)
 and time periods (2025-2100) matching CHELSA climate data v2.1. Original
-landuse data is available at 30-arcsecond resolution and temporal resolution
-of 5 years from 2015 to 2100. To match CHELSA data, the function processes
-data for:
+landuse data is available at 30 arc second resolution and temporal
+resolution of 5 years from 2015 to 2100. To match CHELSA data, the function
+processes data for:
 \itemize{
 \item \code{Current}: 2015
 \item \code{2021-2040}: mode of data for 2025, 2030, 2035, 2040

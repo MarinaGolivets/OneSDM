@@ -46,11 +46,10 @@ object directly or saved to a specified path.
 }
 \examples{
 \dontrun{
-# Load mask layer as `SpatRaster` object
-mask <- load_mask_layer(resolution = 10L)
-
-# Save mask layer to file
-load_mask_layer(resolution = 20L, climate_dir = NULL)
+  require(terra)
+  # Load mask layer as `SpatRaster` object
+  mask <- load_mask_layer(resolution = 10L)
+  print(mask)
 }
 
 }

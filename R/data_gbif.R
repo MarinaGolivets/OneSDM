@@ -29,7 +29,7 @@
 #'   90L)` for global extent). Can also be set via `onesdm_gbif_boundaries`
 #'   option.
 #' @param max_uncertainty Numeric. Maximum allowed spatial uncertainty in
-#'   kilometers. Default is `10L`. Can also be set via
+#'   kilometres. Default is `10L`. Can also be set via
 #'   `onesdm_gbif_max_uncertainty` option.
 #' @param overwrite Logical. If `TRUE`, overwrite existing cleaned GBIF data
 #'   file in the model directory. Default is `FALSE`. Can also be set via

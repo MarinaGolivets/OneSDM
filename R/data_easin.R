@@ -226,9 +226,9 @@ prepare_easin_data <- function(
     .x = easin_ids,
     .f = ~ {
 
-      easin_taxononly_url <- "https://easin.jrc.ec.europa.eu/apixg/catxg"
+      easin_taxon_only_url <- "https://easin.jrc.ec.europa.eu/apixg/catxg"
       # Extract species data as tibble
-      url <- stringr::str_glue("{easin_taxononly_url}/easinid/{.x}") #nolint
+      url <- stringr::str_glue("{easin_taxon_only_url}/easinid/{.x}") #nolint
       taxa_data <- try(RCurl::getURL(url, .mapUnicode = FALSE), silent = TRUE)
       if (inherits(taxa_data, "try-error")) {
         break
@@ -579,7 +579,7 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "filltered out ",
+      "filtered out ",
       crayon::blue(
         format(n_rows_1 - n_rows_2, big.mark = ",", scientific = FALSE)),
       " records with invalid coordinates."),
@@ -621,7 +621,7 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "filltered out ",
+      "filtered out ",
       crayon::blue(
         format(n_rows_2 - n_rows_3, big.mark = ",", scientific = FALSE)),
       " records with low spatial precision or equal longitude and latitude."),
@@ -685,7 +685,7 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "filltered out ",
+      "filtered out ",
       crayon::blue(
         format(n_rows_3 - n_rows_4, big.mark = ",", scientific = FALSE)),
       " records using `CoordinateCleaner`."),
