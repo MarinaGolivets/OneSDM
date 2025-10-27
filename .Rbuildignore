@@ -15,3 +15,6 @@ cspell\.json$
 test/
 path/
 climate_data*/
+climate_data/
+.vscode/
+test

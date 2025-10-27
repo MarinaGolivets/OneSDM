@@ -2,82 +2,110 @@
 % Please edit documentation in R/data_landuse.R
 \name{prepare_landuse}
 \alias{prepare_landuse}
-\title{Process Land-Use Data for Multiple Climate Scenarios and Years}
+\title{Prepare Land-Use Data for \code{OneSDM} Framework}
 \usage{
-prepare_landuse(
-  agg_factors = c(5L, 10L, 20L),
-  n_cores = 20L,
-  climate_scenarios = c("SSP1_RCP26", "SSP3_RCP70", "SSP5_RCP85"),
-  climate_years = c(2025L, 2055L, 2085L),
-  temp_dir = NULL
-)
+prepare_landuse(agg_factors = c(5L, 10L, 20L), n_cores = 20L, temp_dir = NULL)
 }
 \arguments{
-\item{agg_factors}{Integer vector. Aggregation factors (resolutions) to
-process land-use data at. Must be positive integers. Defaults to \code{c(5L, 10L, 20L)} for 5, 10, and 20 arc-minutes resolutions.}
+\item{agg_factors}{Integer vector. Aggregation factors (resolutions) to apply
+when resampling the land-use data. Each value determines a spatial
+resolution of output rasters. Must be positive integers. Defaults to c(\code{5L},
+\code{10L}, \code{20L}) for \code{2.5}, \code{5}, and \code{10} arc-minutes resolutions.}
 
 \item{n_cores}{Integer. Number of CPU cores to use for parallel processing.
 Default: 20L.}
-
-\item{climate_scenarios}{Character vector. Climate scenarios to process. Must
-be a subset of: \code{c("SSP1_RCP19", "SSP1_RCP26", "SSP2_RCP45", "SSP3_RCP70", "SSP4_RCP34", "SSP4_RCP60", "SSP5_RCP34", "SSP5_RCP85")}. Defaults to
-climate scenarios overlapping with CHELSA climate data: \code{c("SSP1_RCP26", "SSP3_RCP70", "SSP5_RCP85")}.}
-
-\item{climate_years}{Integer vector. Years to process. Must be in 5-year
-steps between 2020 and 2100. Defaults to years overlapping with CHELSA
-climate data: \code{c(2025L, 2055L, 2085L)}.}
 
 \item{temp_dir}{Character or \code{NULL}. Path to temporary directory for
 intermediate files. If \code{NULL}, a new temporary directory is created. The
 directory and its contents are deleted after processing.}
 }
 \value{
-Invisibly returns \code{NULL}. Side effects include saving processed
-raster files and a summary RData file (\code{landuse/landuse_results.RData})
-containing:
+Invisibly returns \code{NULL}. The function creates a directory structure
+under \code{"landuse/"} containing:
 \itemize{
-\item \code{majority}: Tibble with file paths to majority class rasters.
-\item \code{percent_pft}: Tibble with file paths to percentage coverage rasters for
-each PFT.
-\item \code{percent_pft_cw}: Tibble with file paths to percentage coverage rasters
-for each PFT cross-walk group.
+\item Majority class rasters for each climate scenario and resolution: most
+common land-use class per grid cell;
+\item Percentage coverage maps for each of \code{20} original PFT class;
+\item Percentage coverage maps for \code{12} grouped PFT classes (cross-walk, see
+below);
+\item An RData file (\code{landuse_results.RData}) with metadata tibbles.
 }
 }
 \description{
-Downloads, extracts, and processes global land-use data under
-various Shared Socioeconomic Pathways (SSPs) and Representative
-Concentration Pathways (RCPs) scenarios. Data is sourced from a
-\href{https://10.5281/zenodo.4584775}{Zenodo} repository and processed at
-multiple spatial resolutions using specified land masks. See Chen et al.
-(\href{https://doi.org/10.1038/s41597-022-01208-6}{2022}) for details on the
-land-use dataset. The function aggregates land-use rasters to specified
-resolutions, computes majority and percentage coverage maps for plant
-functional types (PFTs) and their cross-walked groups, and saves the
-results for future use.
+This function downloads, processes, and aggregates global land-use projection;
+See Chen et al. (\href{https://doi.org/10.1038/s41597-022-01208-6}{2022}) for
+details. The function handles PFT (Plant Functional Type) data under different
+Shared Socioeconomic Pathways (SSPs) and Representative Concentration Pathways
+(RCPs) scenarios. It creates aggregated rasters at multiple resolutions, and
+generates both majority class maps and percentage coverage maps for plant
+functional types (PFTs) and their cross-walked groups, and saves the results
+for future use.
 }
 \details{
-This function is not intended to be called by the end user if the
-\code{OneSDM} package, but to prepare climate data for use in species
-distribution modelling workflows.
+This function is not intended to be called by the end user of the
+\code{OneSDM} package, but to prepare landuse data for use in the workflow.
 
 The function performs the following steps:
 \itemize{
-\item Checks validity of input arguments.
-\item Downloads land-use data from \code{Zenodo} if not already processed.
-\item Extracts relevant files for the specified scenarios and years.
-\item Aggregates rasters to the specified resolutions using provided land masks.
-\item Computes:
+\item Downloads land-use data from \href{https://10.0.20.161/zenodo.4584775}{Zenodo}
+\item Extracts files for climate scenarios (SSP1-RCP26, SSP3-RCP70, SSP5-RCP85)
+and time periods (2025-2100) matching CHELSA climate data v2.1. Original
+landuse data is available at 30-arcsecond resolution and temporal resolution
+of 5 years from 2015 to 2100. To match CHELSA data, the function processes
+data for:
 \itemize{
-\item Majority class maps (mode) for each scenario/year/resolution.
-\item Percentage coverage maps for each original PFT class.
-\item Percentage coverage maps for cross-walked PFT groups.
+\item \code{Current}: 2015
+\item \code{2021-2040}: mode of data for 2025, 2030, 2035, 2040
+\item \code{2041-2070}: mode of data for 2045, 2050, 2055, 2060, 2065, 2070
+\item \code{2071-2100}: mode of data for 2075, 2080, 2085, 2090, 2095, 2100
 }
-\item Saves results as TIFF files and a summary RData file.
+\item Creates cross-walk tables to group similar PFT classes
+\item Processes data at multiple resolutions using parallel computation
+\item Generates majority class maps using modal aggregation
+\item Creates percentage coverage maps for each PFT class (original and grouped)
+\item Saves results as TIFF files and a summary \code{RData} file
 }
 }
+\note{
+\itemize{
+\item Requires corresponding mask layers to exist in \code{"land_mask/"} directory;
+\item If results already exist, the function returns immediately without
+reprocessing
+\item GDAL compression settings use ZSTD level 22 for efficient storage
+}
+}
+\section{Plant Functional Types and Land Cover Classes Table}{
+
+This table provides a mapping between unique ID (\code{ID}) of original PFT classes
+(\code{pft}) and the IDs and names of their corresponding cross-walk (\code{cw_id} and
+\code{pft_cw}).\tabular{llll}{
+   \strong{ID} \tab \strong{pft} \tab \strong{cw_id} \tab \strong{pft_cw} \cr
+   1 \tab Water \tab 1 \tab Water \cr
+   2 \tab Broadleaf_evergreen_tree_tropical \tab 2 \tab Broadleaf_evergreen_forest \cr
+   3 \tab Broadleaf_evergreen_tree_temperate \tab 2 \tab Broadleaf_evergreen_forest \cr
+   4 \tab Broadleaf_deciduous_tree_tropical \tab 3 \tab Broadleaf_deciduous_forest \cr
+   5 \tab Broadleaf_deciduous_tree_temperate \tab 3 \tab Broadleaf_deciduous_forest \cr
+   6 \tab Broadleaf_deciduous_tree_boreal \tab 3 \tab Broadleaf_deciduous_forest \cr
+   7 \tab Needleleaf_evergreen_tree_temperate \tab 4 \tab Needleleaf_evergreen_forest \cr
+   8 \tab Needleleaf_evergreen_tree_boreal \tab 4 \tab Needleleaf_evergreen_forest \cr
+   9 \tab Needleleaf_deciduous_tree \tab 5 \tab Needleleaf_deciduous_forest \cr
+   10 \tab Broadleaf_evergreen_shrub, temperate \tab 6 \tab Broadleaf_evergreen_shrubland \cr
+   11 \tab Broadleaf_deciduous_shrub, temperate \tab 7 \tab Broadleaf_deciduous_shrubland \cr
+   12 \tab Broadleaf_deciduous_shrub, boreal \tab 7 \tab Broadleaf_deciduous_shrubland \cr
+   13 \tab C3_grass, arctic \tab 8 \tab Grasslands \cr
+   14 \tab C3_grass \tab 8 \tab Grasslands \cr
+   15 \tab C4_grass \tab 8 \tab Grasslands \cr
+   16 \tab Mixed_c3_c4_grass \tab 8 \tab Grasslands \cr
+   17 \tab Barren \tab 9 \tab Barren \cr
+   18 \tab Cropland \tab 10 \tab Cropland \cr
+   19 \tab Urban \tab 11 \tab Urban \cr
+   20 \tab Permanent_snow_and_ice \tab 12 \tab Permanent_snow_and_ice \cr
+}
+}
+
 \examples{
 \dontrun{
-prepare_landuse()
+  prepare_landuse()
 }
 
 }

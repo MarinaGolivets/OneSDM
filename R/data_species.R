@@ -742,6 +742,8 @@ prepare_species_data <- function(
         "Generating species distribution plot at: ", crayon::blue(file_plot)),
       verbose = verbose, cat_timestamp = FALSE)
 
+    ecokit::check_packages(c("rworldmap", "tidyterra", "ragg"))
+
     # aggregate species distribution to 0.5 degree resolution for plotting
     species_data_r_4_plot <- species_data_r %>%
       terra::aggregate(

@@ -135,6 +135,12 @@ prepare_easin_data <- function(
     point_coords <- n_dec_long <- n_dec_lat <- n_obs <- matched <-
     species_fact_sheet <- matched_species <- NULL
 
+  ecokit::check_packages(
+    c(
+      "cli", "CoordinateCleaner", "crayon", "fs", "httr", "jsonlite",
+      "lubridate", "purrr", "RCurl", "sf", "stringr", "tibble", "tidyr",
+      "tidyselect", "withr"))
+
   # # ********************************************************************** #
   # Assigning function arguments from options if not provided directly ------
   # # ********************************************************************** #

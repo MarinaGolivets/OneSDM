@@ -1,77 +1,112 @@
-#' @title Process Land-Use Data for Multiple Climate Scenarios and Years
+# prepare_landuse -------
+
+#'Prepare Land-Use Data for `OneSDM` Framework
 #'
-#' @description Downloads, extracts, and processes global land-use data under
-#'   various Shared Socioeconomic Pathways (SSPs) and Representative
-#'   Concentration Pathways (RCPs) scenarios. Data is sourced from a
-#'   [Zenodo](https://10.5281/zenodo.4584775) repository and processed at
-#'   multiple spatial resolutions using specified land masks. See Chen et al.
-#'   ([2022](https://doi.org/10.1038/s41597-022-01208-6)) for details on the
-#'   land-use dataset. The function aggregates land-use rasters to specified
-#'   resolutions, computes majority and percentage coverage maps for plant
-#'   functional types (PFTs) and their cross-walked groups, and saves the
-#'   results for future use.
+#'This function downloads, processes, and aggregates global land-use projection;
+#'See Chen et al. ([2022](https://doi.org/10.1038/s41597-022-01208-6)) for
+#'details. The function handles PFT (Plant Functional Type) data under different
+#'Shared Socioeconomic Pathways (SSPs) and Representative Concentration Pathways
+#'(RCPs) scenarios. It creates aggregated rasters at multiple resolutions, and
+#'generates both majority class maps and percentage coverage maps for plant
+#'functional types (PFTs) and their cross-walked groups, and saves the results
+#'for future use.
 #'
-#' @param agg_factors Integer vector. Aggregation factors (resolutions) to
-#'   process land-use data at. Must be positive integers. Defaults to `c(5L,
-#'   10L, 20L)` for 5, 10, and 20 arc-minutes resolutions.
-#' @param n_cores Integer. Number of CPU cores to use for parallel processing.
-#'   Default: 20L.
-#' @param climate_scenarios Character vector. Climate scenarios to process. Must
-#'   be a subset of: `c("SSP1_RCP19", "SSP1_RCP26", "SSP2_RCP45", "SSP3_RCP70",
-#'   "SSP4_RCP34", "SSP4_RCP60", "SSP5_RCP34", "SSP5_RCP85")`. Defaults to
-#'   climate scenarios overlapping with CHELSA climate data: `c("SSP1_RCP26",
-#'   "SSP3_RCP70", "SSP5_RCP85")`.
-#' @param climate_years Integer vector. Years to process. Must be in 5-year
-#'   steps between 2020 and 2100. Defaults to years overlapping with CHELSA
-#'   climate data: `c(2025L, 2055L, 2085L)`.
-#' @param temp_dir Character or `NULL`. Path to temporary directory for
-#'   intermediate files. If `NULL`, a new temporary directory is created. The
-#'   directory and its contents are deleted after processing.
-#' @details This function is not intended to be called by the end user if the
-#'   `OneSDM` package, but to prepare climate data for use in species
-#'   distribution modelling workflows.
+#'@param agg_factors Integer vector. Aggregation factors (resolutions) to apply
+#'  when resampling the land-use data. Each value determines a spatial
+#'  resolution of output rasters. Must be positive integers. Defaults to c(`5L`,
+#'  `10L`, `20L`) for `2.5`, `5`, and `10` arc-minutes resolutions.
+#'@param n_cores Integer. Number of CPU cores to use for parallel processing.
+#'  Default: 20L.
+#'@param temp_dir Character or `NULL`. Path to temporary directory for
+#'  intermediate files. If `NULL`, a new temporary directory is created. The
+#'  directory and its contents are deleted after processing.
 #'
-#'   The function performs the following steps:
-#' - Checks validity of input arguments.
-#' - Downloads land-use data from `Zenodo` if not already processed.
-#' - Extracts relevant files for the specified scenarios and years.
-#' - Aggregates rasters to the specified resolutions using provided land masks.
-#' - Computes:
-#'   - Majority class maps (mode) for each scenario/year/resolution.
-#'   - Percentage coverage maps for each original PFT class.
-#'   - Percentage coverage maps for cross-walked PFT groups.
-#' - Saves results as TIFF files and a summary RData file.
+#'@return Invisibly returns `NULL`. The function creates a directory structure
+#'  under `"landuse/"` containing:
+#'   - Majority class rasters for each climate scenario and resolution: most
+#'  common land-use class per grid cell;
+#'   - Percentage coverage maps for each of `20` original PFT class;
+#'   - Percentage coverage maps for `12` grouped PFT classes (cross-walk, see
+#'  below);
+#'   - An RData file (`landuse_results.RData`) with metadata tibbles.
 #'
-#' @return Invisibly returns `NULL`. Side effects include saving processed
-#'   raster files and a summary RData file (`landuse/landuse_results.RData`)
-#'   containing:
-#'   - `majority`: Tibble with file paths to majority class rasters.
-#'   - `percent_pft`: Tibble with file paths to percentage coverage rasters for
-#'   each PFT.
-#'   - `percent_pft_cw`: Tibble with file paths to percentage coverage rasters
-#'   for each PFT cross-walk group.
+#'@details This function is not intended to be called by the end user of the
+#'  `OneSDM` package, but to prepare landuse data for use in the workflow.
 #'
-#' @references
+#'  The function performs the following steps:
+#' - Downloads land-use data from [Zenodo](https://10.0.20.161/zenodo.4584775)
+#' - Extracts files for climate scenarios (SSP1-RCP26, SSP3-RCP70, SSP5-RCP85)
+#'  and time periods (2025-2100) matching CHELSA climate data v2.1. Original
+#'  landuse data is available at 30-arcsecond resolution and temporal resolution
+#'  of 5 years from 2015 to 2100. To match CHELSA data, the function processes
+#'  data for:
+#'   - `Current`: 2015
+#'   - `2021-2040`: mode of data for 2025, 2030, 2035, 2040
+#'   - `2041-2070`: mode of data for 2045, 2050, 2055, 2060, 2065, 2070
+#'   - `2071-2100`: mode of data for 2075, 2080, 2085, 2090, 2095, 2100
+#' - Creates cross-walk tables to group similar PFT classes
+#' - Processes data at multiple resolutions using parallel computation
+#' - Generates majority class maps using modal aggregation
+#' - Creates percentage coverage maps for each PFT class (original and grouped)
+#' - Saves results as TIFF files and a summary `RData` file
+#'
+#'@note
+#' - Requires corresponding mask layers to exist in `"land_mask/"` directory;
+#' - If results already exist, the function returns immediately without
+#'reprocessing
+#' - GDAL compression settings use ZSTD level 22 for efficient storage
+#'
+#' @section Plant Functional Types and Land Cover Classes Table:
+#' This table provides a mapping between unique ID (`ID`) of original PFT classes
+#' (`pft`) and the IDs and names of their corresponding cross-walk (`cw_id` and
+#' `pft_cw`).
+#' | **ID** | **pft**                   | **cw_id** | **pft_cw**               |
+#' |----|-----------------------------------|-------|-----------------------------|
+#' | 1  | Water                             | 1     | Water                       |
+#' | 2  | Broadleaf_evergreen_tree_tropical | 2     | Broadleaf_evergreen_forest  |
+#' | 3  | Broadleaf_evergreen_tree_temperate| 2     | Broadleaf_evergreen_forest  |
+#' | 4  | Broadleaf_deciduous_tree_tropical | 3     | Broadleaf_deciduous_forest  |
+#' | 5  | Broadleaf_deciduous_tree_temperate| 3     | Broadleaf_deciduous_forest  |
+#' | 6  | Broadleaf_deciduous_tree_boreal   | 3     | Broadleaf_deciduous_forest  |
+#' | 7  | Needleleaf_evergreen_tree_temperate|4     | Needleleaf_evergreen_forest |
+#' | 8  | Needleleaf_evergreen_tree_boreal  | 4     | Needleleaf_evergreen_forest |
+#' | 9  | Needleleaf_deciduous_tree         | 5     | Needleleaf_deciduous_forest |
+#' | 10 | Broadleaf_evergreen_shrub, temperate|6    | Broadleaf_evergreen_shrubland|
+#' | 11 | Broadleaf_deciduous_shrub, temperate|7    | Broadleaf_deciduous_shrubland|
+#' | 12 | Broadleaf_deciduous_shrub, boreal | 7     | Broadleaf_deciduous_shrubland|
+#' | 13 | C3_grass, arctic                  | 8     | Grasslands                  |
+#' | 14 | C3_grass                          | 8     | Grasslands                  |
+#' | 15 | C4_grass                          | 8     | Grasslands                  |
+#' | 16 | Mixed_c3_c4_grass                 | 8     | Grasslands                  |
+#' | 17 | Barren                            | 9     | Barren                      |
+#' | 18 | Cropland                          | 10    | Cropland                    |
+#' | 19 | Urban                             | 11    | Urban                       |
+#' | 20 | Permanent_snow_and_ice            | 12    | Permanent_snow_and_ice      |
+#'
+#'@references
 #' - Chen G, Li X, Liu X (2022). Global land projection based on plant
-#' functional types with a 1-km resolution under socio-climatic scenarios.
-#' Scientific Data, 9, 125. <https://doi.org/10.1038/s41597-022-01208-6>
+#'functional types with a 1-km resolution under socio-climatic scenarios.
+#'Scientific Data, 9, 125. <https://doi.org/10.1038/s41597-022-01208-6>
 #' @examples
 #' \dontrun{
-#' prepare_landuse()
+#'   prepare_landuse()
 #' }
 #'
-#' @author Ahmed El-Gabbas
-#' @export
+#'@author Ahmed El-Gabbas
+#'@export
 
 prepare_landuse <- function(
-    agg_factors = c(5L, 10L, 20L), n_cores = 20L,
-    climate_scenarios = c("SSP1_RCP26", "SSP3_RCP70", "SSP5_RCP85"),
-    climate_years = c(2025L, 2055L, 2085L), temp_dir = NULL) {
+    agg_factors = c(5L, 10L, 20L), n_cores = 20L, temp_dir = NULL) {
 
   cw_id <- ID <- resolution <- year <- climate_scenario <- cw_id <- #nolint
-    climate_name <- path_input <- path <- ids <- pft <- pft_cw <- NULL
+    climate_name <- path <- ids <- pft <- pft_cw <- NULL
 
   gdal_settings <- c("COMPRESS=ZSTD", "ZSTD_LEVEL=22", "TILED=YES")
+
+  ecokit::check_packages(
+    c(
+      "archive", "fs", "future", "future.apply", "parallelly", "purrr",
+      "stringr", "terra", "tibble", "tidyr", "tidyselect", "withr"))
 
   # # ********************************************************************** #
   # Argument checking -----
@@ -97,11 +132,13 @@ prepare_landuse <- function(
   # agg_factors
   # # ||||||||||||||||||||||||||||||||||||||||| #
 
-  if (!is.integer(agg_factors) || any(agg_factors < 1L)) {
+  if (!is.numeric(agg_factors) || any(agg_factors < 1L) ||
+      any(agg_factors != as.integer(agg_factors))) {
     ecokit::stop_ctx(
       "Argument `agg_factors` must be a vector of positive integers.",
       agg_factors = agg_factors, class_agg_factors = class(agg_factors))
   }
+  agg_factors <- as.integer(agg_factors)
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   # n_cores
@@ -114,39 +151,9 @@ prepare_landuse <- function(
   if (n_cores > parallelly::availableCores()) {
     warning(
       "Argument `n_cores` exceeds the number of available CPU cores.\n",
-      "n_cores: ", n_cores, "; available cores: ", parallel::detectCores(),
+      "n_cores: ", n_cores, "; available cores: ", parallelly::availableCores(),
       call. = FALSE)
     n_cores <- parallelly::availableCores()
-  }
-
-  # # ||||||||||||||||||||||||||||||||||||||||| #
-  # climate_scenarios
-  # # ||||||||||||||||||||||||||||||||||||||||| #
-
-  valid_scenarios <- c(
-    "SSP1_RCP19", "SSP1_RCP26", "SSP2_RCP45", "SSP3_RCP70",
-    "SSP4_RCP34", "SSP4_RCP60", "SSP5_RCP34", "SSP5_RCP85")
-  if (!all(climate_scenarios %in% valid_scenarios)) {
-    invalid_scenarios <- climate_scenarios %in% valid_scenarios
-    invalid_scenarios <- climate_scenarios[!invalid_scenarios]
-    ecokit::stop_ctx(
-      "Argument `climate_scenarios` contains invalid scenario names.",
-      climate_scenarios = climate_scenarios, valid_scenarios = valid_scenarios,
-      invalid_scenarios = invalid_scenarios)
-  }
-
-  # # ||||||||||||||||||||||||||||||||||||||||| #
-  # climate_years
-  # # ||||||||||||||||||||||||||||||||||||||||| #
-
-  valid_years <- seq(2020L, 2100L, by = 5L)
-  if (!all(climate_years %in% valid_years)) {
-    invalid_years <- climate_years %in% valid_years
-    invalid_years <- climate_years[!invalid_years]
-    ecokit::stop_ctx(
-      "Argument `climate_years` contains invalid years.",
-      climate_years = climate_years, valid_years = valid_years,
-      invalid_years = invalid_years)
   }
 
   # # ********************************************************************** #
@@ -171,7 +178,8 @@ prepare_landuse <- function(
   if (!ecokit::check_zip(file_landuse_raw, warning = FALSE)) {
 
     # Zenodo record: https://zenodo.org/record/4584775
-    landuse_file <- "Global PFT-based land projection dataset under SSPs-RCPs.zip" #nolint
+    landuse_file <- paste0(
+      "Global PFT-based land projection dataset under SSPs-RCPs.zip")
     landuse_file <- ecokit::zenodo_download_file(
       "4584775", file_name = landuse_file, dest_file = file_landuse_raw,
       timeout = 1800L)
@@ -191,94 +199,66 @@ prepare_landuse <- function(
 
   ecokit::cat_time("Extract specific files from the zip file")
 
-  # files starting with "global_PFT_2015" represent current landuse data
-  #
-  # Future data
-  # - CHELSA v2.1 provides data for 3 future scenarios (ssp126, ssp370, ssp585)
-  # as simulated by different GCMs for three future periods (2021-2040; 2041
-  # -2070; and 2071-2100).
-  #
-  # The following filters landuse data that matches CHELSA scenarios and
-  # periods:
-  # - scenarios: SSP1_RCP26 (ssp126), SSP3_RCP70 (ssp370), and SSP5_RCP85
-  # (ssp585)
-  # - years: 2025 (2021-2040), 2055 (2041-2070), and 2085 (2071-2100)
-
   # File name pattern to match
-  year_regex <- paste0("(_", paste(climate_years, collapse = "|_"), ")")
+  year_regex <- paste0(
+    "(_", paste(seq(2025L, 2100L, by = 5L), collapse = "|_"), ")")
+  climate_scenarios <- c("SSP1_RCP26", "SSP3_RCP70", "SSP5_RCP85")
   regex_to_match <- paste0(
     "^global_PFT_2015.+|(",
     paste0("^", climate_scenarios, collapse = ".+|"),
     ").+", year_regex, "\\.+")
 
+  dir_landuse_extract <- fs::path(temp_dir, "landuse_extract")
+  fs::dir_create(dir_landuse_extract)
+
   # List all files in the zip that match the pattern
-  files_to_extract <- archive::archive(file_landuse_raw) %>%
+  landuse_data <- archive::archive(file_landuse_raw) %>%
     dplyr::select(path) %>%
     dplyr::filter(stringr::str_detect(path, regex_to_match)) %>%
-    dplyr::pull(path)
+    dplyr::mutate(
+      file_path = fs::path(dir_landuse_extract, path),
+      # Match with year ranges used in CHELSA climate data
+      year = purrr::map_chr(
+        .x = path,
+        .f = ~ {
+          base_name <- basename(.x)
+          year <- stringr::str_extract(base_name, "\\d{4}")
+          future_time_1 <- c("2025", "2030", "2035", "2040")
+          future_time_2 <- c("2045", "2050", "2055", "2060", "2065", "2070")
+          future_time_3 <- c("2075", "2080", "2085", "2090", "2095", "2100")
 
-  if (length(files_to_extract) == 0L) {
-    ecokit::stop_ctx(
-      paste0(
-        "No land-use files were extracted from the zip file. ",
-        "Please check that the specified climate_scenarios and climate_years ",
-        "arguments overlap with the available land-use data scenarios and ",
-        "years."),
-      climate_scenarios = climate_scenarios, climate_years = climate_years)
+          dplyr::case_when(
+            year == "2015" ~ "current",
+            year %in% future_time_1 ~ "2021_2040",
+            year %in% future_time_2 ~ "2041_2070",
+            year %in% future_time_3 ~ "2071_2100",
+            .default = NA_character_)
+        }),
+      # Match with climate scenario names
+      climate_scenario = purrr::map_chr(
+        .x = path,
+        .f = ~ {
+          base_name <- basename(.x)
+          dplyr::case_when(
+            stringr::str_detect(base_name, "2015") ~ "current",
+            stringr::str_detect(base_name, "SSP1_RCP26") ~ "ssp126",
+            stringr::str_detect(base_name, "SSP3_RCP70") ~ "ssp370",
+            stringr::str_detect(base_name, "SSP5_RCP85") ~ "ssp585",
+            .default = NA_character_)
+        })
+    )
+
+  if (nrow(landuse_data) == 0L) {
+    ecokit::stop_ctx("No matched land-use files were found in the zip file. ")
   }
 
   # Extract only matching files; suppress print progress
-  dir_landuse_extract <- fs::path(temp_dir, "landuse_extract")
-  fs::dir_create(dir_landuse_extract)
   suppressMessages(
     suppressWarnings(
       archive::archive_extract(
         archive = file_landuse_raw, dir = dir_landuse_extract,
-        files = files_to_extract)
+        files = landuse_data$path)
     ))
-
-  # # ********************************************************************** #
-  # options for landuse data and mask grids -------
-  # # ********************************************************************** #
-
-  landuse_maps <- tibble::tibble(
-    # List all the extracted tiff files
-    path_input = fs::dir_ls(
-      dir_landuse_extract, glob = "*.tif$", recurse = TRUE)) %>%
-    dplyr::mutate(
-
-      climate_scenario = purrr::map_chr(
-        .x = path_input,
-        .f = ~ {
-
-          base_name <- basename(.x)
-
-          if (stringr::str_starts(base_name, "global_PFT_2015")) {
-            return("current")
-          }
-
-          stringr::str_remove_all(base_name, "global_PFT_|\\.tif$") %>%
-            stringr::str_replace("SSP", "ssp") %>%
-            stringr::str_remove_all("_RCP|_.+")
-        }),
-      year = purrr::map_int(
-        .x = path_input,
-        .f = ~ {
-          base_name <- basename(.x)
-
-          if (stringr::str_starts(base_name, "global_PFT_2015")) {
-            return(2015L)
-          }
-
-          stringr::str_remove_all(
-            stringr::str_extract(
-              base_name, paste0("(", year_regex, ")")), "_") %>%
-            as.integer()
-        }),
-      climate_name = paste0(climate_scenario, "_", year),
-      climate_name = stringr::str_remove(climate_name, "_2015")) %>%
-    dplyr::arrange(climate_name) %>%
-    tidyr::expand_grid(agg_factor = agg_factors)
 
   # # ********************************************************************** #
   # PFT cross-walks table -------
@@ -315,10 +295,18 @@ prepare_landuse <- function(
   # Processing land-use data at different mask grids -----
   # # ********************************************************************** #
 
+  landuse_data <- landuse_data %>%
+    tidyr::nest(file_info = tidyselect::all_of(c("path", "file_path"))) %>%
+    dplyr::mutate(
+      climate_name = paste0(climate_scenario, "_", year),
+      climate_name = stringr::str_replace_all(
+        climate_name, "current_current", "current")) %>%
+    tidyr::expand_grid(agg_factor = agg_factors)
+
   if (n_cores == 1L) {
     future::plan("sequential", gc = TRUE)
   } else {
-    ecokit::set_parallel(min(n_cores, nrow(landuse_maps)), show_log = FALSE)
+    ecokit::set_parallel(min(n_cores, nrow(landuse_data)), show_log = FALSE)
     withr::defer(future::plan("sequential", gc = TRUE))
   }
 
@@ -326,8 +314,8 @@ prepare_landuse <- function(
     "fs", "terra", "ecokit", "dplyr", "magrittr", "purrr", "tibble",
     "stringr", "tidyselect")
 
-  landuse_maps0 <- future.apply::future_lapply(
-    X = seq_len(nrow(landuse_maps)),
+  landuse_data0 <- future.apply::future_lapply(
+    X = seq_len(nrow(landuse_data)),
     FUN = function(map_id) {
 
       terra_options(temp_dir = temp_dir)
@@ -336,14 +324,23 @@ prepare_landuse <- function(
       # Load the original raster and add metadata
       # # ||||||||||||||||||||||||||||||||||||||||| #
 
-      landuse_sub <- dplyr::slice(landuse_maps, map_id)
+      landuse_sub <- dplyr::slice(landuse_data, map_id)
       agg_factor <- landuse_sub$agg_factor
 
-      orig <- terra::as.factor(terra::rast(landuse_sub$path_input))
+      orig <- landuse_sub$file_info[[1L]]$file_path %>%
+        stringr::str_subset(".tif$") %>%
+        terra::rast()
+      if (terra::nlyr(orig) > 1L) {
+        orig <- terra::app(orig, "modal")
+      }
+      orig <- terra::as.factor(orig)
+
       rat <- terra::levels(orig)[[1L]] %>%
         dplyr::left_join(classes_tbl, by = "ID") %>%
         dplyr::select(tidyselect::all_of(c("ID", "pft", "pft_cw")))
       levels(orig)[[1L]] <- rat
+      # Set the active attribute table to the one containing the cross-walked
+      # PFT classes
       terra::activeCat(orig) <- 2L
 
       # # ||||||||||||||||||||||||||||||||||||||||| #
@@ -351,8 +348,7 @@ prepare_landuse <- function(
       # # ||||||||||||||||||||||||||||||||||||||||| #
 
       dir_out <- fs::path(
-        path_landuse,
-        paste0(landuse_sub$climate_name, "_res_", agg_factor))
+        path_landuse, paste0(landuse_sub$climate_name, "_res_", agg_factor))
       fs::dir_create(dir_out)
 
       # # |||||||||||||||||||||||||||||||||||||||||||||||||| #
@@ -360,7 +356,7 @@ prepare_landuse <- function(
       # # |||||||||||||||||||||||||||||||||||||||||||||||||| #
 
       map_mask <- fs::path("land_mask", paste0("mask_agg_", agg_factor, ".tif"))
-      if (!file.exists(map_mask)) {
+      if (!ecokit::check_tiff(map_mask, warning = FALSE)) {
         ecokit::stop_ctx(
           "Mask layer file does not exist", map_mask = map_mask)
       }
@@ -374,12 +370,15 @@ prepare_landuse <- function(
       majority_tibble <- tibble::tibble(
         resolution = as.integer(agg_factor),
         climate_scenario = landuse_sub$climate_scenario,
-        year = as.integer(landuse_sub$year), file_majority = path_majority)
+        year = landuse_sub$year, climate_name = landuse_sub$climate_name,
+        file_majority = path_majority)
 
       if (!ecokit::check_tiff(path_majority, warning = FALSE)) {
         map_majority <- terra::project(
           x = orig, y = map_mask, method = "mode", threads = TRUE) %>%
-          terra::mask(map_mask)
+          terra::mask(map_mask) %>%
+          stats::setNames(
+            paste0("majority_", landuse_sub$climate_name, "_res_", agg_factor))
         invisible(gc())
         terra::writeRaster(
           x = map_majority, filename = path_majority, overwrite = TRUE,
@@ -402,10 +401,9 @@ prepare_landuse <- function(
           out_tibble <- tibble::tibble(
             resolution = as.integer(agg_factor),
             climate_scenario = landuse_sub$climate_scenario,
-            year = as.integer(landuse_sub$year),
+            year = landuse_sub$year, climate_name = landuse_sub$climate_name,
             ID = as.integer(rat$ID[[.x]]),
-            pft = rat$pft[[.x]],
-            file_pft = file_percent)
+            pft = rat$pft[[.x]], file_pft = file_percent)
 
           if (ecokit::check_tiff(file_percent, warning = FALSE)) {
             return(out_tibble)
@@ -424,7 +422,6 @@ prepare_landuse <- function(
 
           rm(prop_map, envir = environment())
           invisible(gc())
-
           out_tibble
         })
 
@@ -451,9 +448,9 @@ prepare_landuse <- function(
           out_tibble <- tibble::tibble(
             resolution = as.integer(agg_factor),
             climate_scenario = landuse_sub$climate_scenario,
-            year = as.integer(landuse_sub$year),
-            cw_id = as.integer(cw_id), pft_cw = cw_name,
-            file_pft_cw = file_percent)
+            year = landuse_sub$year, climate_name = landuse_sub$climate_name,
+            cw_id = as.integer(cw_id),
+            pft_cw = cw_name, file_pft_cw = file_percent)
 
           if (ecokit::check_tiff(file_percent, warning = FALSE)) {
             return(out_tibble)
@@ -488,17 +485,17 @@ prepare_landuse <- function(
     },
     future.scheduling = Inf, future.seed = TRUE, future.packages = par_packages,
     future.globals = c(
-      "classes_tbl", "landuse_maps", "agg_factors", "temp_dir",
+      "classes_tbl", "landuse_data", "agg_factors", "temp_dir",
       "path_landuse", "gdal_settings", "terra_options")) %>%
     dplyr::bind_rows()
 
   ecokit::set_parallel(stop_cluster = TRUE, show_log = FALSE)
 
-  landuse_majority <- dplyr::bind_rows(landuse_maps0$majority) %>%
+  landuse_majority <- dplyr::bind_rows(landuse_data0$majority) %>%
     dplyr::arrange(year, climate_scenario, resolution)
-  landuse_percent_pft <- dplyr::bind_rows(landuse_maps0$percent_pft) %>%
+  landuse_percent_pft <- dplyr::bind_rows(landuse_data0$percent_pft) %>%
     dplyr::arrange(year, climate_scenario, resolution, ID)
-  landuse_percent_pft_cw <- dplyr::bind_rows(landuse_maps0$percent_pft_cw) %>%
+  landuse_percent_pft_cw <- dplyr::bind_rows(landuse_data0$percent_pft_cw) %>%
     dplyr::arrange(year, climate_scenario, resolution, cw_id)
 
   landuse_results <- list(

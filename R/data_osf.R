@@ -43,6 +43,9 @@ load_mask_layer <- function(
 
   name <- NULL
 
+  ecokit::check_packages(
+    c("crayon", "dplyr", "fs", "httr", "osfr", "purrr", "stringr", "terra"))
+
   # # ********************************************************************** #
   # Validate inputs ------
   # # ********************************************************************** #
@@ -268,6 +271,9 @@ get_climate_data <- function(
   ecokit::info_chunk(
     "Download climate data files from OneSDM OSF project",
     line_char_rep = 65L, verbose = verbose)
+
+  ecokit::check_packages(
+    c("crayon", "dplyr", "fs", "httr", "osfr", "purrr", "stringr", "terra"))
 
   # # ********************************************************************** #
   # Validate inputs ------

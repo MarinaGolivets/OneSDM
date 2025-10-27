@@ -72,6 +72,10 @@ prepare_climate <- function(
   year <- climate_scenario <- climate_model <- climate_name <- projected_map <-
     var_name <- climate_model_abb <- . <- NULL
 
+  ecokit::check_packages(
+    c("archive", "fs", "future", "future.apply", "parallelly", "purrr",
+      "stringr", "terra", "tibble", "tidyr", "tidyselect", "withr"))
+
   # # ********************************************************************** #
   # Setup -----
   # # ********************************************************************** #
@@ -125,7 +129,7 @@ prepare_climate <- function(
   if (n_cores > parallelly::availableCores()) {
     warning(
       "Argument `n_cores` exceeds the number of available CPU cores.\n",
-      "n_cores: ", n_cores, "; available cores: ", parallel::detectCores(),
+      "n_cores: ", n_cores, "; available cores: ", parallelly::availableCores(),
       call. = FALSE)
     n_cores <- parallelly::availableCores()
   }

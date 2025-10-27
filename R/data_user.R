@@ -49,6 +49,8 @@ prepare_user_data <- function(
 
   longitude <- latitude <- NULL
 
+  ecokit::check_packages(c("dplyr", "fs", "sf", "tibble"))
+
   # # ********************************************************************** #
   # Assigning function arguments from options if not provided directly ------
   # # ********************************************************************** #

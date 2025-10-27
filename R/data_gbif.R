@@ -114,6 +114,11 @@ prepare_gbif_data <- function(
     occurrenceStatus <- taxonRank <- coordinatePrecision <- #nolint
     scientificName <- coordinateUncertaintyInMeters <- NULL #nolint
 
+  ecokit::check_packages(
+    c(
+      "CoordinateCleaner", "crayon", "curl", "fs", "lubridate", "purrr",
+      "readr", "rgbif", "sf", "stringr", "tidyselect"))
+
   # # ********************************************************************** #
   # Checking inputs and environment ------
   # # ********************************************************************** #
@@ -428,8 +433,8 @@ prepare_gbif_data <- function(
 
   } else {
 
-    ecokit::cat_time("\nDownload GBIF data", cat_timestamp = FALSE,
-      verbose = verbose)
+    ecokit::cat_time(
+      "\nDownload GBIF data", cat_timestamp = FALSE, verbose = verbose)
     .start_time_download <- lubridate::now(tzone = "CET")
 
     # download file to path_gbif_data_raw
