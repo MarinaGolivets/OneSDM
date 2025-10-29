@@ -5,7 +5,7 @@
 \alias{landuse_data}
 \title{landuse_data Data}
 \format{
-\subsection{\code{landuse_data} A tibble 10 columns:}{
+\subsection{\code{landuse_data} A tibble 11 columns:}{
 \itemize{
 \item \strong{\code{pft_type}}: Character. The type of plant functional type (PFT); one of
 "\code{original}" for the PFTs classes in the original land use data and
@@ -31,6 +31,8 @@ would be relative to the \code{landuse_dir} argument.
 \item \strong{\code{out_file}}: Character. The output file path for the land use data
 files: "\verb{<out_dir>/lu_(pft|pft_cw)_<pft_id>.tif}". This would be relative
 to the \code{landuse_dir} argument.
+\item \strong{\code{out_file_name}}: Character. The output file name without the directory
+and file extension; e.g., "\code{lu_pft_1}" and "\code{lu_pft_cw_1}".
 }
 }
 }

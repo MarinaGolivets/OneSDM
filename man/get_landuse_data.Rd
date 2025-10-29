@@ -11,7 +11,8 @@ get_landuse_data(
   year = "1981_2010",
   pft_type = "cross-walk",
   pft_id = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  sleep_time = 1L
 )
 }
 \arguments{
@@ -42,6 +43,9 @@ option. This parameter has no default and must be provided.}
 
 \item{verbose}{Logical scalar. If \code{TRUE} (default), prints progress and
 informative messages.}
+
+\item{sleep_time}{Numeric scalar. Number of seconds to pause after
+downloading files to avoid overwhelming the server. Default is \code{1L}.}
 }
 \value{
 Invisibly returns a tibble containing metadata about the downloaded

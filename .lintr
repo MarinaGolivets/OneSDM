@@ -1,7 +1,7 @@
 exclusions: list(
 	"vignettes/",
 	"data-raw/",
-	"R/data_landuse.R" = list("line_length_linter" = 55:86)
+	"R/data_landuse.R" = list("line_length_linter" = 55:90)
   )
 linters: linters_with_defaults(
 	absolute_path_linter(),

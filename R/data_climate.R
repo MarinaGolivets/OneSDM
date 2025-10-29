@@ -365,7 +365,7 @@ chelsa-w5e5_obsclim_mask_30arcsec_global.nc")
     "path_chelsa_tif", "agg_factors", "file_mask_agg", "terra_options",
     "temp_dir", "chelsa_links", "gdal_settings")
 
-  climate_data <- future.apply::future_lapply(
+  climate_out_data <- future.apply::future_lapply(
     X = seq_len(nrow(chelsa_links)),
     FUN = function(map_id) {
 
@@ -505,7 +505,9 @@ chelsa-w5e5_obsclim_mask_30arcsec_global.nc")
   # Save climate data summary
   # # ||||||||||||||||||||||||||||||||||||||||| #
 
-  save(climate_data, file = fs::path(path_climate, "climate_data.RData"))
+  ecokit::save_as(
+    object = climate_out_data, object_name = "climate_data",
+    out_path = fs::path(path_climate, "climate_data.RData"))
 
   # # ********************************************************************** #
 

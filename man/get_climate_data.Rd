@@ -11,7 +11,8 @@ get_climate_data(
   climate_model = "current",
   year = "1981_2010",
   var_names = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  sleep_time = 1L
 )
 }
 \arguments{
@@ -42,6 +43,9 @@ provided.}
 
 \item{verbose}{Logical scalar. If \code{TRUE} (default), prints progress and
 informative messages.}
+
+\item{sleep_time}{Numeric scalar. Number of seconds to pause after
+downloading files to avoid overwhelming the server. Default is \code{1L}.}
 }
 \value{
 Returns invisibly a tibble with metadata of the downloaded climate

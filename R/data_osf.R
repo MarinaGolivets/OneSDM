@@ -109,6 +109,7 @@ load_mask_layer <- function(
           "Mask file for `resolution` ", resolution, " not found on OSF."),
         cat_timestamp = FALSE)
     }
+
     if (nrow(mask_file) > 1L) {
       ecokit::stop_ctx(
         paste0(
@@ -175,6 +176,8 @@ load_mask_layer <- function(
 #'   provided.
 #' @param verbose Logical scalar. If `TRUE` (default), prints progress and
 #'   informative messages.
+#' @param sleep_time Numeric scalar. Number of seconds to pause after
+#'   downloading files to avoid overwhelming the server. Default is `1L`.
 #'
 #' @details
 #' - The function filters the [OneSDM::climate_data] data to identify files
@@ -266,10 +269,11 @@ load_mask_layer <- function(
 get_climate_data <- function(
     climate_dir = NULL, resolution = 10L,
     climate_scenario = "current", climate_model = "current",
-    year = "1981_2010", var_names = NULL, verbose = TRUE) {
+    year = "1981_2010", var_names = NULL, verbose = TRUE,
+    sleep_time = 1L) {
 
   osf_path <- download_link <- out_dir <- meta <- out_file <-
-    name <- climate_model_abb <- var_name <- NULL
+    climate_model_abb <- var_name <- NULL
 
   ecokit::check_args("verbose", "logical")
 
@@ -312,6 +316,7 @@ get_climate_data <- function(
         "data files."),
       cat_timestamp = FALSE)
   }
+
   if (!fs::dir_exists(climate_dir)) {
     ecokit::cat_time(
       paste0(
@@ -334,6 +339,7 @@ get_climate_data <- function(
         "Provided: ", toString(resolution), "."),
       cat_timestamp = FALSE)
   }
+
   if (!resolution %in% valid_resolutions) {
     ecokit::stop_ctx(
       paste0(
@@ -354,6 +360,7 @@ get_climate_data <- function(
         "Provided: ", toString(climate_model), "."),
       cat_timestamp = FALSE)
   }
+
   if (!climate_model %in% valid_models) {
     ecokit::stop_ctx(
       paste0(
@@ -367,6 +374,7 @@ get_climate_data <- function(
   ## climate scenarios ----
 
   valid_scenarios <- unique(climate_data_0$climate_scenario)
+
   if (length(climate_scenario) != 1L || !is.character(climate_scenario)) {
     ecokit::stop_ctx(
       paste0(
@@ -374,6 +382,7 @@ get_climate_data <- function(
         "Provided: ", toString(climate_scenario), "."),
       cat_timestamp = FALSE)
   }
+
   if (!climate_scenario %in% valid_scenarios) {
     ecokit::stop_ctx(
       paste0(
@@ -387,6 +396,7 @@ get_climate_data <- function(
   ## years ----
 
   valid_years <- unique(climate_data_0$year)
+
   if (length(year) != 1L || !is.character(year)) {
     ecokit::stop_ctx(
       paste0(
@@ -394,6 +404,7 @@ get_climate_data <- function(
         "Provided: ", toString(year), "."),
       cat_timestamp = FALSE)
   }
+
   if (!year %in% valid_years) {
     ecokit::stop_ctx(
       paste0(
@@ -407,6 +418,7 @@ get_climate_data <- function(
   ## var_names ----
 
   valid_var_names <- unique(climate_data_0$var_name)
+
   if (is.null(var_names)) {
     ecokit::stop_ctx(
       paste0(
@@ -414,12 +426,25 @@ get_climate_data <- function(
         "Valid options are: ", toString(valid_var_names), "."),
       cat_timestamp = FALSE)
   }
+
   if (!all(var_names %in% valid_var_names)) {
     ecokit::stop_ctx(
       paste0(
         "Invalid `var_names` values: ",
         toString(var_names[!var_names %in% valid_var_names]), ".\n",
         "Valid options are: ", toString(valid_var_names), "."),
+      cat_timestamp = FALSE)
+  }
+
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  # sleep_time -----
+
+  if (length(sleep_time) != 1L || !is.numeric(sleep_time) || sleep_time < 0L) {
+    ecokit::stop_ctx(
+      paste0(
+        "`sleep_time` must be a single non-negative numeric value. ",
+        "Provided: ", toString(sleep_time), "."),
       cat_timestamp = FALSE)
   }
 
@@ -533,8 +558,10 @@ get_climate_data <- function(
 
   # Get list of files in the specified OSF directory
   osf_l_files <- osfr::osf_retrieve_node("tuyxh") %>%
-    osfr::osf_ls_files(n_max = 1000L, type = "folder") %>%
-    dplyr::filter(name == osf_dir_unique) %>%
+    # Without using pattern osfr may return incomplete list of directories, with
+    # some duplicates
+    osfr::osf_ls_files(
+      n_max = 1000L, type = "folder", pattern = osf_dir_unique) %>%
     osfr::osf_ls_files(n_max = 1000L, type = "file")
 
   ecokit::cat_time(
@@ -597,6 +624,10 @@ get_climate_data <- function(
     "All climate data files downloaded successfully.",
     cat_timestamp = FALSE, verbose = verbose)
 
+  if (sleep_time > 0L) {
+    Sys.sleep(sleep_time)
+  }
+
   return(invisible(download_links))
 
 }
@@ -636,6 +667,9 @@ get_climate_data <- function(
 #'   option. This parameter has no default and must be provided.
 #' @param verbose Logical scalar. If `TRUE` (default), prints progress and
 #'   informative messages.
+#' @param sleep_time Numeric scalar. Number of seconds to pause after
+#'   downloading files to avoid overwhelming the server. Default is `1L`.
+#'
 #' @return Invisibly returns a tibble containing metadata about the downloaded
 #'   files, including local file paths, OSF paths, download links, and
 #'   validation status.
@@ -715,7 +749,7 @@ get_climate_data <- function(
 get_landuse_data <- function(
     climate_dir = NULL, resolution = 10L, climate_scenario = "current",
     year = "1981_2010", pft_type = "cross-walk", pft_id = NULL,
-    verbose = TRUE) {
+    verbose = TRUE, sleep_time = 1L) {
 
   osf_path <- download_link <- out_dir <- meta <- out_file <- name <- NULL
 
@@ -902,6 +936,18 @@ get_landuse_data <- function(
       pft_id = toString(pft_id), pft_type = pft_type)
   }
 
+  # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  # sleep_time -----
+
+  if (length(sleep_time) != 1L || !is.numeric(sleep_time) || sleep_time < 0L) {
+    ecokit::stop_ctx(
+      paste0(
+        "`sleep_time` must be a single non-negative numeric value. ",
+        "Provided: ", toString(sleep_time), "."),
+      cat_timestamp = FALSE)
+  }
+
   # # ********************************************************************** #
   # Print function arguments ------
   # # ********************************************************************** #
@@ -991,8 +1037,8 @@ get_landuse_data <- function(
 
   # Get list of files in the specified OSF directory
   osf_l_files <- osfr::osf_retrieve_node("jvns4") %>%
-    osfr::osf_ls_files(n_max = 1000L, type = "folder") %>%
-    dplyr::filter(name == osf_dir_unique) %>%
+    osfr::osf_ls_files(
+      n_max = 1000L, type = "folder", pattern = osf_dir_unique) %>%
     osfr::osf_ls_files(n_max = 1000L, type = "file") %>%
     dplyr::filter(name %in% download_links$name)
 
@@ -1071,6 +1117,10 @@ get_landuse_data <- function(
   ecokit::cat_time(
     "All land use data files downloaded successfully.",
     cat_timestamp = FALSE, verbose = verbose)
+
+  if (sleep_time > 0L) {
+    Sys.sleep(sleep_time)
+  }
 
   return(invisible(download_links))
 

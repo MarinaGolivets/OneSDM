@@ -107,8 +107,9 @@
 #'   - `onesdm_plot_distribution`: for the `plot_distribution` argument.
 #'   - This in addition to options used in the internal functions called.
 #'
-#' @return Invisibly returns `NULL`. The function is called for its side effects
-#'   (saving processed data files and generating plots).
+#' @return Invisibly returns path to the final processed species data raster
+#'  file (`species_data_r_<resolution>_km_PA.tif`) saved in the `data`
+#'  subdirectory of `model_dir`.
 #'
 #' @examples
 #' \dontrun{
@@ -139,10 +140,6 @@ prepare_species_data <- function(
     plot_distribution = TRUE) {
 
   valid <- xmin <- xmax <- ymin <- ymax <- nearest_dist <- value <- NULL
-
-  ecokit::info_chunk(
-    "Preparing species occurrence data", line_char = "=", cat_bold =  TRUE,
-    cat_red = TRUE, line_char_rep  = 65L, verbose = verbose, cat_date = FALSE)
 
   # # ********************************************************************** #
   # Check inputs ------
@@ -304,8 +301,27 @@ prepare_species_data <- function(
   fs::dir_create(path_data)
 
   # # ********************************************************************** #
+  # Check if species data already exists on disk -----
+  # # ********************************************************************** #
+
+  if (ecokit::check_tiff(file_data_final, warning = FALSE)) {
+    ecokit::cat_time(
+      paste0(
+        "Species data raster already exists at: ",
+        crayon::blue(fs::path_abs(file_data_final)),
+        "\nLoading existing data and skipping preparation steps."),
+      cat_timestamp = FALSE, verbose = verbose)
+
+    return(invisible(file_data_final))
+  }
+
+  # # ********************************************************************** #
   # Print function arguments ------
   # # ********************************************************************** #
+
+  ecokit::info_chunk(
+    "Preparing species occurrence data", line_char = "=", cat_bold =  TRUE,
+    cat_red = TRUE, line_char_rep  = 65L, verbose = verbose, cat_date = FALSE)
 
   if (verbose) {
 
@@ -649,7 +665,8 @@ prepare_species_data <- function(
 
   species_data_r <- terra::rasterize(
     x = species_data2, y = mask_layer, field = 1L, background = 0L)
-  species_data_r <- species_data_r * mask_layer
+  species_data_r <- (species_data_r * mask_layer) %>%
+    stats::setNames(ecokit::replace_space(species_name))
 
   # Number of grid cells with species presence
   n_cells_presence <- terra::global(
@@ -687,7 +704,8 @@ prepare_species_data <- function(
       species_data_r <- terra::mask(
         species_data_r, ext, inverse = TRUE, updatevalue = 0L)
     }
-    species_data_r <- species_data_r * mask_layer
+    species_data_r <- (species_data_r * mask_layer) %>%
+      stats::setNames(ecokit::replace_space(species_name))
 
     n_cells_presence_2 <- terra::global(
       species_data_r, fun = "sum", na.rm = TRUE)[1L, 1L]
@@ -820,5 +838,5 @@ prepare_species_data <- function(
     grDevices::dev.off()
   }
 
-  return(invisible(NULL))
+  return(invisible(file_data_final))
 }

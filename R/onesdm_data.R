@@ -54,7 +54,7 @@
 #' A dataset containing information about land use data files available for
 #' download from OSF. For more details, see [prepare_landuse()].
 #'
-#' @format ## `landuse_data` A tibble 10 columns:
+#' @format ## `landuse_data` A tibble 11 columns:
 #' - **`pft_type`**: Character. The type of plant functional type (PFT); one of
 #'   "`original`" for the PFTs classes in the original land use data and
 #'   "`cross-walk`" for the grouped (cross-walked) PFTs.
@@ -79,6 +79,8 @@
 #' - **`out_file`**: Character. The output file path for the land use data
 #'   files: "`<out_dir>/lu_(pft|pft_cw)_<pft_id>.tif`". This would be relative
 #'   to the `landuse_dir` argument.
+#' - **`out_file_name`**: Character. The output file name without the directory
+#'   and file extension; e.g., "`lu_pft_1`" and "`lu_pft_cw_1`".
 #'
 #' @docType data
 #' @examples

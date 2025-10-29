@@ -3,7 +3,7 @@ Package: OneSDM
 Title: Automated workflows for species distribution modelling under
     environmental change scenarios
 Version: 0.1.0
-Date: 2025-10-27
+Date: 2025-10-29
 Authors@R: c(
     person("Ahmed", "El-Gabbas", , "elgabbas@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2225-088X")),
@@ -19,6 +19,7 @@ Depends:
     magrittr (>= 2.0),
     R (>= 4.0.4)
 Imports: 
+    crayon (>= 1.5),
     dplyr (>= 1.1),
     ecokit (>= 0.1),
     fs (>= 1.6),
@@ -31,9 +32,9 @@ Imports:
     terra (>= 1.8)
 Suggests:
     archive (>= 1.1),
+    blockCV (>= 3.2),
     cli (>= 3.65),
     CoordinateCleaner (>= 3.0),
-    crayon (>= 1.5),
     curl (>= 7.0),
     ggplot2 (>= 3.5.2),
     httr (>= 1.4),
@@ -57,6 +58,7 @@ Suggests:
     tidyr (>= 1.3),
     tidyselect (>= 1.2),
     tidyterra (>= 0.7),
+    usdm (>= 2.1),
     withr (>= 3.0)
 Remotes:
     babaknaimi/sdm,

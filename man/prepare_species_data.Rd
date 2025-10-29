@@ -86,8 +86,9 @@ of species distribution. Can be set via the \code{onesdm_plot_distribution}
 option.}
 }
 \value{
-Invisibly returns \code{NULL}. The function is called for its side effects
-(saving processed data files and generating plots).
+Invisibly returns path to the final processed species data raster
+file (\verb{species_data_r_<resolution>_km_PA.tif}) saved in the \code{data}
+subdirectory of \code{model_dir}.
 }
 \description{
 This function prepares species occurrence data from multiple

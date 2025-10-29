@@ -55,7 +55,10 @@ resolution of 5 years from 2015 to 2100. To match CHELSA data, the function
 processes data for:
 \itemize{
 \item \code{Current}: 2015
-\item \code{2021-2040}: mode of data for 2025, 2030, 2035, 2040
+\item \code{2011-2040}: mode of data for 2025, 2030, 2035, 2040. \strong{Note} that
+although the range of years used for computations is from 2025 to 2040, it
+is named as \code{2011-2040} to be consistent with CHELSA climate data naming
+convention.
 \item \code{2041-2070}: mode of data for 2045, 2050, 2055, 2060, 2065, 2070
 \item \code{2071-2100}: mode of data for 2075, 2080, 2085, 2090, 2095, 2100
 }
