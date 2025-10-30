@@ -562,8 +562,7 @@ prepare_species_data <- function(
   n_records <- nrow(species_data)
   ecokit::cat_time(
     paste0(
-      "Total number of species records: ",
-      crayon::blue(format(n_records, big.mark = ",", scientific = FALSE))),
+      "Total number of species records: ", ecokit::format_number(n_records)),
     verbose = verbose, cat_timestamp = FALSE)
 
   # Ensure species_data2 is always defined
@@ -611,7 +610,7 @@ prepare_species_data <- function(
     ecokit::cat_time(
       paste0(
         "Number of records excluded as spatial outliers: ",
-        crayon::blue(format(n_excluded, big.mark = ",", scientific = FALSE)),
+        ecokit::format_number(n_excluded),
         " (", round((n_excluded / n_records) * 100L, 2L), "%)"),
       verbose = verbose, cat_timestamp = FALSE, level = 1L)
 
@@ -651,7 +650,7 @@ prepare_species_data <- function(
       "Loading mask layer at resolution of ", crayon::blue(resolution), " km"),
     verbose = verbose, cat_timestamp = FALSE)
 
-  mask_layer <- OneSDM::load_mask_layer(
+  mask_layer <- OneSDM::get_mask_layer(
     resolution = resolution, climate_dir = climate_dir, verbose = verbose,
     overwrite = FALSE, return_spatraster = TRUE, wrap = FALSE)
 
@@ -675,8 +674,7 @@ prepare_species_data <- function(
     paste0(
       "Number of grid cells at resolution of ", crayon::blue(resolution),
       " km with species presence: ",
-      crayon::blue(format(
-        n_cells_presence, big.mark = ",", scientific = FALSE))),
+      ecokit::format_number(n_cells_presence)),
     verbose = verbose, cat_timestamp = FALSE, level = 1L)
 
   # Save the number of presence cells before exclusion
@@ -713,15 +711,13 @@ prepare_species_data <- function(
     ecokit::cat_time(
       paste0(
         "Number of grid cells excluded: ",
-        crayon::blue(format(
-          n_cells_excluded, big.mark = ",", scientific = FALSE)),
+        ecokit::format_number(n_cells_excluded),
         " (", round((n_cells_excluded / n_cells_presence) * 100L, 2L), "%)"),
       verbose = verbose, cat_timestamp = FALSE, level = 1L)
     ecokit::cat_time(
       paste0(
         "Number of presence grid cells after exclusion: ",
-        crayon::blue(
-          format(n_cells_presence_2, big.mark = ",", scientific = FALSE))),
+        ecokit::format_number(n_cells_presence_2)),
       verbose = verbose, cat_timestamp = FALSE, level = 1L)
 
     # Save the final rasterized species data after exclusion

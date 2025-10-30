@@ -390,15 +390,14 @@ prepare_easin_data <- function(
     )
     ecokit::cat_time(
       paste0(
-        crayon::italic("Number of search results per chunk: "),
-        crayon::blue(format(n_search, big.mark = ",", scientific = FALSE))),
+        crayon::italic("Number of search results per chunk: "), ecokit::format_number(n_search)),
       level = 1L,
       cat_timestamp = FALSE
     )
     ecokit::cat_time(
       paste0(
         crayon::italic("Number of download attempts: "),
-        crayon::blue(n_attempts)),
+        ecokit::format_number(n_attempts)),
       level = 1L,
       cat_timestamp = FALSE
     )
@@ -520,8 +519,7 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "Filtered out ",
-      format(n_rows_raw - n_rows_1, big.mark = ",", scientific = FALSE),
+      "Filtered out ", ecokit::format_number(n_rows_raw - n_rows_1),
       " records with empty coordinates or older than ", start_year, "."),
     cat_timestamp = FALSE, level = 1L, verbose = verbose)
 
@@ -579,9 +577,7 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "filtered out ",
-      crayon::blue(
-        format(n_rows_1 - n_rows_2, big.mark = ",", scientific = FALSE)),
+      "filtered out ", ecokit::format_number(n_rows_1 - n_rows_2),
       " records with invalid coordinates."),
     cat_timestamp = FALSE, level = 1L, verbose = verbose)
 
@@ -621,9 +617,7 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "filtered out ",
-      crayon::blue(
-        format(n_rows_2 - n_rows_3, big.mark = ",", scientific = FALSE)),
+      "filtered out ", ecokit::format_number(n_rows_2 - n_rows_3),
       " records with low spatial precision or equal longitude and latitude."),
     cat_timestamp = FALSE, level = 1L, verbose = verbose)
 
@@ -685,9 +679,7 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "filtered out ",
-      crayon::blue(
-        format(n_rows_3 - n_rows_4, big.mark = ",", scientific = FALSE)),
+      "filtered out ", ecokit::format_number(n_rows_3 - n_rows_4),
       " records using `CoordinateCleaner`."),
     cat_timestamp = FALSE, level = 1L, verbose = verbose)
 
@@ -714,8 +706,7 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "A total of ",
-      crayon::blue(format(n_rows_4, big.mark = ",", scientific = FALSE)),
+      "A total of ", ecokit::format_number(n_rows_4),
       " filtered observations were extracted for EASIN ID(s): ",
       crayon::blue(n_obs_per_id)),
     cat_timestamp = FALSE, verbose = verbose)
@@ -865,9 +856,7 @@ get_easin_internal <- function(
 
   ecokit::cat_time(
     paste0(
-      "A total of ",
-      crayon::blue(
-        format(nrow(easin_data_sub), big.mark = ",", scientific = FALSE)),
+      "A total of ", ecokit::format_number(nrow(easin_data_sub)),
       " observations were extracted for EASIN ID: ", crayon::blue(easin_id)),
     cat_timestamp = FALSE, level = 2L, verbose = verbose)
 

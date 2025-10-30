@@ -1,4 +1,4 @@
-# load_mask_layer -----
+# get_mask_layer -----
 
 #' Load or Create a Mask Layer at Specified Resolution
 #'
@@ -29,14 +29,14 @@
 #' \dontrun{
 #'   require(terra)
 #'   # Load mask layer as `SpatRaster` object
-#'   mask <- load_mask_layer(resolution = 10L)
+#'   mask <- get_mask_layer(resolution = 10L)
 #'   print(mask)
 #' }
 #'
 #' @export
 #' @author Ahmed El-Gabbas
 
-load_mask_layer <- function(
+get_mask_layer <- function(
     resolution = NULL, climate_dir = NULL, verbose = FALSE,
     overwrite = FALSE, return_spatraster = TRUE, wrap = FALSE) {
 
@@ -88,7 +88,7 @@ load_mask_layer <- function(
       ecokit::cat_time(
         paste0(
           "Creating climate data directory at: ", crayon::blue(climate_dir)),
-        cat_timestamp = FALSE)
+        cat_timestamp = FALSE, verbose = verbose)
       fs::dir_create(climate_dir)
     }
     save_path <- fs::path(climate_dir, paste0("mask_agg_", resolution, ".tif"))
@@ -1123,5 +1123,143 @@ get_landuse_data <- function(
   }
 
   return(invisible(download_links))
+
+}
+
+
+# # ********************************************************************** #
+# # ********************************************************************** #
+
+# get_sampling_efforts ------
+
+#' Get sampling effort (bias) raster for a taxonomic group
+#'
+#' Download and prepare a sampling-effort (bias) raster for a specified
+#' taxonomic group. If a precomputed bias TIFF already exists in the provided
+#' climate directory it will be returned; otherwise the function downloads a 1°
+#' bias grid from [Zenodo](https://zenodo.org/records/7556851),
+#' projects/disaggregates it to the requested resolution using the study mask,
+#' masks out invalid cells, names the layer, and writes a compressed GeoTIFF to
+#' disk.
+#'
+#' @param bias_group character scalar. Taxonomic group for which to obtain the
+#'   bias raster. Valid values are `"amphibians"`, `"birds"`, `"mammals"`,
+#'   `"molluscs"`, `"plants"` and `"reptiles"`.
+#' @param resolution integer scalar. Target spatial resolution (see
+#'   [OneSDM::get_mask_layer()]) used to disaggregate the 1° bias grid. Defaults
+#'   to `10L`.
+#' @param climate_dir character. Path to the directory where the output bias
+#'   TIFF should be stored (and where existing bias TIFFs are checked).
+#' @param return_spatraster logical. If `TRUE` (default) the function returns a
+#'   `SpatRaster` object (invisibly). If `FALSE` the function returns
+#'   (invisibly) the path to the written TIFF file.
+#' @param verbose logical. If `TRUE`, prints progress and informative messages.
+#'   Defaults to `FALSE`.
+#'
+#' @details The function:
+#' - constructs a target output filename of the form
+#'   "bias_<bias_group>_res_<resolution>.tif" in `climate_dir`;
+#' - if the file exists, returns it (as a `SpatRaster` or path depending on
+#'   `return_spatraster`);
+#' - otherwise downloads the appropriate 1° bias raster from Zenodo, projects
+#'   it to the study mask resolution via [OneSDM::get_mask_layer()], converts
+#'   `NA` values to zeros, applies the mask, sets a descriptive layer name, and
+#'   writes a compressed GeoTIFF (ZSTD compression, tiled) to disk.
+#'
+#' @return Invisibly returns either:
+#' - a `SpatRaster` (if `return_spatraster = TRUE`), or
+#' - a character scalar with the path to the written TIFF (if
+#'   `return_spatraster = FALSE`).
+#'
+#' @examples
+#' \dontrun{
+#' # Return a `SpatRaster` for birds at resolution 10
+#' r <- get_sampling_efforts(
+#'   bias_group = "birds", resolution = 10L, climate_dir = "climate_data")
+#' r
+#'
+#' # Only return path to file after creation
+#' path <- get_sampling_efforts(
+#'   bias_group = "mammals", resolution = 5L, climate_dir = "climate_data",
+#'   return_spatraster = FALSE)
+#' path
+#'
+#' terra::rast(path)
+#' }
+#'
+#' @author Ahmed El-Gabbas
+#' @export
+
+get_sampling_efforts <- function(
+    bias_group = NULL, resolution = 10L, climate_dir = NULL,
+    return_spatraster = TRUE, verbose = FALSE) {
+
+  valid_groups <- c(
+    "amphibians", "birds", "mammals", "molluscs", "reptiles", "plants")
+
+  if (is.null(bias_group) || length(bias_group) != 1L || !nzchar(bias_group)) {
+    ecokit::stop_ctx(
+      "The `bias_group` argument must be a single non-empty string.",
+      bias_group = bias_group, cat_timestamp = FALSE)
+  }
+
+  if (!(bias_group %in% valid_groups)) {
+    ecokit::stop_ctx(
+      paste0(
+        "Invalid `bias_group` value. Valid options are: ",
+        toString(valid_groups), "."),
+      bias_group = bias_group, cat_timestamp = FALSE)
+  }
+
+  bias_file <- dplyr::case_when(
+    bias_group == "amphibians" ~ "amphib_1deg_grid.tif",
+    bias_group == "birds" ~ "birds_1deg_grid.tif",
+    bias_group == "mammals" ~ "mammals_1deg_grid.tif",
+    bias_group == "molluscs" ~ "molluscs_1deg_grid.tif",
+    bias_group == "reptiles" ~ "reptiles_1deg_grid.tif",
+    bias_group == "plants" ~ "plants_1deg_min5.tif",
+    .default = NA_character_)
+
+  out_bias_file <- fs::path(
+    climate_dir, paste0("bias_", bias_group, "_res_", resolution, ".tif"))
+
+  if (ecokit::check_tiff(out_bias_file, warning = FALSE)) {
+    ecokit::cat_time(
+      paste0(
+        "Bias file for group ", crayon::blue(bias_group),
+        " already exists at: ", crayon::blue(out_bias_file)),
+      cat_timestamp = FALSE, verbose = verbose)
+    if (return_spatraster) {
+      return(invisible(terra::rast(out_bias_file)))
+    } else {
+      return(invisible(out_bias_file))
+    }
+  }
+
+  out_bias_temp <- fs::file_temp(
+    pattern = paste0("bias_", bias_group, "_"), ext = ".tif")
+
+  mask_r <- OneSDM::get_mask_layer(
+    resolution = resolution, climate_dir = climate_dir,
+    verbose = verbose, overwrite = FALSE, return_spatraster = TRUE)
+
+  bias_r <- ecokit::zenodo_download_file(
+    record_id = "7556851", file = bias_file, dest_file = out_bias_temp,
+    read_func = terra::rast, verbose = verbose) %>%
+    # disaggregate from 1 degree to current resolution
+    terra::project(mask_r) %>%
+    terra::classify(cbind(NA, 0L)) %>%
+    terra::mask(mask_r) %>%
+    stats::setNames(paste0("bias_", bias_group, "_res_", resolution))
+
+  terra::writeRaster(
+    x = bias_r, filename = out_bias_file, overwrite = TRUE,
+    gdal = c("COMPRESS=ZSTD", "ZSTD_LEVEL=22", "TILED=YES"))
+
+  if (return_spatraster) {
+    return(invisible(bias_r))
+  } else {
+    return(invisible(out_bias_file))
+  }
 
 }

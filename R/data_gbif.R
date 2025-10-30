@@ -599,11 +599,9 @@ prepare_gbif_data <- function(
     ecokit::cat_time(
       paste0(
         "A total of ",
-        crayon::underline(
-          format(n_rows_cleaned, big.mark = ",", scientific = FALSE)),
+        ecokit::format_number(n_rows_cleaned, underline = TRUE),
         " observations were kept after cleaning from the initial ",
-        crayon::underline(
-          format(n_rows_raw, big.mark = ",", scientific = FALSE)),
+        ecokit::format_number(n_rows_raw, underline = TRUE),
         " observations."),
       cat_timestamp = FALSE, level = 1L, verbose = verbose)
 
@@ -641,11 +639,9 @@ prepare_gbif_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "A total of ",
-      crayon::underline(
-        format(nrow(gbif_data), big.mark = ",", scientific = FALSE)),
+      "A total of ", ecokit::format_number(nrow(gbif_data), underline = TRUE),
       " filtered observations were extracted for GBIF ID(s): ",
-      crayon::blue(toString(unique(gbif_data$speciesKey)))),
+      crayon::blue(as.numeric(unique(gbif_data$datasetKey))),
     cat_timestamp = FALSE, level = 1L, verbose = verbose)
 
   # # ********************************************************************** #
