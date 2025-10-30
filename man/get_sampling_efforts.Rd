@@ -52,7 +52,7 @@ disk.
 The function:
 \itemize{
 \item constructs a target output filename of the form
-"bias_<bias_group>\emph{res}\if{html}{\out{<resolution>}}.tif" in \code{climate_dir};
+\code{"bias_<bias_group>_res_<resolution>.tif"} in \code{climate_dir};
 \item if the file exists, returns it (as a \code{SpatRaster} or path depending on
 \code{return_spatraster});
 \item otherwise downloads the appropriate 1° bias raster from Zenodo, projects

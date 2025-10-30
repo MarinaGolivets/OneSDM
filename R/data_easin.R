@@ -390,7 +390,8 @@ prepare_easin_data <- function(
     )
     ecokit::cat_time(
       paste0(
-        crayon::italic("Number of search results per chunk: "), ecokit::format_number(n_search)),
+        crayon::italic("Number of search results per chunk: "),
+        ecokit::format_number(n_search)),
       level = 1L,
       cat_timestamp = FALSE
     )

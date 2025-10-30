@@ -1158,7 +1158,7 @@ get_landuse_data <- function(
 #'
 #' @details The function:
 #' - constructs a target output filename of the form
-#'   "bias_<bias_group>_res_<resolution>.tif" in `climate_dir`;
+#'   `"bias_<bias_group>_res_<resolution>.tif"` in `climate_dir`;
 #' - if the file exists, returns it (as a `SpatRaster` or path depending on
 #'   `return_spatraster`);
 #' - otherwise downloads the appropriate 1° bias raster from Zenodo, projects
