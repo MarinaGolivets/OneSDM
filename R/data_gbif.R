@@ -22,8 +22,16 @@
 #'   default is `1981L`, to match the temporal coverage of CHELSA climate data.
 #'   Can also be set via the `onesdm_start_year` option.
 #' @param r_environ Character. Path to `.Renviron` file containing GBIF
-#'   credentials (default: ".Renviron"). If `NULL`, attempts to retrieve from
-#'   the `onesdm_r_environ` option. See [ecokit::check_gbif()] for more details.
+#'   credentials (default: ".Renviron"). The function uses
+#'   [ecokit::check_gbif()] to validate the presence of GBIF credentials. If the
+#'   `GBIF_USER`, `GBIF_PWD`, and `GBIF_EMAIL` environment variables are not set
+#'   in the current R session, `check_gbif` will attempt to read them from the
+#'   specified `.Renviron` file. See [ecokit::check_gbif()] for more details and
+#'   this
+#'   [article](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
+#'   from `rgbif` documentation on how to set GBIF credentials. If `r_environ =
+#'   NULL`, the `prepare_gbif_data` function attempts to retrieve path to
+#'   `.Renviron` file from the `onesdm_r_environ` option.
 #' @param boundaries Numeric vector of length 4. Spatial boundaries as (left,
 #'   right, bottom, top) in decimal degrees (default: `c(-180L, 180L, -90L,
 #'   90L)` for global extent). Can also be set via `onesdm_gbif_boundaries`
@@ -79,7 +87,6 @@
 #'     onesdm_gbif_overwrite = FALSE
 #'   )
 #'   ```
-
 #'
 #' @return If `return_data` is `TRUE`, return the cleaned GBIF data as an `sf`
 #'   object. Otherwise, returns (invisibly) a named list with paths to the saved

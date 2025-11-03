@@ -30,7 +30,11 @@ Can also be set via the \code{onesdm_easin_ids} option. For more details, see
 
 \item{gbif_ids}{Character or numeric vector of GBIF taxon keys (as numeric
 strings) to query. If \code{NULL}, attempts to retrieve from the
-\code{onesdm_gbif_ids} option. For more details, see \code{\link[=prepare_gbif_data]{prepare_gbif_data()}}.}
+\code{onesdm_gbif_ids} option. To request data from GBIF, GBIF credentials must
+be set for the current session, otherwise an error will be raised. For
+more, see \code{\link[=prepare_gbif_data]{prepare_gbif_data()}}, and this
+\href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{article}
+from \code{rgbif} package documentation on how to set GBIF credentials.}
 
 \item{coordinates}{A data frame or matrix containing user-provided longitude
 and latitude values. Must have exactly two columns. If not provided

@@ -19,7 +19,11 @@
 #'   [prepare_easin_data()].
 #' @param gbif_ids Character or numeric vector of GBIF taxon keys (as numeric
 #'   strings) to query. If `NULL`, attempts to retrieve from the
-#'   `onesdm_gbif_ids` option. For more details, see [prepare_gbif_data()].
+#'   `onesdm_gbif_ids` option. To request data from GBIF, GBIF credentials must
+#'   be set for the current session, otherwise an error will be raised. For
+#'   more, see [prepare_gbif_data()], and this
+#'   [article](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
+#'   from `rgbif` package documentation on how to set GBIF credentials.
 #' @param coordinates A data frame or matrix containing user-provided longitude
 #'   and latitude values. Must have exactly two columns. If not provided
 #'   directly, the function will attempt to retrieve it from the
@@ -108,8 +112,8 @@
 #'   - This in addition to options used in the internal functions called.
 #'
 #' @return Invisibly returns path to the final processed species data raster
-#'  file (`species_data_r_<resolution>_km_PA.tif`) saved in the `data`
-#'  subdirectory of `model_dir`.
+#'   file (`species_data_r_<resolution>_km_PA.tif`) saved in the `data`
+#'   subdirectory of `model_dir`.
 #'
 #' @examples
 #' \dontrun{

@@ -34,8 +34,15 @@ default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
 Can also be set via the \code{onesdm_start_year} option.}
 
 \item{r_environ}{Character. Path to \code{.Renviron} file containing GBIF
-credentials (default: ".Renviron"). If \code{NULL}, attempts to retrieve from
-the \code{onesdm_r_environ} option. See \code{\link[ecokit:check_gbif]{ecokit::check_gbif()}} for more details.}
+credentials (default: ".Renviron"). The function uses
+\code{\link[ecokit:check_gbif]{ecokit::check_gbif()}} to validate the presence of GBIF credentials. If the
+\code{GBIF_USER}, \code{GBIF_PWD}, and \code{GBIF_EMAIL} environment variables are not set
+in the current R session, \code{check_gbif} will attempt to read them from the
+specified \code{.Renviron} file. See \code{\link[ecokit:check_gbif]{ecokit::check_gbif()}} for more details and
+this
+\href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{article}
+from \code{rgbif} documentation on how to set GBIF credentials. If \code{r_environ = NULL}, the \code{prepare_gbif_data} function attempts to retrieve path to
+\code{.Renviron} file from the \code{onesdm_r_environ} option.}
 
 \item{boundaries}{Numeric vector of length 4. Spatial boundaries as (left,
 right, bottom, top) in decimal degrees (default: \code{c(-180L, 180L, -90L, 90L)} for global extent). Can also be set via \code{onesdm_gbif_boundaries}
