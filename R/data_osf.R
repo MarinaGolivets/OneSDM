@@ -1137,10 +1137,10 @@ get_landuse_data <- function(
 #' Download and prepare a sampling-effort (bias) raster for a specified
 #' taxonomic group. If a precomputed bias TIFF already exists in the provided
 #' climate directory it will be returned; otherwise the function downloads a 1°
-#' bias grid from [Zenodo](https://zenodo.org/records/7556851),
-#' projects/disaggregates it to the requested resolution using the study mask,
-#' masks out invalid cells, names the layer, and writes a compressed GeoTIFF to
-#' disk.
+#' bias grid from Davis *et al.* 2023, available at
+#' [Zenodo](https://zenodo.org/records/7556851), projects/disaggregates it to
+#' the requested resolution using the study mask, masks out invalid cells, names
+#' the layer, and writes a compressed GeoTIFF to disk.
 #'
 #' @param bias_group character scalar. Taxonomic group for which to obtain the
 #'   bias raster. Valid values are `"amphibians"`, `"birds"`, `"mammals"`,

@@ -43,10 +43,10 @@ Invisibly returns either:
 Download and prepare a sampling-effort (bias) raster for a specified
 taxonomic group. If a precomputed bias TIFF already exists in the provided
 climate directory it will be returned; otherwise the function downloads a 1°
-bias grid from \href{https://zenodo.org/records/7556851}{Zenodo},
-projects/disaggregates it to the requested resolution using the study mask,
-masks out invalid cells, names the layer, and writes a compressed GeoTIFF to
-disk.
+bias grid from Davis \emph{et al.} 2023, available at
+\href{https://zenodo.org/records/7556851}{Zenodo}, projects/disaggregates it to
+the requested resolution using the study mask, masks out invalid cells, names
+the layer, and writes a compressed GeoTIFF to disk.
 }
 \details{
 The function:
