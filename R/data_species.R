@@ -655,7 +655,7 @@ prepare_species_data <- function(
     verbose = verbose, cat_timestamp = FALSE)
 
   mask_layer <- OneSDM::get_mask_layer(
-    resolution = resolution, climate_dir = climate_dir, verbose = verbose,
+    resolution = resolution, climate_dir = climate_dir, verbose = FALSE,
     overwrite = FALSE, return_spatraster = TRUE, wrap = FALSE)
 
   # # ********************************************************************** #

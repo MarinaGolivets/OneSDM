@@ -648,7 +648,7 @@ prepare_gbif_data <- function(
     paste0(
       "A total of ", ecokit::format_number(nrow(gbif_data), underline = TRUE),
       " filtered observations were extracted for GBIF ID(s): ",
-      ecokit::format_number(as.numeric(unique(gbif_data$datasetKey)))),
+      crayon::blue(toString(sort(unique(gbif_data$speciesKey))))),
     cat_timestamp = FALSE, level = 1L, verbose = verbose)
 
   # # ********************************************************************** #
