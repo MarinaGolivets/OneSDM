@@ -1,6 +1,6 @@
 # prepare_model_data -------
 
-#' Prepare Modelling Data for SDM Modelling using OneSDM (**DRAFT**)
+#' Prepare Modelling Data for SDM Modelling using OneSDM
 #'
 #' High-level workflow to prepare presence/pseudo-absence, predictors and
 #' cross-validation datasets required for fitting species distribution models
@@ -882,10 +882,11 @@ prepare_model_data <- function(
   }
 
   ecokit::cat_sep(
-    sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose)
+    sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose,
+    line_char_rep = 65)
 
   ecokit::cat_time(
-    "\nCombining and masking predictors to study area",
+    "Combining and masking predictors to study area",
     cat_timestamp = FALSE, verbose = verbose)
 
   model_predictors <- terra::rast(
@@ -1151,12 +1152,13 @@ prepare_model_data <- function(
   # # ********************************************************************** #
 
   ecokit::cat_sep(
-    sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose)
+    sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose,
+    line_char_rep = 65)
 
   if (cv_random) {
 
     ecokit::cat_time(
-      "\nCreating spatial cross-validation blocks using random blocks",
+      "Creating spatial cross-validation blocks using random blocks",
       cat_timestamp = FALSE, verbose = verbose)
 
     # Find aggregation factor based on cv_block_size and map resolution

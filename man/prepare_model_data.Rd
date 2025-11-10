@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_data.R
 \name{prepare_model_data}
 \alias{prepare_model_data}
-\title{Prepare Modelling Data for SDM Modelling using OneSDM (\strong{DRAFT})}
+\title{Prepare Modelling Data for SDM Modelling using OneSDM}
 \usage{
 prepare_model_data(
   model_dir = NULL,
