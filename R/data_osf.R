@@ -279,7 +279,7 @@ get_climate_data <- function(
 
   ecokit::info_chunk(
     "Download climate data files from OneSDM OSF project",
-    line_char_rep = 65L, verbose = verbose)
+    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
 
   ecokit::check_packages(
     c("crayon", "dplyr", "fs", "httr", "osfr", "purrr", "stringr", "terra"))
@@ -757,7 +757,7 @@ get_landuse_data <- function(
 
   ecokit::info_chunk(
     "Download land use files from OneSDM OSF project",
-    line_char_rep = 65L, verbose = verbose)
+    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
 
   ecokit::check_packages(
     c("crayon", "dplyr", "fs", "httr", "osfr", "purrr", "stringr", "terra"))

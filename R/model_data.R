@@ -659,6 +659,10 @@ prepare_model_data <- function(
   # Prepare species data ------
   # # ********************************************************************** #
 
+  ecokit::info_chunk(
+    "Preparing species data",
+    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+
   exclude_extents <- ecokit::get_option_with_default(
     "onesdm_exclude_extents", "OneSDM::prepare_species_data", "exclude_extents")
   species_name <- ecokit::get_option_with_default(
@@ -701,7 +705,7 @@ prepare_model_data <- function(
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   # # ********************************************************************** #
-  # Check number of presence grid cells after masking -----
+  # Check number of presence grid cells -----
   # # ********************************************************************** #
 
   n_pres_grids <- (terra::classify(species_pa_r, cbind(0L, NA)) == 1L) %>%
@@ -724,7 +728,7 @@ prepare_model_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "Number of presence grid cells after masking: ",
+      "Number of presence grid cells: ",
       ecokit::format_number(n_pres_grids)),
     cat_timestamp = FALSE, verbose = verbose)
 
@@ -739,7 +743,7 @@ prepare_model_data <- function(
   if (length(abs_exclude_ext) > 0L) {
 
     ecokit::cat_time(
-      "Excluding pseudo-absences based on provided extents",
+      "\nExcluding pseudo-absences based on provided extents",
       cat_timestamp = FALSE, verbose = verbose)
 
     for (ext in abs_exclude_ext) {
@@ -856,20 +860,12 @@ prepare_model_data <- function(
   # Predictors - current ------
   # # ********************************************************************** #
 
-  ecokit::cat_time(
-    "Preparing current climate predictors",
-    cat_timestamp = FALSE, verbose = verbose)
-
   climate_preds <- OneSDM::get_climate_data(
     climate_dir = climate_dir, resolution = resolution,
     climate_scenario = "current", climate_model = "current", year = "1981_2010",
     var_names = var_names, verbose = verbose)
 
   if (!is.null(pft_id)) {
-
-    ecokit::cat_time(
-      "Preparing current land use predictors",
-      cat_timestamp = FALSE, verbose = verbose)
 
     lu_preds <- OneSDM::get_landuse_data(
       climate_dir = climate_dir, resolution = resolution,
@@ -886,7 +882,7 @@ prepare_model_data <- function(
   }
 
   ecokit::cat_time(
-    "Combining and masking predictors to study area",
+    "\nCombining and masking predictors to study area",
     cat_timestamp = FALSE, verbose = verbose)
 
   model_predictors <- terra::rast(
@@ -942,7 +938,8 @@ prepare_model_data <- function(
   }
 
   ecokit::cat_time(
-    "Saving masked predictors", cat_timestamp = FALSE, verbose = verbose)
+    "Saving masked predictors", cat_timestamp = FALSE,
+    verbose = verbose, level = 1L)
   model_predictors_f <- fs::path(
     dir_sub, paste0("model_predictors_res_", resolution, ".RData"))
   ecokit::save_as(
@@ -1009,7 +1006,7 @@ prepare_model_data <- function(
       paste0(
         "The following predictor variables were excluded based on VIF > ",
         ecokit::format_number(vif_th),
-        ": ", crayon::blue(toString(excluded_vars)), "."),
+        ": ", crayon::blue(toString(excluded_vars))),
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     model_predictors <- terra::subset(
@@ -1031,7 +1028,7 @@ prepare_model_data <- function(
     paste0(
       "Final set of predictor variables: ",
       crayon::blue(toString(predictor_names))),
-    cat_timestamp = FALSE, verbose = verbose)
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
   climate_predictor_names <- setdiff(climate_preds$var_name, excluded_vars)
 
@@ -1050,9 +1047,9 @@ prepare_model_data <- function(
 
   if (make_future_predictions) {
 
-    ecokit::cat_time(
+    ecokit::info_chunk(
       "Preparing future climate predictors",
-      cat_timestamp = FALSE, verbose = verbose)
+      line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
 
     climate_future <- tidyr::expand_grid(
       climate_scenario = climate_scenario,
@@ -1062,7 +1059,7 @@ prepare_model_data <- function(
     ecokit::cat_time(
       paste0(
         "Total climate scenario combinations to process: ",
-        nrow(climate_future), "."),
+        nrow(climate_future)),
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     ecokit::cat_time(
@@ -1096,9 +1093,9 @@ prepare_model_data <- function(
 
     if (!is.null(pft_id) && !all(is.na(lu_predictor_names))) {
 
-      ecokit::cat_time(
+      ecokit::info_chunk(
         "Preparing future landuse predictors",
-        cat_timestamp = FALSE, verbose = verbose)
+        line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
 
       lu_future <- tidyr::expand_grid(
         climate_scenario = climate_scenario,
@@ -1106,8 +1103,7 @@ prepare_model_data <- function(
 
       ecokit::cat_time(
         paste0(
-          "Total land use scenario combinations to process: ",
-          nrow(lu_future), "."),
+          "Total land use scenario combinations to process: ", nrow(lu_future)),
         cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
       ecokit::cat_time(
@@ -1154,7 +1150,7 @@ prepare_model_data <- function(
   if (cv_random) {
 
     ecokit::cat_time(
-      "Creating spatial cross-validation blocks using random blocks",
+      "\nCreating spatial cross-validation blocks using random blocks",
       cat_timestamp = FALSE, verbose = verbose)
 
     # Find aggregation factor based on cv_block_size and map resolution
@@ -1309,7 +1305,7 @@ prepare_model_data <- function(
       ecokit::cat_time(
         paste0(
           "Sampling pseudo-absences with ", ecokit::format_number(model_n_reps),
-          " model repetitions."),
+          " model repetitions"),
         cat_timestamp = FALSE, verbose = verbose, level = 1L)
     } else {
       ecokit::cat_time(
