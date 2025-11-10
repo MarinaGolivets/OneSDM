@@ -23,6 +23,7 @@ prepare_model_data(
   pres_buffer = 1000L,
   abs_buffer = 10L,
   abs_exclude_ext = list(),
+  min_pres_grids = 50L,
   cv_folds = 5L,
   cv_block_size = 500L,
   cv_random = TRUE,
@@ -125,6 +126,9 @@ downloads sampling-effort raster of the specified group from
 \code{\link[=get_sampling_efforts]{get_sampling_efforts()}} for details. This can also be set via the
 \code{onesdm_bias_group} option.
 
+Note that the \code{bias} predictor, if used, is enforced to be kept during VIF
+screening.
+
 When not "none", the sampling-effort raster (log\if{html}{\out{<sub>}}10\if{html}{\out{</sub>}} scale) is
 added as a predictor and the 90\if{html}{\out{<sup>}}th\if{html}{\out{</sup>}} -percentile value of the
 raster in the modelling study area is used across the whole study area to
@@ -176,6 +180,12 @@ areas outside the species' native range or regions with specific
 environmental conditions that preclude the species' presence. If an empty
 list (default), no additional exclusion extents are applied. This can also
 be set via the \code{onesdm_abs_exclude_ext} option.}
+
+\item{min_pres_grids}{Integer. Minimum number of presence grid cells required
+to proceed with modelling. If the number of presence grid cells after
+filtering (e.g., after applying \code{pres_buffer}) is less than this value, the
+function will stop with an error. Default is \code{50}. This can also be set via
+\code{onesdm_min_pres_grids} option.}
 
 \item{cv_folds, cv_block_size, cv_random}{Parameters controlling spatial-block
 cross-validation.

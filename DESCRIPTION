@@ -3,7 +3,7 @@ Package: OneSDM
 Title: Automated workflows for species distribution modelling under
     environmental change scenarios
 Version: 0.1.0
-Date: 2025-11-04
+Date: 2025-11-10
 Authors@R: c(
     person("Ahmed", "El-Gabbas", , "elgabbas@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2225-088X")),
@@ -37,6 +37,7 @@ Suggests:
     CoordinateCleaner (>= 3.0),
     curl (>= 7.0),
     ggplot2 (>= 3.5.2),
+    gtools (>= 3.9),
     httr (>= 1.4),
     jsonlite (>= 2.0),
     knitr (>= 1.50),
