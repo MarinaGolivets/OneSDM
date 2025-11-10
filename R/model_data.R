@@ -881,6 +881,9 @@ prepare_model_data <- function(
 
   }
 
+  ecokit::cat_sep(
+    sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose)
+
   ecokit::cat_time(
     "\nCombining and masking predictors to study area",
     cat_timestamp = FALSE, verbose = verbose)
@@ -939,7 +942,7 @@ prepare_model_data <- function(
 
   ecokit::cat_time(
     "Saving masked predictors", cat_timestamp = FALSE,
-    verbose = verbose, level = 1L)
+    verbose = verbose)
   model_predictors_f <- fs::path(
     dir_sub, paste0("model_predictors_res_", resolution, ".RData"))
   ecokit::save_as(
@@ -1147,6 +1150,9 @@ prepare_model_data <- function(
   # Spatial blocks ------
   # # ********************************************************************** #
 
+  ecokit::cat_sep(
+    sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose)
+
   if (cv_random) {
 
     ecokit::cat_time(
@@ -1268,8 +1274,10 @@ prepare_model_data <- function(
   # Prepare modelling data ------
   # # ********************************************************************** #
 
-  ecokit::cat_time(
-    "Preparing modelling data", cat_timestamp = FALSE, verbose = verbose)
+  ecokit::info_chunk(
+    "Preparing modelling data",
+    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+
 
   model_data_r <- c(species_pa_r, model_predictors, species_blocks)
   model_data <- as.data.frame(model_data_r, xy = TRUE, na.rm = TRUE) %>%
