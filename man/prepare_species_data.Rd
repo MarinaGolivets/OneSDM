@@ -70,7 +70,7 @@ be set via the \code{onesdm_exclude_extents} option.}
 This will not be used to retrieve data from \code{GBIF} or \code{EASIN}. Can be set
 via the \code{onesdm_species_name} option. Default is \code{"species"}.}
 
-\item{outlier_dist_km}{Numeric. Distance threshold in kilometers for
+\item{outlier_dist_km}{Numeric. Distance threshold in kilometres for
 identifying spatial outliers. If \code{0L} (default), no outlier detection is
 performed. Can be set via the \code{onesdm_outlier_dist_km} option. For more
 details, see \code{\link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf()}}.}

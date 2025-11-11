@@ -11,31 +11,37 @@
 #' of intermediate raster/data objects to disk.
 #'
 #' @param climate_dir Character. Directory path for climate data files. Can be
-#'   set via the `onesdm_climate_dir` option. This directory is used to load
-#'   mask layers matching the specified resolution. The same directory should be
-#'   used in case of modelling multiple species to ensure consistency. Default
-#'   is `NULL`.
+#'   set via the `onesdm_climate_dir` option. This directory is used to
+#'   load/download mask layers matching the specified resolution and
+#'   current/future climate and land use data. The same directory should be used
+#'   in case of modelling multiple species to ensure consistency and redundant
+#'   re-download of large geospatial data. Default is `NULL`.
+#' @param resolution Integer. Spatial resolution. valid values are 5, 10
+#'   (default), or 20 for resolutions of approximately 10km, 20km, and 40km
+#'   (2.5, 5, and 10 arc-minutes) respectively. Can be set via the
+#'   `onesdm_resolution` option.
 #' @param climate_scenario,climate_model,climate_year Character. Future climate
 #'   scenario(s), model(s), and year(s). These three parameters control which
 #'   future climate data will be prepared for future predictions (data for
 #'   selected variables at current climate conditions are always prepared):
-#'   - **`climate_scenario`** represents the
-#'   Shared Socioeconomic Pathways (SSPs) to prepare for. Valid values are:
-#'   `"ssp126"`, `"ssp370"`, `"ssp585"`, `"all"` (default), or `"none"`. This
-#'   can also be set via the `onesdm_climate_scenario` option.
-#'   - **`climate_model`** represents abbreviation for the future climate
-#'   model(s) to prepare for; valid values are: `"gfdl"`, `"ipsl"`, `"mpi"`,
-#'   `"mri"`, `"ukesm1"`, `"all"` (default), or `"none"`. This can also be set
-#'   via the `onesdm_climate_model` option.
-#'   - **`climate_year`** represents the climate year range(s) to prepare; valid
-#'   values are: `"2011_2040"`, `"2041_2070"`, `"2071_2100"`, `"all"` (default),
-#'   `"none"`. This can also be set via the `onesdm_climate_year` option.
+#'   - **`climate_scenario`**:
+#'   Shared Socioeconomic Pathways (SSPs). Valid values are: `"ssp126"`,
+#'   `"ssp370"`, `"ssp585"`, `"all"` (default), or `"none"`. This can also be
+#'   set via the `onesdm_climate_scenario` option.
+#'   - **`climate_model`**: abbreviation for future climate
+#'   model(s). Valid values are: `"gfdl"`, `"ipsl"`, `"mpi"`, `"mri"`,
+#'   `"ukesm1"`, `"all"` (default), or `"none"`. This can also be set via the
+#'   `onesdm_climate_model` option.
+#'   - **`climate_year`**: future year range(s). Valid values are:
+#'   `"2011_2040"`, `"2041_2070"`, `"2071_2100"`, `"all"` (default), `"none"`.
+#'   This can also be set via the `onesdm_climate_year` option.
 #'
-#'   Multiple options for each of the three parameters can be provided as
-#'   character vectors; with all combinations of scenario × model × year being
-#'   prepared. This is unless any of the three parameters is set to "none" or
-#'   `NULL`, in which case no future climate data will be prepared. For more
-#'   details, [OneSDM::climate_data()] and [OneSDM::get_climate_data()].
+#'   Multiple values are possible for each of the three parameters, each
+#'   provided as a character vector. Combinations of scenario × model × year
+#'   will be prepared. This is unless any of the three parameters is set to
+#'   `"none"` or `NULL`, in which case no future climate data will be prepared.
+#'   For more details, [OneSDM::climate_data()] and
+#'   [OneSDM::get_climate_data()].
 #'
 #' @param pft_type,pft_id Information on the plant functional type (PFT)
 #'   parameters for land-use predictors. See [OneSDM::landuse_data] and
@@ -60,13 +66,11 @@
 #'   `onesdm_bias_group` option.
 #'
 #'   Note that the `bias` predictor, if used, is enforced to be kept during VIF
-#'   screening.
-#'
-#'   When not "none", the sampling-effort raster (log<sub>10</sub> scale) is
-#'   added as a predictor and the 90<sup>th</sup> -percentile value of the
-#'   raster in the modelling study area is used across the whole study area to
-#'   correct for sampling bias. For more details on model-based sampling bias
-#'   correction, see Warton et al.
+#'   screening (see below). When not "none", the sampling-effort raster
+#'   (log<sub>10</sub> scale) is added as a predictor and the 90<sup>th</sup>
+#'   -percentile value of the raster in the modelling study area is used across
+#'   the whole study area to correct for sampling bias. For more details on
+#'   model-based sampling bias correction, see Warton et al.
 #'   ([2013](https://doi.org/10.1371/journal.pone.0079168)).
 #'
 #' @param vif_th Numeric. Variance inflation factor (VIF) threshold for
@@ -74,38 +78,37 @@
 #'   excluded. Default is `10`.
 #'
 #'   - This argument refers to the `th` parameter of the [usdm::vifstep()]
-#'   function. Set to `NULL` to skip VIF-based variable selection. This can also
-#'   be set via the `onesdm_vif_th` option.
+#'   function. This can also be set via the `onesdm_vif_th` option.
 #'   - The function checks if the option `onesdm_vif_sample` is set in the
-#'   current R session; if so, its value is used as the `sample` argument of
-#'   `usdm::vifstep()`. This option controls the number of random sample points
-#'   drawn from the study area raster stack. If not set, the default value is
-#'   used (5000).
+#'   current R session; if so, its value (numeric integer) is used as the
+#'   `sample` argument of `usdm::vifstep()`. This option controls the number of
+#'   random sample points drawn from the study area raster stack. If not set,
+#'   the default value is used (5000).
 #'   - Similarly, if the option `onesdm_vif_keep` is set in the current R
 #'   session, its value (a character vector of predictor names) is used as the
 #'   `exclude` argument of `usdm::vifstep()`. This option allows specifying
 #'   predictors that should always be retained regardless of their VIF values.
-#'   If not set, no predictors are forced to be kept.
-#' @param pres_buffer Numeric. Distance in kilometres. Non-presence grid cells
-#'   beyond this distance from any presence grid cells are masked out of the
-#'   modelling area. This helps to exclude areas that are unlikely to be
-#'   accessible to the species. Larger values lead to more inclusive modelling
-#'   areas. If `NULL` or `<=0`, no presences-based masking is applied. Default
-#'   is `1000` km. This can be set via the `onesdm_pres_buffer` option.
-#' @param abs_buffer Numeric. Minimum distance in kilometres from presence
-#'   points inside which pseudo-absences will not be sampled. This helps avoid
-#'   sampling pseudo-absences in nearby areas of presences that are likely to be
-#'   suitable or are occupied by the species. Larger values lead to more
-#'   conservative pseudo-absence sampling. If `NULL` or `<=0`, no presence-based
-#'   pseudo-absence exclusion buffer is applied (i.e., pseudo-absences can be
-#'   sampled anywhere outside presence grid cells, prior to sampling
-#'   pseudo-absences using [sdm::background]). Default is `10` km. This can be
-#'   set via the `onesdm_abs_buffer` option.
-#' @param min_pres_grids Integer. Minimum number of presence grid cells required
-#'   to proceed with modelling. If the number of presence grid cells after
-#'   filtering (e.g., after applying `pres_buffer`) is less than this value, the
-#'   function will stop with an error. Default is `50`. This can also be set via
-#'   `onesdm_min_pres_grids` option.
+#'   If not set, no predictors are forced to be kept. If a valid `bias_group` is
+#'   provided, the corresponding `bias` predictor is always included in this
+#'   list to ensure it is retained during VIF screening.
+#' @param pres_buffer Numeric or `NULL`. Distance in kilometres. Non-presence
+#'   grid cells beyond this distance from any presence grid cells are masked out
+#'   of the modelling area (i.e., no pseudo-absences will be sampled there).
+#'   This helps to exclude areas that are unlikely to be accessible to the
+#'   species or are too environmentally distant from the known species
+#'   presences. Larger values lead to more inclusive modelling areas. If `NULL`
+#'   or `<=0`, no presences-based masking is applied (i.e., pseudo-absences can
+#'   be sampled anywhere in the study area). Default is `1000` km. This can be
+#'   set via the `onesdm_pres_buffer` option.
+#' @param abs_buffer Numeric or `NULL`. Minimum distance in kilometres from
+#'   presence points inside which pseudo-absences will not be sampled. This
+#'   helps avoid sampling pseudo-absences in nearby areas of presences that are
+#'   likely to be suitable or are occupied by the species. Larger values lead to
+#'   more conservative pseudo-absence sampling. If `NULL` or `<=0`, no
+#'   presence-based pseudo-absence exclusion buffer is applied (i.e.,
+#'   pseudo-absences can be sampled anywhere outside presence grid cells, prior
+#'   to sampling pseudo-absences using [sdm::background]). Default is `10` km.
+#'   This can be set via the `onesdm_abs_buffer` option.
 #' @param abs_exclude_ext List (Optional). A list of terra `SpatExtent` objects,
 #'   typically generated using [terra::ext()]. Each extent defines a geographic
 #'   area where pseudo-absences will not be sampled. This is useful for
@@ -114,6 +117,10 @@
 #'   environmental conditions that preclude the species' presence. If an empty
 #'   list (default), no additional exclusion extents are applied. This can also
 #'   be set via the `onesdm_abs_exclude_ext` option.
+#' @param min_pres_grids Integer. Minimum number of presence grid cells required
+#'   to proceed with modelling. If the number of presence grid cells after
+#'   filtering is less than this value, the function will stop with an error.
+#'   Default is `50`. This can also be set via `onesdm_min_pres_grids` option.
 #' @param cv_folds,cv_block_size,cv_random Parameters controlling spatial-block
 #'   cross-validation.
 #'   - **`cv_folds`**: Integer. Number of cross-validation folds. Default is
@@ -132,19 +139,20 @@
 #'   `onesdm_cv_random` option.
 #' @param abs_ratio,model_n_reps,n_cores Parameters for sampling
 #'   pseudo-absences.
-#'   - **`abs_ratio`**: Integer. Desired ratio of pseudo-absences to
+#'   - **`abs_ratio`**: Integer scalar. Desired ratio of pseudo-absences to
 #'   training presences used when sampling background points. Default is `10`,
 #'   which means that for each training presence point, 10 pseudo-absence points
 #'   will be sampled. This can also be set via the `onesdm_abs_ratio` option.
-#'   - **`model_n_reps`**: Integer. Number of repetition datasets (different
-#'   sets of pseudo-absences) to generate for each CV fold. Pseudo-absences are
-#'   sampled using [sdm::background()] with method `"eDist"`, which draws
-#'   pseudo-absences weighted by environmental distance from presence grid
-#'   cells. Default is `5`, for five different pseudo-absence datasets per fold.
-#'   If the available absences become limiting (when the number of requested
-#'   pseudo-absences exceeds ~80% of available absences), the function will
-#'   reduce the number of repetitions to `1` as further repetitions would be
-#'   redundant. This can also be set via the `onesdm_model_n_reps` option.
+#'   - **`model_n_reps`**: Integer scalar. Number of repetition datasets
+#'   (different sets of pseudo-absences) to generate for each CV fold.
+#'   Pseudo-absences are sampled using [sdm::background()] with method
+#'   `"eDist"`, which draws pseudo-absences weighted by environmental distance
+#'   from presence grid cells. Default is `5`, for five different pseudo-absence
+#'   datasets per fold. If the available absences become limiting (when the
+#'   number of requested pseudo-absences exceeds ~80% of available absences),
+#'   the function will reduce the number of repetitions to `1` as further
+#'   repetitions would be redundant. This can also be set via the
+#'   `onesdm_model_n_reps` option.
 #'   - **`n_cores`**: Integer. Number of CPU cores to use for parallel
 #'   processing of data for cross-validation folds. Default is equal to
 #'   `cv_folds`. Parallel processing helps to speed up the preparation of
@@ -188,6 +196,36 @@
 #'   - Saves a tibble describing all CV folds and model repetitions with file
 #'   paths to persisted datasets (training/testing rasters and pseudo-absence
 #'   objects).
+#'
+#'   The function also saves a summary list for the parameters used and file
+#'   paths to important intermediate data objects under
+#'   `"<model_dir>/models_res_<resolution>/model_data_summary.RData"`. This list
+#'   contains the following elements:
+#'   - **`model_dir`**: Character. The modelling directory path.
+#'   - **`species_data_raw`**: list of GBIF and EASIN IDs and/or user-provided
+#'   coordinates used. This also includes the file path to the saved GeoTIFF
+#'   file for prepared species  distribution `species_data_tiff`.
+#'   - **`climate`**: list. Information on the current and future climate data
+#'   used, including climate directory path, climate variable names, scenarios,
+#'   models, years, and file paths to the downloaded GeoTIFF files.
+#'   - **`landuse`**: list. Information on the land-use data used, including PFT
+#'   type, PFT IDs, and file paths to the downloaded GeoTIFF files.
+#'   - **`bias`**: list. Information on the sampling-effort (bias) predictor
+#'   used, if any, including the taxonomic group and the value of the
+#'   90<sup>th</sup>-percentile used for bias correction `bias_fix_value`.
+#'   - **`var_selection`**: list. Information on the variable selection process,
+#'   including the VIF threshold used, names of always kept or excluded
+#'   predictors and file path for the VIF selection summary.
+#'   - **`model_options`**: list. Information on modelling options used,
+#'   including resolution, presence filtering buffer, absence exclusion buffer,
+#'   absence-to-presence ratio, minimum number of presence grid cells,
+#'   cross-validation parameters, and number of model repetitions.
+#'   - **`model_data`**: list. Information on the prepared modelling data,
+#'   including file paths to the saved presence/pseudo-absence GeoTIFF files,
+#'   predictor names, number of presence grid cells, and file paths to the saved
+#'   model predictors and modelling data RData files. This also includes the
+#'   tibble `model_data_cv` with one row per cross-validation fold × repetition,
+#'   saved as an RData file (see the `value` section below).
 #'
 #' @return Invisibly returns a tibble (`model_data_cv`) with one row per
 #'   cross-validation fold × repetition. The tibble is saved as `.RData` file
@@ -247,7 +285,7 @@ prepare_model_data <- function(
     training_abs <- training_pres <- test_abs <- test_pres <- valid <- NULL
 
   ecokit::check_packages(
-    c("usdm", "sdm", "parallelly", "future.apply", "future",
+    c("usdm", "sdm", "parallelly", "future.apply", "future", "gtools", "fs",
       "tidyr", "withr", "sf", "terra", "crayon", "purrr", "tibble", "dplyr"))
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
@@ -309,11 +347,12 @@ prepare_model_data <- function(
 
   # Modelling parameters
   pres_buffer <- ecokit::assign_from_options(
-    pres_buffer, "onesdm_pres_buffer", c("numeric", "integer"))
+    pres_buffer, "onesdm_pres_buffer", c("numeric", "integer"),
+    allow_null = TRUE)
   abs_ratio <- ecokit::assign_from_options(
     abs_ratio, "onesdm_abs_ratio", c("numeric", "integer"))
   abs_buffer <- ecokit::assign_from_options(
-    abs_buffer, "onesdm_abs_buffer", c("numeric", "integer"))
+    abs_buffer, "onesdm_abs_buffer", c("numeric", "integer"), allow_null = TRUE)
   abs_exclude_ext <- ecokit::assign_from_options(
     abs_exclude_ext, "onesdm_abs_exclude_ext", "list")
   min_pres_grids <- ecokit::assign_from_options(
@@ -344,12 +383,12 @@ prepare_model_data <- function(
 
   ## `climate_scenario` -----
 
-  valid_clim_sceanarios <- c("ssp126", "ssp370", "ssp585", "all", "none")
-  if (!all(climate_scenario %in% valid_clim_sceanarios)) {
+  valid_clim_scenarios <- c("ssp126", "ssp370", "ssp585", "all", "none")
+  if (!all(climate_scenario %in% valid_clim_scenarios)) {
     ecokit::stop_ctx(
       paste0(
         "Invalid climate_scenario value(s). Valid options are: ",
-        toString(valid_clim_sceanarios), "."),
+        toString(valid_clim_scenarios), "."),
       climate_scenario = climate_scenario, cat_timestamp = FALSE)
   }
 
@@ -537,7 +576,18 @@ prepare_model_data <- function(
 
   ## `cv_folds` ----
 
+  if (!is.numeric(cv_folds) || length(cv_folds) != 1L || cv_folds <= 0L) {
+    ecokit::stop_ctx(
+      "The `cv_folds` argument must be a single positive numeric.",
+      cv_folds = cv_folds, cat_timestamp = FALSE)
+  }
+
   if (!is.integer(cv_folds)) {
+    if (cv_folds != as.integer(cv_folds)) {
+      ecokit::stop_ctx(
+        "The `cv_folds` argument must be an integer value.",
+        cv_folds = cv_folds, cat_timestamp = FALSE)
+    }
     cv_folds <- as.integer(cv_folds)
   }
 
@@ -551,9 +601,9 @@ prepare_model_data <- function(
 
   ## `n_cores` ----
 
-  if (n_cores < 1L) {
+  if (!is.numeric(n_cores) || length(n_cores) != 1L || n_cores <= 0L) {
     ecokit::stop_ctx(
-      "The `n_cores` argument must be a positive integer.",
+      "The `n_cores` argument must be a single positive numeric.",
       n_cores = n_cores, cat_timestamp = FALSE)
   }
 
@@ -651,6 +701,27 @@ prepare_model_data <- function(
         min_pres_grids = min_pres_grids, cat_timestamp = FALSE)
     }
     min_pres_grids <- as.integer(min_pres_grids)
+  }
+
+
+  # # ********************************************************************** #
+
+  ## parameters set via options -----
+
+  vif_sample <- getOption("onesdm_vif_sample")
+
+  if (is.null(vif_sample)) {
+    vif_sample <- 5000L
+  } else {
+    if (!is.numeric(vif_sample) || length(vif_sample) != 1L ||
+        vif_sample <= 0L) {
+      ecokit::stop_ctx(
+        paste0(
+          "The `onesdm_vif_sample` option must be a single positive numeric ",
+          "value."),
+        vif_sample = vif_sample, cat_timestamp = FALSE)
+    }
+    vif_sample <- as.integer(vif_sample)
   }
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
@@ -883,7 +954,7 @@ prepare_model_data <- function(
 
   ecokit::cat_sep(
     sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose,
-    line_char_rep = 65)
+    line_char_rep = 65L)
 
   ecokit::cat_time(
     "Combining and masking predictors to study area",
@@ -974,21 +1045,6 @@ prepare_model_data <- function(
 
   if (bias_group != "none") {
     vif_keep <- unique(c(vif_keep, "bias"))
-  }
-
-  vif_sample <- getOption("onesdm_vif_sample")
-  if (!is.null(vif_sample) &&
-      (!is.numeric(vif_sample) || length(vif_sample) != 1L ||
-       vif_sample <= 0L)) {
-    ecokit::stop_ctx(
-      paste0(
-        "The `onesdm_vif_sample` option must be a single positive numeric ",
-        "value."),
-      vif_sample = vif_sample, cat_timestamp = FALSE)
-  }
-
-  if (is.null(vif_sample)) {
-    vif_sample <- 5000L
   }
 
   ecokit::cat_time(
@@ -1153,7 +1209,7 @@ prepare_model_data <- function(
 
   ecokit::cat_sep(
     sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose,
-    line_char_rep = 65)
+    line_char_rep = 65L)
 
   if (cv_random) {
 
@@ -1404,7 +1460,7 @@ prepare_model_data <- function(
           out_path = training_r_file)
       }
 
-      # Pseuso-absences -------
+      # Pseudo-absences -------
       n_pseudo_abs <- pmin(n_training_pres * abs_ratio, n_training_abs)
 
       training_r_sub <- terra::subset(

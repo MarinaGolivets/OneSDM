@@ -51,7 +51,7 @@
 #' @param species_name Character. Name of the species for labelling outputs.
 #'   This will not be used to retrieve data from `GBIF` or `EASIN`. Can be set
 #'   via the `onesdm_species_name` option. Default is `"species"`.
-#' @param outlier_dist_km Numeric. Distance threshold in kilometers for
+#' @param outlier_dist_km Numeric. Distance threshold in kilometres for
 #'   identifying spatial outliers. If `0L` (default), no outlier detection is
 #'   performed. Can be set via the `onesdm_outlier_dist_km` option. For more
 #'   details, see [ecokit::nearest_dist_sf()].
