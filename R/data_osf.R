@@ -84,13 +84,7 @@ get_mask_layer <- function(
     save_path <- fs::file_temp(
       pattern = paste0("mask_agg", resolution, "_"), ext = ".tif")
   } else {
-    if (!fs::dir_exists(climate_dir)) {
-      ecokit::cat_time(
-        paste0(
-          "Creating climate data directory at: ", crayon::blue(climate_dir)),
-        cat_timestamp = FALSE, verbose = verbose)
-      fs::dir_create(climate_dir)
-    }
+    fs::dir_create(climate_dir)
     save_path <- fs::path(climate_dir, paste0("mask_agg_", resolution, ".tif"))
   }
 
@@ -317,15 +311,8 @@ get_climate_data <- function(
       cat_timestamp = FALSE)
   }
 
-  if (!fs::dir_exists(climate_dir)) {
-    ecokit::cat_time(
-      paste0(
-        "Creating climate data directory at: ",
-        crayon::blue(climate_dir)),
-      cat_timestamp = FALSE, verbose = verbose)
-    fs::dir_create(climate_dir)
-  }
-
+  fs::dir_create(climate_dir)
+  
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## resolution ----
@@ -796,16 +783,9 @@ get_landuse_data <- function(
         "use data files."),
       cat_timestamp = FALSE)
   }
-
-  if (!fs::dir_exists(climate_dir)) {
-    ecokit::cat_time(
-      paste0(
-        "Creating climate data directory at: ",
-        crayon::blue(climate_dir)),
-      cat_timestamp = FALSE, verbose = verbose)
-    fs::dir_create(climate_dir)
-  }
-
+  
+  fs::dir_create(climate_dir)
+  
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## resolution ----

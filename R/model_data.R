@@ -1280,12 +1280,10 @@ prepare_model_data <- function(
     "Preparing modelling data",
     line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
 
-
   model_data_r <- c(species_pa_r, model_predictors, species_blocks)
   model_data <- as.data.frame(model_data_r, xy = TRUE, na.rm = TRUE) %>%
     tibble::tibble()
-  model_data_f <- fs::path(
-    dir_model_data, paste0("model_data_res_", resolution, ".RData"))
+  model_data_f <- fs::path(dir_model_data, "model_data_res_.RData")
   ecokit::save_as(
     object = model_data, object_name = "model_data", out_path = model_data_f)
 
@@ -1411,6 +1409,9 @@ prepare_model_data <- function(
 
       training_r_sub <- terra::subset(
         x = training_r, subset = "species", negate = TRUE)
+      if (bias_as_predictor) {
+        training_r_sub$bias_fixed <- NULL
+      }
       training_r_pres <- training_r
       training_r_pres[training_r_pres$species == 0L] <- NA
       training_r_pres <- terra::subset(

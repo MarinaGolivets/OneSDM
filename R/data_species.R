@@ -214,15 +214,8 @@ prepare_species_data <- function(
       cat_timestamp = FALSE)
   }
 
-  if (!fs::dir_exists(climate_dir)) {
-    ecokit::cat_time(
-      paste0(
-        "Creating climate data directory at: ",
-        crayon::blue(climate_dir)),
-      cat_timestamp = FALSE, verbose = verbose)
-    fs::dir_create(climate_dir)
-  }
-
+  fs::dir_create(climate_dir)
+  
   # # ||||||||||||||||||||||||||||||||||||||||| #
 
   ## resolution -----
