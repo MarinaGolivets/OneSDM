@@ -913,7 +913,7 @@ prepare_model_data <- function(
     ecokit::cat_time(
       paste0(
         "Using sampling efforts for '", crayon::blue(bias_group),
-        "' group as predictor to correct for sampling bias."),
+        "' group as predictor to correct for sampling bias"),
       cat_timestamp = FALSE, verbose = verbose)
 
     bias_r <- OneSDM::get_sampling_efforts(
@@ -1531,6 +1531,10 @@ prepare_model_data <- function(
   # # ********************************************************************** #
   # Summary of modelling data ------
   # # ********************************************************************** #
+
+  if (length(abs_exclude_ext) > 0L) {
+    abs_exclude_ext <- purrr::map(abs_exclude_ext, terra::wrap)
+  }
 
   model_data_summary <- list(
     # model output directory
