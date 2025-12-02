@@ -21,78 +21,83 @@ prepare_species_data(
 )
 }
 \arguments{
-\item{easin_ids}{Character vector. One or more EASIN species IDs. Each ID
-should start with 'R' followed by five digits (e.g. "R00544"). This cannot
-be \code{NULL}. Species IDs can be found on the \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website} by searching
-for a species and locating the "EASIN ID" in the species details section.
-Can also be set via the \code{onesdm_easin_ids} option. For more details, see
-\code{\link[=prepare_easin_data]{prepare_easin_data()}}.}
+\item{easin_ids}{Character vector (Optional). One or more EASIN species IDs,
+each starting with "R" followed by five digits (e.g., "R00544"). Species
+IDs can be obtained from the \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website} by searching
+for a species and checking its "EASIN ID" in the species details section.
+When multiple IDs are provided, data are collated across all IDs. If \code{NULL}
+(default), the function attempts to retrieve IDs from the
+"\code{onesdm_easin_ids}" option and skips the EASIN download if no IDs are set.
+For more details, see \link{prepare_easin_data}.}
 
-\item{gbif_ids}{Character or numeric vector of GBIF taxon keys (as numeric
-strings) to query. If \code{NULL}, attempts to retrieve from the
-\code{onesdm_gbif_ids} option. To request data from GBIF, GBIF credentials must
-be set for the current session, otherwise an error will be raised. For
-more, see \code{\link[=prepare_gbif_data]{prepare_gbif_data()}}, and this
+\item{gbif_ids}{character or numeric (optional). A vector of one or more GBIF
+taxon keys. When multiple IDs are supplied, data are combined across all
+keys. If \code{NULL} (default), the function attempts to retrieve IDs from the
+"\code{onesdm_gbif_ids}" option. If no IDs are set, the GBIF download step is
+skipped. To request data from GBIF, GBIF credentials must be set for the
+current session, otherwise an error will be raised. For more, see
+\link{prepare_gbif_data}, and this
 \href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{article}
 from \code{rgbif} package documentation on how to set GBIF credentials.}
 
-\item{coordinates}{A data frame or matrix containing user-provided longitude
-and latitude values. Must have exactly two columns. If not provided
-directly, the function will attempt to retrieve it from the
-\code{onesdm_coordinates} option. See \code{\link[=prepare_user_data]{prepare_user_data()}} for more details.}
+\item{coordinates}{data frame or matrix (optional). A user-supplied object
+containing longitude and latitude values in two columns (in that order).
+Must have exactly two columns. If \code{NULL} (default), the function attempts
+to retrieve coordinates from the "\code{onesdm_coordinates}" option. See
+\code{\link[=prepare_user_data]{prepare_user_data()}} for details.}
 
 \item{model_dir}{Character. Directory path where model outputs will be saved.
-Can be set via the \code{onesdm_model_dir} option. A subdirectory \code{data} will be
-created within this directory to store processed species data. A separate
-directory is expected in case of modelling multiple species, otherwise data
-files may be overwritten or mixed up. Default is \code{NULL}.}
+Can be set via the "\code{onesdm_model_dir}" option. A subdirectory \code{data} will
+be created within this directory to store processed species data. A
+separate directory is expected in case of modelling multiple species,
+otherwise data files may be overwritten or mixed up. Default is \code{NULL}.}
 
 \item{climate_dir}{Character. Directory path for climate data files. Can be
-set via the \code{onesdm_climate_dir} option. This directory is used to load
+set via the "\code{onesdm_climate_dir}" option. This directory is used to load
 mask layers matching the specified resolution. The same directory should be
 used in case of modelling multiple species to ensure consistency. Default
 is \code{NULL}.}
 
 \item{resolution}{Numeric. Spatial resolution. valid values are 5, 10, or 20
-for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
-arc-minutes) respectively. Can be set via the \code{onesdm_resolution} option.
+for resolutions of approximately 5, 10, and 20 km (2.5, 5, and 10
+arc-minutes) respectively. Can be set via the "\code{onesdm_resolution}" option.
 Default is \code{NULL}.}
 
-\item{verbose}{Logical. If \code{TRUE} (default), prints progress messages. Can be
-set via the \code{onesdm_verbose} option.}
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress and information
+messages. Can be set via the "\code{onesdm_verbose}" option.}
 
 \item{exclude_extents}{List. A list of \code{SpatExtent} objects (created using
 \link[terra:ext]{terra::ext} function), defining geographic areas to exclude from the
 species data. Default is an empty list, meaning no areas are excluded. Can
-be set via the \code{onesdm_exclude_extents} option.}
+be set via the "\code{onesdm_exclude_extents}" option.}
 
 \item{species_name}{Character. Name of the species for labelling outputs.
 This will not be used to retrieve data from \code{GBIF} or \code{EASIN}. Can be set
-via the \code{onesdm_species_name} option. Default is \code{"species"}.}
+via the "\code{onesdm_species_name}" option. Default is \code{"species"}.}
 
 \item{outlier_dist_km}{Numeric. Distance threshold in kilometres for
 identifying spatial outliers. If \code{0L} (default), no outlier detection is
-performed. Can be set via the \code{onesdm_outlier_dist_km} option. For more
-details, see \code{\link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf()}}.}
+performed. Can be set via the "\code{onesdm_outlier_dist_km}" option. For more
+details, see \link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf}.}
 
 \item{outlier_resolution}{Numeric. Spatial resolution for outlier detection
-calculations. Can be set via the \code{onesdm_outlier_resolution} option. Only
+calculations. Can be set via the "\code{onesdm_outlier_resolution}" option. Only
 used if \code{outlier_dist_km} is greater than 0. A coarser resolution can speed
-up calculations. See \code{\link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf()}} for more details. Default
-is 0.125.}
+up calculations. See \link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf} for more details. Default is
+0.125.}
 
 \item{outlier_n_cores}{Integer. Number of CPU cores to use for outlier
-detection. Can be set via the \code{onesdm_outlier_n_cores} option. Only used if
-\code{outlier_dist_km} is greater than 0. Default is \code{6L}.}
+detection. Can be set via the "\code{onesdm_outlier_n_cores}" option. Only used
+if \code{outlier_dist_km} is greater than 0. Default is \code{6L}.}
 
 \item{plot_distribution}{Logical. If \code{TRUE} (default), generates a JPEG map
-of species distribution. Can be set via the \code{onesdm_plot_distribution}
+of species distribution. Can be set via the "\code{onesdm_plot_distribution}"
 option.}
 }
 \value{
 Invisibly returns path to the final processed species data raster
-file (\verb{species_data_r_<resolution>_km_PA.tif}) saved in the \code{data}
-subdirectory of \code{model_dir}.
+file ("\verb{species_data_r_<resolution>_km_PA.tif}") saved in the "\code{data}"
+subdirectory of "\code{model_dir}".
 }
 \description{
 This function prepares species occurrence data from multiple
@@ -112,7 +117,7 @@ optional plots.
 \itemize{
 \item Validates input parameters
 \item Retrieves species data from GBIF, EASIN, and/or user coordinates using
-\code{\link[=prepare_gbif_data]{prepare_gbif_data()}}, \code{\link[=prepare_easin_data]{prepare_easin_data()}}, and \code{\link[=prepare_user_data]{prepare_user_data()}}.
+\link{prepare_gbif_data}, \link{prepare_easin_data}, and \link{prepare_user_data}.
 \strong{Note} that
 \itemize{
 \item at least one of \code{easin_ids}, \code{gbif_ids}, or \code{coordinates} must be
@@ -129,27 +134,27 @@ the respective function documentation for details.
 shows the rasterized species distribution overlaid on a world map. If
 \code{exclude_extents} is provided, these areas are highlighted on the map in red.
 If a specific extent is used to retrieve GBIF data (via the
-\code{onesdm_gbif_boundaries} option in \code{\link[=prepare_gbif_data]{prepare_gbif_data()}}), it is also
+\code{onesdm_gbif_boundaries} option in \link{prepare_gbif_data}), it is also
 highlighted on the map in green
 }
-\item Function default arguments can be set globally using the \code{options()}
+\item Function default arguments can be set globally using the \link[base:options]{base::options}
 function. Users can set these options at the start of their R session to
 avoid repeatedly specifying them in function calls. The following options
 correspond to the function arguments:
 \itemize{
-\item \code{onesdm_easin_ids}: for the \code{easin_ids} argument.
-\item \code{onesdm_gbif_ids}: for the \code{gbif_ids} argument.
-\item \code{onesdm_coordinates}: for the \code{coordinates} argument.
-\item \code{onesdm_model_dir}: for the \code{model_dir} argument.
-\item \code{onesdm_climate_dir}: for the \code{climate_dir} argument.
-\item \code{onesdm_resolution}: for the \code{resolution} argument.
-\item \code{onesdm_verbose}: for the \code{verbose} argument.
-\item \code{onesdm_exclude_extents}: for the \code{exclude_extents} argument.
-\item \code{onesdm_species_name}: for the \code{species_name} argument.
-\item \code{onesdm_outlier_dist_km}: for the \code{outlier_dist_km} argument.
-\item \code{onesdm_outlier_resolution}: for the \code{outlier_resolution} argument.
-\item \code{onesdm_outlier_n_cores}: for the \code{outlier_n_cores} argument.
-\item \code{onesdm_plot_distribution}: for the \code{plot_distribution} argument.
+\item "\code{onesdm_easin_ids}": for the \code{easin_ids} argument.
+\item "\code{onesdm_gbif_ids}": for the \code{gbif_ids} argument.
+\item "\code{onesdm_coordinates}": for the \code{coordinates} argument.
+\item "\code{onesdm_model_dir}": for the \code{model_dir} argument.
+\item "\code{onesdm_climate_dir}": for the \code{climate_dir} argument.
+\item "\code{onesdm_resolution}": for the \code{resolution} argument.
+\item "\code{onesdm_verbose}": for the \code{verbose} argument.
+\item "\code{onesdm_exclude_extents}": for the \code{exclude_extents} argument.
+\item "\code{onesdm_species_name}": for the \code{species_name} argument.
+\item "\code{onesdm_outlier_dist_km}": for the \code{outlier_dist_km} argument.
+\item "\code{onesdm_outlier_resolution}": for the \code{outlier_resolution} argument.
+\item "\code{onesdm_outlier_n_cores}": for the \code{outlier_n_cores} argument.
+\item "\code{onesdm_plot_distribution}": for the \code{plot_distribution} argument.
 \item This in addition to options used in the internal functions called.
 }
 }

@@ -15,8 +15,8 @@ get_mask_layer(
 }
 \arguments{
 \item{resolution}{Numeric. Spatial resolution. Valid values are 5, 10, or 20
-for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
-arc-minutes) respectively. Can be set via the \code{onesdm_resolution} option.
+for resolutions of approximately 5, 10, and 20 km (2.5, 5, and 10
+arc-minutes) respectively. Can be set via the "\code{onesdm_resolution}" option.
 Default is \code{NULL}.}
 
 \item{climate_dir}{Character. Directory where climate data and mask layers

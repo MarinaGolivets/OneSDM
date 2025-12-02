@@ -7,8 +7,8 @@
 #' object directly or saved to a specified path.
 #'
 #' @param resolution Numeric. Spatial resolution. Valid values are 5, 10, or 20
-#'   for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
-#'   arc-minutes) respectively. Can be set via the `onesdm_resolution` option.
+#'   for resolutions of approximately 5, 10, and 20 km (2.5, 5, and 10
+#'   arc-minutes) respectively. Can be set via the "`onesdm_resolution`" option.
 #'   Default is `NULL`.
 #' @param climate_dir Character. Directory where climate data and mask layers
 #'   are stored. If `NULL` (default), a temporary file is created.
@@ -150,12 +150,12 @@ get_mask_layer <- function(
 #' integrity.
 #'
 #' @param climate_dir Character. Destination directory where climate and land
-#'   use data files will be saved. Can be set via the `onesdm_climate_dir`
+#'   use data files will be saved. Can be set via the "`onesdm_climate_dir`"
 #'   option. The same directory should be used in case of modelling multiple
 #'   species to ensure consistency. Default is `NULL`.
 #' @param resolution Numeric. Spatial resolution. Valid values are 5, 10, or 20
-#'   for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
-#'   arc-minutes) respectively. Can be set via the `onesdm_resolution` option.
+#'   for resolutions of approximately 5, 10, and 20 km (2.5, 5, and 10
+#'   arc-minutes) respectively. Can be set via the "`onesdm_resolution`" option.
 #'   Default is `10L`.
 #' @param climate_scenario Character scalar. Climate scenario; one of `current`,
 #'   `ssp126`, `ssp370`, `ssp585`. Default is `"current"`.
@@ -165,9 +165,9 @@ get_mask_layer <- function(
 #' @param year Character scalar. Time period; one of `1981_2010`, `2011_2040`,
 #'   `2041_2070`, `2071_2100`. Default is `"1981_2010"`.
 #' @param var_names Character vector of climate variable codes to download. See
-#'   [OneSDM::climate_data] for the list of valid variable names. Can be set via
-#'   the `onesdm_var_names` option. This parameter has no default and must be
-#'   provided.
+#'   [OneSDM::climate_data] for the list of valid climate variable names. Can
+#'   be set via the "`onesdm_var_names`" option. This parameter is required and
+#'   cannot be `NULL`.
 #' @param verbose Logical scalar. If `TRUE` (default), prints progress and
 #'   informative messages.
 #' @param sleep_time Numeric scalar. Number of seconds to pause after
@@ -312,7 +312,7 @@ get_climate_data <- function(
   }
 
   fs::dir_create(climate_dir)
-  
+
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## resolution ----
@@ -633,12 +633,12 @@ get_climate_data <- function(
 #'   and downloads only missing or corrupted files.
 #'
 #' @param climate_dir Character. Destination directory where climate and land
-#'   use data files will be saved. Can be set via the `onesdm_climate_dir`
+#'   use data files will be saved. Can be set via the "`onesdm_climate_dir`"
 #'   option. The same directory should be used in case of modelling multiple
 #'   species to ensure consistency. Default is `NULL`.
 #' @param resolution Numeric. Spatial resolution. Valid values are 5, 10, or 20
-#'   for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
-#'   arc-minutes) respectively. Can be set via the `onesdm_resolution` option.
+#'   for resolutions of approximately 5, 10, and 20 km (2.5, 5, and 10
+#'   arc-minutes) respectively. Can be set via the "`onesdm_resolution`" option.
 #'   Default is `10L`.
 #' @param climate_scenario Character scalar. Climate scenario; one of `current`,
 #'   `ssp126`, `ssp370`, `ssp585`. Default is `"current"`.
@@ -646,11 +646,11 @@ get_climate_data <- function(
 #'   `2041_2070`, `2071_2100`. Default is `"1981_2010"`.
 #' @param pft_type Character string. Plant functional type category. Has to be
 #'   one of "`cross-walk`" (default) "`original`"; see [OneSDM::landuse_data]
-#'   for details. This can be set via the `onesdm_pft_type` option.
+#'   for details. This can be set via the "`onesdm_pft_type`" option.
 #' @param pft_id Numeric vector. One or more plant functional type identifiers
 #'   to download. Must be valid for the specified `pft_type`: 1-20 for `pft_type
 #'   == "original"`, and 1-12 for `pft_type == "cross-walk"`; See
-#'   [OneSDM::landuse_data] for details. Can be set via the `onesdm_pft_id`
+#'   [OneSDM::landuse_data] for details. Can be set via the "`onesdm_pft_id`"
 #'   option. This parameter has no default and must be provided.
 #' @param verbose Logical scalar. If `TRUE` (default), prints progress and
 #'   informative messages.
@@ -783,9 +783,9 @@ get_landuse_data <- function(
         "use data files."),
       cat_timestamp = FALSE)
   }
-  
+
   fs::dir_create(climate_dir)
-  
+
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   ## resolution ----

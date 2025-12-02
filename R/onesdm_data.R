@@ -27,7 +27,7 @@
 #'   e.g., "`1981_2010_res_10/bio1.tif`".
 #' - **`file_size_mb`**: Double. The size of the climate data file in megabytes.
 #' - **`resolution`**: Integer. The resolution of the climate data. Valid values
-#'   are `5`, `10`, and `20`, for resolutions of approximately 10, 20, and 40 km
+#'   are `5`, `10`, and `20`, for resolutions of approximately 5, 10, and 20 km
 #'   (2.5, 5, and 10 arc-minutes) respectively.
 #' - **`out_dir`**: Character. The output directory for the climate data file;
 #'   e.g., "`res_<resolution>/1981_2010`" and
@@ -59,7 +59,7 @@
 #'   "`original`" for the PFTs classes in the original land use data and
 #'   "`cross-walk`" for the grouped (cross-walked) PFTs.
 #' - **`resolution`**: Integer. The resolution of the land use data: `5`, `10`,
-#'   and `20`, for resolutions of approximately 10, 20, and 40 km (2.5, 5, and
+#'   and `20`, for resolutions of approximately 5, 10, and 20 km (2.5, 5, and
 #'   10 arc-minutes) respectively.
 #' - **`climate_scenario`**: Character. The climate scenario: "`current`",
 #'   "`ssp126`", "`ssp370`", and "`ssp585`".

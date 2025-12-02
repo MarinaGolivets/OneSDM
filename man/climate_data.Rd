@@ -30,7 +30,7 @@
 e.g., "\verb{1981_2010_res_10/bio1.tif}".
 \item \strong{\code{file_size_mb}}: Double. The size of the climate data file in megabytes.
 \item \strong{\code{resolution}}: Integer. The resolution of the climate data. Valid values
-are \code{5}, \code{10}, and \code{20}, for resolutions of approximately 10, 20, and 40 km
+are \code{5}, \code{10}, and \code{20}, for resolutions of approximately 5, 10, and 20 km
 (2.5, 5, and 10 arc-minutes) respectively.
 \item \strong{\code{out_dir}}: Character. The output directory for the climate data file;
 e.g., "\verb{res_<resolution>/1981_2010}" and

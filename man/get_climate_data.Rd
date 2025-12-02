@@ -17,13 +17,13 @@ get_climate_data(
 }
 \arguments{
 \item{climate_dir}{Character. Destination directory where climate and land
-use data files will be saved. Can be set via the \code{onesdm_climate_dir}
+use data files will be saved. Can be set via the "\code{onesdm_climate_dir}"
 option. The same directory should be used in case of modelling multiple
 species to ensure consistency. Default is \code{NULL}.}
 
 \item{resolution}{Numeric. Spatial resolution. Valid values are 5, 10, or 20
-for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
-arc-minutes) respectively. Can be set via the \code{onesdm_resolution} option.
+for resolutions of approximately 5, 10, and 20 km (2.5, 5, and 10
+arc-minutes) respectively. Can be set via the "\code{onesdm_resolution}" option.
 Default is \code{10L}.}
 
 \item{climate_scenario}{Character scalar. Climate scenario; one of \code{current},
@@ -37,9 +37,9 @@ is \code{"current"}.}
 \verb{2041_2070}, \verb{2071_2100}. Default is \code{"1981_2010"}.}
 
 \item{var_names}{Character vector of climate variable codes to download. See
-\link{climate_data} for the list of valid variable names. Can be set via
-the \code{onesdm_var_names} option. This parameter has no default and must be
-provided.}
+\link{climate_data} for the list of valid climate variable names. Can
+be set via the "\code{onesdm_var_names}" option. This parameter is required and
+cannot be \code{NULL}.}
 
 \item{verbose}{Logical scalar. If \code{TRUE} (default), prints progress and
 informative messages.}

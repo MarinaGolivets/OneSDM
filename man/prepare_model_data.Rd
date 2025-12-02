@@ -33,46 +33,58 @@ prepare_model_data(
 )
 }
 \arguments{
-\item{model_dir}{Character. Directory path where model outputs will be saved.
-Can be set via the \code{onesdm_model_dir} option. A subdirectory \code{data} will be
-created within this directory to store processed species data. A separate
-directory is expected in case of modelling multiple species, otherwise data
-files may be overwritten or mixed up. Default is \code{NULL}.}
+\item{model_dir}{Character (required). Path to the modelling directory where
+data and fitted models will be saved. This should be a single directory for
+all models of a given species (a separate directory is expected in case of
+modelling multiple species, otherwise data files may be overwritten or
+mixed up). This can also be set via the "\code{onesdm_model_dir}" option.
+\itemize{
+\item The function creates a subdirectory "\code{data}" to store processed species
+data.
+\item The function creates a subdirectory "\verb{models_res_<resolution>}" to store
+model data and outputs for the specified resolution.
+}}
 
-\item{climate_dir}{Character. Directory path for climate data files. Can be
-set via the \code{onesdm_climate_dir} option. This directory is used to
-load/download mask layers matching the specified resolution and
-current/future climate and land use data. The same directory should be used
-in case of modelling multiple species to ensure consistency and redundant
-re-download of large geospatial data. Default is \code{NULL}.}
+\item{climate_dir}{Character (required). Directory path for climate data
+files. Can be set via the "\code{onesdm_climate_dir}" option. This directory is
+used to load/download mask layers matching the specified resolution and
+current/future climate and land use data (see below). The same directory
+should be used in case of modelling multiple species to ensure consistency
+and redundant re-download of large geospatial data.}
 
-\item{resolution}{Integer. Spatial resolution. valid values are 5, 10
-(default), or 20 for resolutions of approximately 10km, 20km, and 40km
-(2.5, 5, and 10 arc-minutes) respectively. Can be set via the
-\code{onesdm_resolution} option.}
+\item{resolution}{Integer. Spatial resolution used to prepare data for
+analysis and model fitting. valid values are 5, 10 (default), or 20,
+corresponding to approximate spatial resolutions of 5, 10, and 20 km (2.5,
+5, and 10 arc-minutes) respectively. This value can also be set via the
+"\code{onesdm_resolution}" option.}
 
-\item{verbose}{Logical. If \code{TRUE} (default), prints progress messages. Can be
-set via the \code{onesdm_verbose} option.}
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress and information
+messages. Can be set via the "\code{onesdm_verbose}" option.}
 
-\item{easin_ids}{Character vector. One or more EASIN species IDs. Each ID
-should start with 'R' followed by five digits (e.g. "R00544"). This cannot
-be \code{NULL}. Species IDs can be found on the \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website} by searching
-for a species and locating the "EASIN ID" in the species details section.
-Can also be set via the \code{onesdm_easin_ids} option. For more details, see
-\code{\link[=prepare_easin_data]{prepare_easin_data()}}.}
+\item{easin_ids}{Character vector (Optional). One or more EASIN species IDs,
+each starting with "R" followed by five digits (e.g., "R00544"). Species
+IDs can be obtained from the \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website} by searching
+for a species and checking its "EASIN ID" in the species details section.
+When multiple IDs are provided, data are collated across all IDs. If \code{NULL}
+(default), the function attempts to retrieve IDs from the
+"\code{onesdm_easin_ids}" option and skips the EASIN download if no IDs are set.
+For more details, see \link{prepare_easin_data}.}
 
-\item{gbif_ids}{Character or numeric vector of GBIF taxon keys (as numeric
-strings) to query. If \code{NULL}, attempts to retrieve from the
-\code{onesdm_gbif_ids} option. To request data from GBIF, GBIF credentials must
-be set for the current session, otherwise an error will be raised. For
-more, see \code{\link[=prepare_gbif_data]{prepare_gbif_data()}}, and this
+\item{gbif_ids}{character or numeric (optional). A vector of one or more GBIF
+taxon keys. When multiple IDs are supplied, data are combined across all
+keys. If \code{NULL} (default), the function attempts to retrieve IDs from the
+"\code{onesdm_gbif_ids}" option. If no IDs are set, the GBIF download step is
+skipped. To request data from GBIF, GBIF credentials must be set for the
+current session, otherwise an error will be raised. For more, see
+\link{prepare_gbif_data}, and this
 \href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{article}
 from \code{rgbif} package documentation on how to set GBIF credentials.}
 
-\item{coordinates}{A data frame or matrix containing user-provided longitude
-and latitude values. Must have exactly two columns. If not provided
-directly, the function will attempt to retrieve it from the
-\code{onesdm_coordinates} option. See \code{\link[=prepare_user_data]{prepare_user_data()}} for more details.}
+\item{coordinates}{data frame or matrix (optional). A user-supplied object
+containing longitude and latitude values in two columns (in that order).
+Must have exactly two columns. If \code{NULL} (default), the function attempts
+to retrieve coordinates from the "\code{onesdm_coordinates}" option. See
+\code{\link[=prepare_user_data]{prepare_user_data()}} for details.}
 
 \item{climate_scenario, climate_model, climate_year}{Character. Future climate
 scenario(s), model(s), and year(s). These three parameters control which
@@ -82,27 +94,27 @@ selected variables at current climate conditions are always prepared):
 \item \strong{\code{climate_scenario}}:
 Shared Socioeconomic Pathways (SSPs). Valid values are: \code{"ssp126"},
 \code{"ssp370"}, \code{"ssp585"}, \code{"all"} (default), or \code{"none"}. This can also be
-set via the \code{onesdm_climate_scenario} option.
+set via the "\code{onesdm_climate_scenario}" option.
 \item \strong{\code{climate_model}}: abbreviation for future climate
 model(s). Valid values are: \code{"gfdl"}, \code{"ipsl"}, \code{"mpi"}, \code{"mri"},
 \code{"ukesm1"}, \code{"all"} (default), or \code{"none"}. This can also be set via the
-\code{onesdm_climate_model} option.
+"\code{onesdm_climate_model}" option.
 \item \strong{\code{climate_year}}: future year range(s). Valid values are:
 \code{"2011_2040"}, \code{"2041_2070"}, \code{"2071_2100"}, \code{"all"} (default), \code{"none"}.
-This can also be set via the \code{onesdm_climate_year} option.
+This can also be set via the "\code{onesdm_climate_year}" option.
 }
 
 Multiple values are possible for each of the three parameters, each
 provided as a character vector. Combinations of scenario × model × year
 will be prepared. This is unless any of the three parameters is set to
 \code{"none"} or \code{NULL}, in which case no future climate data will be prepared.
-For more details, \code{\link[=climate_data]{climate_data()}} and
-\code{\link[=get_climate_data]{get_climate_data()}}.}
+For more details, see \link{climate_data} and
+\link{get_climate_data}.}
 
 \item{var_names}{Character vector of climate variable codes to download. See
-\link{climate_data} for the list of valid variable names. Can be set via
-the \code{onesdm_var_names} option. This parameter has no default and must be
-provided.}
+\link{climate_data} for the list of valid climate variable names. Can
+be set via the "\code{onesdm_var_names}" option. This parameter is required and
+cannot be \code{NULL}.}
 
 \item{pft_type, pft_id}{Information on the plant functional type (PFT)
 parameters for land-use predictors. See \link{landuse_data} and
@@ -110,13 +122,13 @@ parameters for land-use predictors. See \link{landuse_data} and
 \itemize{
 \item \strong{\code{pft_type}}: Character vector of length 1. Plant functional type
 category to download land-use predictors for. Must be one of "\code{cross-walk}"
-(default) or "\code{original}". This can be set via the \code{onesdm_pft_type}
+(default) or "\code{original}". This can be set via the "\code{onesdm_pft_type}"
 option.
 \item \strong{\code{pft_id}}: Numeric vector. One or more plant functional type
 identifiers to download. Must be valid for the specified \code{pft_type}: 1-20
 for \code{pft_type == "original"}, and 1-12 for \code{pft_type == "cross-walk"}. If
 \code{NULL} (default), no land-use predictors are used. This can be set via the
-\code{onesdm_pft_id} option.
+"\code{onesdm_pft_id}" option.
 }}
 
 \item{bias_group}{Character scalar. Taxonomic group used to compute sampling
@@ -125,31 +137,34 @@ effort surface. Valid options are \code{"amphibians"}, \code{"birds"}, \code{"ma
 i.e., no sampling-effort predictor is used. If not "none", the function
 downloads sampling-effort raster of the specified group from
 \href{https://zenodo.org/records/7556851}{Zenodo}. See
-\code{\link[=get_sampling_efforts]{get_sampling_efforts()}} for details. This can also be set via the
-\code{onesdm_bias_group} option.
-
-Note that the \code{bias} predictor, if used, is enforced to be kept during VIF
-screening (see below). When not "none", the sampling-effort raster
-(log\if{html}{\out{<sub>}}10\if{html}{\out{</sub>}} scale) is added as a predictor and the 90\if{html}{\out{<sup>}}th\if{html}{\out{</sup>}}
--percentile value of the raster in the modelling study area is used across
-the whole study area to correct for sampling bias. For more details on
-model-based sampling bias correction, see Warton et al.
-(\href{https://doi.org/10.1371/journal.pone.0079168}{2013}).}
+\link{get_sampling_efforts} for details. This can also be set via the
+"\code{onesdm_bias_group}" option.
+\itemize{
+\item When not "none", the sampling-effort raster
+(log\if{html}{\out{<sub>}}10\if{html}{\out{</sub>}} scale) is used as a predictor in the models. The
+90\if{html}{\out{<sup>}}th\if{html}{\out{</sup>}}-percentile value of the  sampling-effort raster in the
+modelling study area is used across the whole study area to correct for
+sampling bias in projections (but not during models evaluation). For more
+details on model-based sampling bias correction, see Warton et al.
+(\href{https://doi.org/10.1371/journal.pone.0079168}{2013}).
+\item The \code{bias} predictor, if used, is enforced to be kept during VIF
+screening (see below).
+}}
 
 \item{vif_th}{Numeric. Variance inflation factor (VIF) threshold for
 multicollinearity screening. Predictors with VIF larger than this value are
 excluded. Default is \code{10}.
 \itemize{
-\item This argument refers to the \code{th} parameter of the \code{\link[usdm:vif]{usdm::vifstep()}}
-function. This can also be set via the \code{onesdm_vif_th} option.
-\item The function checks if the option \code{onesdm_vif_sample} is set in the
+\item This argument refers to the \code{th} parameter of the \link[usdm:vif]{usdm::vifstep}
+function. This can also be set via the "\code{onesdm_vif_th}" option.
+\item The function checks if the option "\code{onesdm_vif_sample}" is set in the
 current R session; if so, its value (numeric integer) is used as the
-\code{sample} argument of \code{usdm::vifstep()}. This option controls the number of
+\code{sample} argument of \link[usdm:vif]{usdm::vifstep}. This option controls the number of
 random sample points drawn from the study area raster stack. If not set,
 the default value is used (5000).
-\item Similarly, if the option \code{onesdm_vif_keep} is set in the current R
+\item Similarly, if the option "\code{onesdm_vif_keep}" is set in the current R
 session, its value (a character vector of predictor names) is used as the
-\code{exclude} argument of \code{usdm::vifstep()}. This option allows specifying
+\code{exclude} argument of \link[usdm:vif]{usdm::vifstep}. This option allows specifying
 predictors that should always be retained regardless of their VIF values.
 If not set, no predictors are forced to be kept. If a valid \code{bias_group} is
 provided, the corresponding \code{bias} predictor is always included in this
@@ -162,83 +177,84 @@ of the modelling area (i.e., no pseudo-absences will be sampled there).
 This helps to exclude areas that are unlikely to be accessible to the
 species or are too environmentally distant from the known species
 presences. Larger values lead to more inclusive modelling areas. If \code{NULL}
-or \verb{<=0}, no presences-based masking is applied (i.e., pseudo-absences can
-be sampled anywhere in the study area). Default is \code{1000} km. This can be
-set via the \code{onesdm_pres_buffer} option.}
+or \eqn{\leq 0}, no presences-based masking is applied (i.e.,
+pseudo-absences can be sampled anywhere in the study area). Default is
+\code{1000} km. This can be set via the "\code{onesdm_pres_buffer}" option.}
 
 \item{abs_buffer}{Numeric or \code{NULL}. Minimum distance in kilometres from
 presence points inside which pseudo-absences will not be sampled. This
 helps avoid sampling pseudo-absences in nearby areas of presences that are
-likely to be suitable or are occupied by the species. Larger values lead to
-more conservative pseudo-absence sampling. If \code{NULL} or \verb{<=0}, no
-presence-based pseudo-absence exclusion buffer is applied (i.e.,
-pseudo-absences can be sampled anywhere outside presence grid cells, prior
-to sampling pseudo-absences using \link[sdm:background]{sdm::background}). Default is \code{10} km.
-This can be set via the \code{onesdm_abs_buffer} option.}
+likely to be suitable (e.g., due to spatial autocorrelation) or are already
+occupied by the species. Larger values lead to more conservative
+pseudo-absence sampling. If \code{NULL} or \eqn{\leq 0}, no presence-based
+pseudo-absence exclusion buffer is applied (i.e., pseudo-absences can be
+sampled anywhere outside presence grid cells, prior to sampling
+pseudo-absences using \link[sdm:background]{sdm::background}). Default is \code{10} km. This can be
+set via the "\code{onesdm_abs_buffer}" option.}
 
 \item{abs_exclude_ext}{List (Optional). A list of terra \code{SpatExtent} objects,
-typically generated using \code{\link[terra:ext]{terra::ext()}}. Each extent defines a geographic
+typically generated using \link[terra:ext]{terra::ext}. Each extent defines a geographic
 area where pseudo-absences will not be sampled. This is useful for
-excluding regions that are known to be unsuitable for the species, such as
-areas outside the species' native range or regions with specific
-environmental conditions that preclude the species' presence. If an empty
-list (default), no additional exclusion extents are applied. This can also
-be set via the \code{onesdm_abs_exclude_ext} option.}
+excluding regions such as areas outside the species' native range or
+regions with specific environmental conditions that preclude the species'
+presence. If an empty list (default), no additional exclusion extents are
+applied. This can also be set via the "\code{onesdm_abs_exclude_ext}" option.}
 
 \item{min_pres_grids}{Integer. Minimum number of presence grid cells required
 to proceed with modelling. If the number of presence grid cells after
 filtering is less than this value, the function will stop with an error.
-Default is \code{50}. This can also be set via \code{onesdm_min_pres_grids} option.}
+Default is \code{50}. This can also be set via "\code{onesdm_min_pres_grids}" option.}
 
 \item{cv_folds, cv_block_size, cv_random}{Parameters controlling spatial-block
 cross-validation.
 \itemize{
 \item \strong{\code{cv_folds}}: Integer. Number of cross-validation folds. Default is
-\code{5}. This can also be set via the \code{onesdm_cv_folds} option.
+\code{5}. This can also be set via the "\code{onesdm_cv_folds}" option.
 \item \strong{\code{cv_block_size}}: Numeric. Approximate cross-validation block
 size in kilometres. Default is \code{500} km. Larger block sizes lead to fewer,
 more spatially distinct blocks. This can also be set via the
-\code{onesdm_cv_block_size} option.
+"\code{onesdm_cv_block_size}" option.
 \item \strong{\code{cv_random}}: Logical. If \code{TRUE} (default), create random spatial
 blocks by aggregating and randomly assigning blocks into \code{cv_folds} groups.
-Although this is done randomly, the function ensures that each fold has a
-balanced number of presence grid cells. If \code{FALSE}, use
-\code{\link[blockCV:cv_spatial]{blockCV::cv_spatial()}} for block determination. Note that
-\code{blockCV::cv_spatial} can be more computationally intensive for large study
+Although this is done randomly, the function tries to ensure that each fold
+has a balanced number of presence grid cells. If \code{FALSE},
+\link[blockCV:cv_spatial]{blockCV::cv_spatial} is used for block determination. Note that
+\link[blockCV:cv_spatial]{blockCV::cv_spatial} can be computationally intensive for large study
 areas and small block sizes. This can also be set via the
-\code{onesdm_cv_random} option.
+"\code{onesdm_cv_random}" option.
 }}
 
 \item{abs_ratio, model_n_reps, n_cores}{Parameters for sampling
 pseudo-absences.
 \itemize{
 \item \strong{\code{abs_ratio}}: Integer scalar. Desired ratio of pseudo-absences to
-training presences used when sampling background points. Default is \code{10},
-which means that for each training presence point, 10 pseudo-absence points
-will be sampled. This can also be set via the \code{onesdm_abs_ratio} option.
+training presences used when sampling pseudo-absences grid cells for each
+cross-validation fold. Default is \code{10}, which means that for each training
+presence grid cell, 10 pseudo-absence grid cells will be sampled. This can
+also be set via the "\code{onesdm_abs_ratio}" option.
 \item \strong{\code{model_n_reps}}: Integer scalar. Number of repetition datasets
-(different sets of pseudo-absences) to generate for each CV fold.
-Pseudo-absences are sampled using \code{\link[sdm:background]{sdm::background()}} with method
+(different sets of pseudo-absences) to generate for each cross-validation
+fold. Pseudo-absences are sampled using \link[sdm:background]{sdm::background} with method
 \code{"eDist"}, which draws pseudo-absences weighted by environmental distance
 from presence grid cells. Default is \code{5}, for five different pseudo-absence
-datasets per fold. If the available absences become limiting (when the
-number of requested pseudo-absences exceeds ~80\% of available absences),
-the function will reduce the number of repetitions to \code{1} as further
-repetitions would be redundant. This can also be set via the
-\code{onesdm_model_n_reps} option.
+sample datasets per fold. If the available non-presence grid cells become
+limiting (when the number of requested pseudo-absences exceeds 80\% of
+available non-presence grid cells), the function will reduce the number of
+repetitions to \code{1} as further repetitions would be redundant. This can also
+be set via the "\code{onesdm_model_n_reps}" option.
 \item \strong{\code{n_cores}}: Integer. Number of CPU cores to use for parallel
 processing of data for cross-validation folds. Default is equal to
 \code{cv_folds}. Parallel processing helps to speed up the preparation of
-cross-validation modelling data; however, the \code{sdm::background()} can be
+cross-validation modelling data; however, the \code{sdm::background} can be
 memory-intensive when sampling many pseudo-absences over large study areas,
 so care should be taken when setting this value. This can also be set via
-the \code{onesdm_model_n_cores} option.
+the "\code{onesdm_model_n_cores}" option.
 }}
 }
 \value{
 Invisibly returns a tibble (\code{model_data_cv}) with one row per
 cross-validation fold × repetition. The tibble is saved as \code{.RData} file
-under \code{"<model_dir>/models_res_<resolution>/model_data_cv.RData"}. The
+under "\verb{<model_dir>/models_res_<resolution>/model_data_cv.RData}". The
 tibble consists of the following columns.
 \itemize{
 \item \strong{\code{cv}}: Integer. Cross-validation fold index.
@@ -257,57 +273,58 @@ repetition ID (from 1 to \code{n_model_reps}) and file paths to the sampled
 pseudo-absence objects for this repetition.
 \item \strong{\code{testing_data}/\code{testing_data_r}}: Character. File path to \code{.RData}
 files for testing data table and raster.
-\item \strong{\code{n_test_pres} / \code{n_test_abs}}: Integer. Number of presence/non-
-presence grid cells in the testing data.
+\item \strong{\code{n_test_pres} / \code{n_test_abs}}: Integer. Number of presence/
+non-presence grid cells in the testing data.
 }
 }
 \description{
 High-level workflow to prepare presence/pseudo-absence, predictors and
 cross-validation datasets required for fitting species distribution models
 using the \code{OneSDM} workflow. This function orchestrates species data
-preparation, predictor assembly (current and optional future scenarios),
-variable selection (using the variance inflation factor, VIF), spatial block
-creation for cross-validation, pseudo-absence sampling, and persistent saving
-of intermediate raster/data objects to disk.
+preparation, predictor assembly (climate and land use data under current and
+optional future scenarios), variable selection (using the variance inflation
+factor, VIF), spatial block creation for cross-validation, pseudo-absence
+sampling, and persistent saving of intermediate raster/data objects to disk.
 }
 \details{
 The function has several side-effects: it writes GeoTIFFs and RData
-files under a subdirectory of \code{model_dir} (folder
-\code{"models_res_<resolution>"}), and download/process climate and land-use
+files under a subdirectory of "\code{model_dir}" (folder
+"\verb{models_res_<resolution>}"), and download/process climate and land-use
 data via OneSDM utilities, if needed.
 
 The function performs the following major steps:
 \itemize{
 \item Validates input arguments and resolves defaults from package options.
-\item Calls \code{\link[=prepare_species_data]{prepare_species_data()}} to check/prepare species
+\item Calls \link{prepare_species_data} to check/prepare species
 distribution data. This includes loading occurrence data from EASIN/GBIF or
 user-provided coordinates.
 \item Masks and filters the study area using optional exclusion extents and
 distances (\code{abs_exclude_ext}, \code{pres_buffer}, and \code{abs_buffer}).
 \item Loads/download current climate (and optionally land-use) data for
-selected predictors via \code{\link[=get_climate_data]{get_climate_data()}} and
-\code{\link[=get_landuse_data]{get_landuse_data()}}, combines them and masks them to the study
-area.
+selected predictors via \link{get_climate_data} and
+\link{get_landuse_data}, combines them and masks them to the study area.
 \item Loads/download future climate (and optionally land-use) predictors for
 each requested scenario/model/year combination (if any) via
-\code{\link[=get_climate_data]{get_climate_data()}} and \code{\link[=get_landuse_data]{get_landuse_data()}}, and masks
-them to the study area.
+\link{get_climate_data} and \link{get_landuse_data}, and masks them
+to the study area.
 \item Optionally adds a sampling-effort (bias) predictor when \code{bias_group}
 is valid and != "none".
-\item Performs VIF-based predictor selection (\code{\link[usdm:vif]{usdm::vifstep()}}) and excludes
-highly collinear variables.
+\item Performs VIF-based predictor selection (using \link[usdm:vif]{usdm::vifstep}) and
+excludes highly collinear variables. The \code{bias} predictor, if used, is
+always retained.
 \item Creates spatial cross-validation blocks either with a simple random-block
-aggregation or via \code{\link[blockCV:cv_spatial]{blockCV::cv_spatial()}} (controlled by \code{cv_random}).
+aggregation or via \link[blockCV:cv_spatial]{blockCV::cv_spatial} (controlled by \code{cv_random}).
 \item Builds a modelling table (raster + predictors), saves wrapped rasters and
-per-fold data to disk and samples pseudo-absences per fold/rep.
-\item Saves a tibble describing all CV folds and model repetitions with file
-paths to persisted datasets (training/testing rasters and pseudo-absence
-objects).
+per-fold data to disk and samples pseudo-absences per cross-validation
+fold/repetition.
+\item Saves a tibble describing all cross-validation folds and model
+repetitions with file paths to persisted datasets (training/testing
+rasters and pseudo-absence objects).
 }
 
 The function also saves a summary list for the parameters used and file
 paths to important intermediate data objects under
-\code{"<model_dir>/models_res_<resolution>/model_data_summary.RData"}. This list
+"\verb{<model_dir>/models_res_<resolution>/model_data_summary.RData}". This list
 contains the following elements:
 \itemize{
 \item \strong{\code{model_dir}}: Character. The modelling directory path.

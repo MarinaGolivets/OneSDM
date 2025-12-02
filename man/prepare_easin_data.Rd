@@ -23,45 +23,46 @@ prepare_easin_data(
 should start with 'R' followed by five digits (e.g. "R00544"). This cannot
 be \code{NULL}. Species IDs can be found on the \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website} by searching
 for a species and locating the "EASIN ID" in the species details section.
-Can also be set via the \code{onesdm_easin_ids} option.}
+Can also be set via the "\code{onesdm_easin_ids}" option.}
 
 \item{model_dir}{Character. Path to the modelling directory where data and
 fitted models will be saved. This cannot be \code{NULL} and must the same
 directory used for the same species data. This can also be set via the
-\code{onesdm_model_dir} option.}
+"\code{onesdm_model_dir}" option.}
 
 \item{timeout}{Integer. Timeout (in seconds) for each download attempt.
-Default is \code{600L}. Can also be set via the \code{onesdm_easin_timeout} option.
+Default is \code{600L}. Can also be set via the "\code{onesdm_easin_timeout}" option.
 Note: This timeout only applies to the download of each chunk, not the
 entire download process.}
 
 \item{n_search}{Integer. Number of records to request per API call (chunk
 size). Default is \code{1000L}, which is the maximum allowed by the EASIN API.
-Can also be set via the \code{onesdm_easin_n_search} option.}
+Can also be set via the "\code{onesdm_easin_n_search}" option.}
 
 \item{n_attempts}{Integer. Maximum number of download attempts per chunk.
-Default is \code{10L}. Can also be set via the \code{onesdm_easin_n_attempts} option.}
+Default is \code{10L}. Can also be set via the "\code{onesdm_easin_n_attempts}"
+option.}
 
 \item{sleep_time}{Integer. Seconds to wait between chunk downloads. This
 helps avoid overwhelming the EASIN server. Default is 5L. Can also be set
-via the \code{onesdm_easin_sleep_time} option.}
+via the "\code{onesdm_easin_sleep_time}" option.}
 
 \item{exclude_gbif}{Logical. If \code{TRUE} (default), exclude
 \href{https://www.gbif.org/}{GBIF} — the Global Biodiversity Information
 Facility — records from the download. Can also be set via the
-\code{onesdm_easin_exclude_gbif} option.}
+"\code{onesdm_easin_exclude_gbif}" option.}
 
 \item{verbose}{Logical. If \code{TRUE} (default), print progress and information
 messages, including the URL of the currently processed chunk. Can also be
-set via the \code{onesdm_easin_verbose} option.}
+set via the "\code{onesdm_easin_verbose}" option.}
 
 \item{start_year}{Integer. Include only records from this year onward. The
 default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
-Can also be set via the \code{onesdm_start_year} option.}
+Can also be set via the "\code{onesdm_start_year}" option.}
 
 \item{overwrite}{Logical. If \code{TRUE}, overwrite existing cleaned EASIN data
 file in the model directory. Default is \code{FALSE}. Can also be set via
-\code{onesdm_easin_overwrite} option.}
+"\code{onesdm_easin_overwrite}" option.}
 
 \item{return_data}{Logical. If \code{TRUE}, returns the processed EASIN data as an
 \code{sf} object in addition to saving it. Default is \code{FALSE}.}
@@ -88,26 +89,26 @@ download if found.
 \item The function applies several cleaning steps; e.g. filtering out records
 with low coordinate precision, equal longitude / latitude, or near centroids,
 capitals, biodiversity institutions, and GBIF headquarters.
-\item Function default arguments can be set globally using the \code{options()}
+\item Function default arguments can be set globally using the \link[base:options]{base::options}
 function. Users can set these options at the start of their R session to
 avoid repeatedly specifying them in function calls. The following options
 correspond to the function arguments:
 \itemize{
-\item \code{onesdm_easin_ids}: Character vector of EASIN species IDs.
-\item \code{onesdm_model_dir}: Character. Path to the modelling directory.
-\item \code{onesdm_easin_timeout}: Integer. Timeout (in seconds) for each download
+\item "\code{onesdm_easin_ids}": Character vector of EASIN species IDs.
+\item "\code{onesdm_model_dir}": Character. Path to the modelling directory.
+\item "\code{onesdm_easin_timeout}": Integer. Timeout (in seconds) for each download
 attempt.
-\item \code{onesdm_easin_n_search}: Integer. Number of records to request per API
+\item "\code{onesdm_easin_n_search}": Integer. Number of records to request per API
 call.
-\item \code{onesdm_easin_n_attempts}: Integer. Maximum number of download attempts
+\item "\code{onesdm_easin_n_attempts}": Integer. Maximum number of download attempts
 per chunk.
-\item \code{onesdm_easin_sleep_time}: Integer. Seconds to wait between chunk
+\item "\code{onesdm_easin_sleep_time}": Integer. Seconds to wait between chunk
 downloads.
-\item \code{onesdm_easin_exclude_gbif}: Logical. Whether to exclude GBIF records.
-\item \code{onesdm_easin_verbose}: Logical. Whether to print progress messages.
-\item \code{onesdm_start_year}: Integer. Minimum year for records to include.
-\item \code{onesdm_easin_overwrite}: Logical. Whether to overwrite existing cleaned
-data.
+\item "\code{onesdm_easin_exclude_gbif}": Logical. Whether to exclude GBIF records.
+\item "\code{onesdm_easin_verbose}": Logical. Whether to print progress messages.
+\item "\code{onesdm_start_year}": Integer. Minimum year for records to include.
+\item "\code{onesdm_easin_overwrite}": Logical. Whether to overwrite existing
+cleaned data.
 }
 \item Example of setting options:
 

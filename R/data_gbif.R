@@ -11,16 +11,16 @@
 #'
 #' @param gbif_ids Character or numeric vector of GBIF taxon keys (as numeric
 #'   strings) to query. If `NULL`, attempts to retrieve from the
-#'   `onesdm_gbif_ids` option.
+#'   "`onesdm_gbif_ids`" option.
 #' @param model_dir Character. Path to the modelling directory where data and
-#'   fitted models will be saved. This can not be `NULL` and should be the same
-#'   directory used for the same species data. This can also be set via the
-#'   `onesdm_model_dir` option.
-#' @param verbose Logical. If `TRUE` (default), prints progress and status
-#'   messages. Can also be set via the `onesdm_gbif_verbose` option.
+#'   fitted models will be saved. This can not be `NULL` (default) and should be
+#'   the same directory used for the same species data. This can also be set via
+#'   the "`onesdm_model_dir`" option.
+#' @param verbose Logical. If `TRUE` (default), prints progress and information
+#'   messages. Can also be set via the "`onesdm_gbif_verbose`" option.
 #' @param start_year Integer. Include only records from this year onward. The
 #'   default is `1981L`, to match the temporal coverage of CHELSA climate data.
-#'   Can also be set via the `onesdm_start_year` option.
+#'   Can also be set via the "`onesdm_start_year`" option.
 #' @param r_environ Character. Path to `.Renviron` file containing GBIF
 #'   credentials (default: ".Renviron"). The function uses
 #'   [ecokit::check_gbif()] to validate the presence of GBIF credentials. If the
@@ -31,17 +31,17 @@
 #'   [article](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
 #'   from `rgbif` documentation on how to set GBIF credentials. If `r_environ =
 #'   NULL`, the `prepare_gbif_data` function attempts to retrieve path to
-#'   `.Renviron` file from the `onesdm_r_environ` option.
+#'   `.Renviron` file from the "`onesdm_r_environ`" option.
 #' @param boundaries Numeric vector of length 4. Spatial boundaries as (left,
 #'   right, bottom, top) in decimal degrees (default: `c(-180L, 180L, -90L,
-#'   90L)` for global extent). Can also be set via `onesdm_gbif_boundaries`
+#'   90L)` for global extent). Can also be set via "`onesdm_gbif_boundaries`"
 #'   option.
 #' @param max_uncertainty Numeric. Maximum allowed spatial uncertainty in
 #'   kilometres. Default is `10L`. Can also be set via
-#'   `onesdm_gbif_max_uncertainty` option.
+#'   "`onesdm_gbif_max_uncertainty`" option.
 #' @param overwrite Logical. If `TRUE`, overwrite existing cleaned GBIF data
 #'   file in the model directory. Default is `FALSE`. Can also be set via
-#'   `onesdm_gbif_overwrite` option.
+#'   "`onesdm_gbif_overwrite`" option.
 #' @param return_data Logical. If `TRUE`, returns the processed GBIF data as an
 #'   `sf` object in addition to saving it. Default is `FALSE`.
 #'
@@ -61,18 +61,18 @@
 #'   function. Users can set these options at the start of their R session to
 #'   avoid repeatedly specifying them in function calls. The following options
 #'   correspond to the function arguments:
-#'   - `onesdm_gbif_ids`: Character vector of GBIF taxon keys.
-#'   - `onesdm_model_dir`: Character. Path to the modelling directory.
-#'   - `onesdm_gbif_verbose`: Logical. Verbosity of GBIF data extraction.
-#'   - `onesdm_start_year`: Integer. Start year for GBIF records.
-#'   - `onesdm_r_environ`: Character. Path to `.Renviron` file for GBIF
+#'   - "`onesdm_gbif_ids`": Character vector of GBIF taxon keys.
+#'   - "`onesdm_model_dir`": Character. Path to the modelling directory.
+#'   - "`onesdm_gbif_verbose`": Logical. Verbosity of GBIF data extraction.
+#'   - "`onesdm_start_year`": Integer. Start year for GBIF records.
+#'   - "`onesdm_r_environ`": Character. Path to `.Renviron` file for GBIF
 #'   credentials.
-#'   - `onesdm_gbif_boundaries`: Numeric vector of length 4 for spatial
+#'   - "`onesdm_gbif_boundaries`": Numeric vector of length 4 for spatial
 #'   boundaries of the data extraction in decimal degrees (left, right, bottom,
 #'   top).
-#'   - `onesdm_gbif_max_uncertainty`: Numeric. Maximum allowed spatial
+#'   - "`onesdm_gbif_max_uncertainty`": Numeric. Maximum allowed spatial
 #'   uncertainty in km.
-#'   - `onesdm_gbif_overwrite`: Logical. Whether to overwrite existing GBIF
+#'   - "`onesdm_gbif_overwrite`": Logical. Whether to overwrite existing GBIF
 #'   data.
 #' - Example of setting options:
 #'   ```r

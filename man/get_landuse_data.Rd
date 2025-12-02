@@ -17,13 +17,13 @@ get_landuse_data(
 }
 \arguments{
 \item{climate_dir}{Character. Destination directory where climate and land
-use data files will be saved. Can be set via the \code{onesdm_climate_dir}
+use data files will be saved. Can be set via the "\code{onesdm_climate_dir}"
 option. The same directory should be used in case of modelling multiple
 species to ensure consistency. Default is \code{NULL}.}
 
 \item{resolution}{Numeric. Spatial resolution. Valid values are 5, 10, or 20
-for resolutions of approximately 10km, 20km, and 40km (2.5, 5, and 10
-arc-minutes) respectively. Can be set via the \code{onesdm_resolution} option.
+for resolutions of approximately 5, 10, and 20 km (2.5, 5, and 10
+arc-minutes) respectively. Can be set via the "\code{onesdm_resolution}" option.
 Default is \code{10L}.}
 
 \item{climate_scenario}{Character scalar. Climate scenario; one of \code{current},
@@ -34,11 +34,11 @@ Default is \code{10L}.}
 
 \item{pft_type}{Character string. Plant functional type category. Has to be
 one of "\code{cross-walk}" (default) "\code{original}"; see \link{landuse_data}
-for details. This can be set via the \code{onesdm_pft_type} option.}
+for details. This can be set via the "\code{onesdm_pft_type}" option.}
 
 \item{pft_id}{Numeric vector. One or more plant functional type identifiers
 to download. Must be valid for the specified \code{pft_type}: 1-20 for \code{pft_type == "original"}, and 1-12 for \code{pft_type == "cross-walk"}; See
-\link{landuse_data} for details. Can be set via the \code{onesdm_pft_id}
+\link{landuse_data} for details. Can be set via the "\code{onesdm_pft_id}"
 option. This parameter has no default and must be provided.}
 
 \item{verbose}{Logical scalar. If \code{TRUE} (default), prints progress and

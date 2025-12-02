@@ -6,11 +6,12 @@
 #'
 #' @param coordinates A data frame or matrix containing longitude and latitude
 #'   values. Must have exactly two columns. If not provided directly, the
-#'   function will attempt to retrieve it from the `onesdm_coordinates` option.
+#'   function will attempt to retrieve it from the "`onesdm_coordinates`"
+#'   option.
 #' @param model_dir Character. Path to the modelling directory where data and
 #'   fitted models will be saved. This can not be `NULL` and should be the same
 #'   directory used for the same species data. This can also be set via the
-#'   `onesdm_model_dir` option.
+#'   "`onesdm_model_dir`" option.
 #' @param return_data Logical. If `TRUE`, the function returns the processed
 #'   spatial object instead of the file path. Default is `FALSE`.
 #'
@@ -24,12 +25,12 @@
 #'   EPSG:4326).
 #' - Saves the resulting spatial object as `data/user_coordinates.RData` in
 #'   `model_dir`.
-#' - Function default arguments can be set globally using the `options()`
-#' function. Users can set these options at the start of their R session to
-#' avoid repeatedly specifying them in function calls. The following options
-#' correspond to the function arguments:
-#'   - `onesdm_coordinates`: for the `coordinates` argument.
-#'   - `onesdm_model_dir`: for the `model_dir` argument.
+#' - Function default arguments can be set globally using the [base::options]
+#'   function. Users can set these options at the start of their R session to
+#'   avoid repeatedly specifying them in function calls. The following options
+#'   correspond to the function arguments:
+#'   - "`onesdm_coordinates`": for the `coordinates` argument.
+#'   - "`onesdm_model_dir`": for the `model_dir` argument.
 #'
 #' @return If `return_data` is `TRUE`, the function returns the processed
 #'   spatial object of class `sf`. If `FALSE`, it returns the file path where

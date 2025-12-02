@@ -11,7 +11,7 @@
 "\code{original}" for the PFTs classes in the original land use data and
 "\code{cross-walk}" for the grouped (cross-walked) PFTs.
 \item \strong{\code{resolution}}: Integer. The resolution of the land use data: \code{5}, \code{10},
-and \code{20}, for resolutions of approximately 10, 20, and 40 km (2.5, 5, and
+and \code{20}, for resolutions of approximately 5, 10, and 20 km (2.5, 5, and
 10 arc-minutes) respectively.
 \item \strong{\code{climate_scenario}}: Character. The climate scenario: "\code{current}",
 "\code{ssp126}", "\code{ssp370}", and "\code{ssp585}".
