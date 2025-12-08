@@ -8,6 +8,7 @@ get_mask_layer(
   resolution = NULL,
   climate_dir = NULL,
   verbose = FALSE,
+  europe_only = FALSE,
   overwrite = FALSE,
   return_spatraster = TRUE,
   wrap = FALSE
@@ -24,6 +25,9 @@ are stored. If \code{NULL} (default), a temporary file is created.}
 
 \item{verbose}{Logical. Should a download progress bar be shown? Default is
 \code{FALSE}.}
+
+\item{europe_only}{Logical. If \code{TRUE}, downloads the Europe-only mask layer.
+Default is \code{FALSE}.}
 
 \item{overwrite}{Logical. Should existing files be overwritten? Default is
 \code{FALSE}.}

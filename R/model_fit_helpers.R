@@ -707,12 +707,12 @@ prep_model_data <- function(
 
 fit_predict <- function(
     cv_rep_id, bias_fix_value, bias_as_predictor,
-    projection_inputs, predictor_names, model_data_cv, sdm_settings,
-    dir_fit, dir_proj_raw, sdm_packages) {
+    projection_inputs, predictor_names, models_cv, sdm_settings,
+    dir_fit, dir_proj_reps, sdm_packages, proj_mask_file) {
 
   climate_option <- map_paths <- mod_method <- NULL
 
-  cv_rep_data <- dplyr::slice(model_data_cv, cv_rep_id)
+  cv_rep_data <- dplyr::slice(models_cv, cv_rep_id)
   training_pres <- cv_rep_data$training_pres
   pseudo_abs <- cv_rep_data$pseudo_abs_file
   training_abs <- cv_rep_data$training_abs
@@ -874,8 +874,6 @@ fit_predict <- function(
 
   ## Making projections -----
 
-  # Add proj_extent column XXXX
-
   projections <- projection_inputs %>%
     dplyr::mutate(
       proj = purrr::map2(
@@ -883,12 +881,17 @@ fit_predict <- function(
         .f = ~ {
 
           proj_name <- paste0(model_name, "_", .y)
-          proj_file <- fs::path(dir_proj_raw, paste0(proj_name, ".tif"))
+          proj_file <- fs::path(dir_proj_reps, paste0(proj_name, ".tif"))
 
           if (ecokit::check_tiff(proj_file, warning = FALSE)) {
             pred2 <- terra::rast(proj_file)
           } else {
-            pred_input_r <- terra::rast(.x)
+
+            proj_extent_r_0 <- terra::rast(proj_mask_file)
+            pred_input_r <- terra::rast(.x) %>%
+              terra::crop(proj_extent_r_0) %>%
+              terra::mask(proj_extent_r_0)
+
             if (bias_as_predictor) {
               pred_input_r$bias <- terra::setValues(
                 pred_input_r[[1L]], bias_fix_value) %>%
@@ -898,7 +901,7 @@ fit_predict <- function(
               predict(object = fitted_m, newdata = pred_input_r)) %>%
               stats::setNames(proj_name)
 
-            rm(pred_input_r, envir = environment())
+            rm(pred_input_r, proj_extent_r_0, envir = environment())
             invisible(gc())
 
             terra::writeRaster(
@@ -934,4 +937,265 @@ fit_predict <- function(
   invisible(gc())
 
   model_out_file
+}
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ------
+
+# # ========================================================================= #
+# summarise_preds_cv -------
+# # ========================================================================= #
+
+summarise_preds_cv <- function(cv_id, models_cv_summary, dir_proj_cv) {
+
+  proj_file <- n_model_reps <- climate_model <- climate_scenario <-
+    year <- climate_option <- proj_okay <- NULL
+
+  withr::with_envvar(
+    new = c(NOAWT = "TRUE"),
+    code = {
+      suppressPackageStartupMessages(
+        ecokit::quietly({
+
+          models_cv_summary_sub <- dplyr::slice(
+            models_cv_summary, cv_id) %>%
+            dplyr::select(
+              tidyselect::all_of(
+                c("n_model_reps", "sdm_method", "cv_summary"))) %>%
+            tidyr::unnest(cols = "cv_summary") %>%
+            dplyr::select(
+              -tidyselect::all_of(
+                c("evaluation_training", "evaluation_testing",
+                  "variable_importance", "response_curves"))) %>%
+            tidyr::unnest(cols = "projections") %>%
+            dplyr::filter(proj_okay) %>%
+            dplyr::select(-tidyselect::all_of("proj_okay")) %>%
+            dplyr::group_by(
+              n_model_reps, climate_model, climate_scenario,
+              year, climate_option) %>%
+            dplyr::summarise(proj_file = list(proj_file), .groups = "drop")
+
+          n_reps <- unique(models_cv_summary_sub$n_model_reps)
+          gdal_settings <- c("COMPRESS=ZSTD", "ZSTD_LEVEL=22", "TILED=YES")
+
+          if (n_reps > 1L) {
+
+            models_cv_summary_sub <- models_cv_summary_sub %>%
+              dplyr::mutate(
+                projections = purrr::map(
+                  .x = proj_file,
+                  .f = function(proj_file) {
+
+                    pred_name <- basename(proj_file[1L]) %>%
+                      fs::path_ext_remove() %>%
+                      stringr::str_replace("_rep(\\d)+_", "_") #nolint
+
+                    pred_maps <- terra::rast(proj_file)
+
+                    out_file_mean <- fs::path(
+                      dir_proj_cv, paste0(pred_name, "_mean.tif"))
+                    mean_file_okay <- ecokit::check_tiff(
+                      out_file_mean, warning = FALSE)
+                    if (!mean_file_okay) {
+                      pred_mean <- terra::app(
+                        x = pred_maps, fun = mean, na.rm = TRUE) %>%
+                        stats::setNames(paste0(pred_name, "_mean"))
+                      terra::writeRaster(
+                        x = pred_mean, filename = out_file_mean,
+                        overwrite = TRUE, gdal = gdal_settings)
+                      rm(pred_mean, envir = environment())
+                      invisible(gc())
+                    }
+
+                    out_file_sd <- fs::path(
+                      dir_proj_cv, paste0(pred_name, "_sd.tif"))
+                    sd_file_okay <- ecokit::check_tiff(
+                      out_file_sd, warning = FALSE)
+                    if (!sd_file_okay) {
+                      pred_sd <- terra::app(
+                        x = pred_maps, fun = stats::sd, na.rm = TRUE) %>%
+                        stats::setNames(paste0(pred_name, "_sd"))
+                      terra::writeRaster(
+                        x = pred_sd, filename = out_file_sd,
+                        overwrite = TRUE, gdal = gdal_settings)
+                      rm(pred_sd, envir = environment())
+                      invisible(gc())
+                    }
+
+                    rm(pred_maps, envir = environment())
+                    invisible(gc())
+
+                    out_file_cov <- fs::path(
+                      dir_proj_cv, paste0(pred_name, "_cov.tif"))
+                    cov_file_okay <- ecokit::check_tiff(
+                      out_file_cov, warning = FALSE)
+                    if (!cov_file_okay) {
+                      pred_mean <- terra::rast(out_file_mean)
+                      # Replace very small mean values with reasonably small
+                      # number to avoid overflow warning
+                      pred_mean[pred_mean < 1e-8] <- 1e-8
+                      pred_sd <- terra::rast(out_file_sd)
+                      pred_cov <- (pred_sd / pred_mean) %>%
+                        stats::setNames(paste0(pred_name, "_cov"))
+                      terra::writeRaster(
+                        x = pred_cov, filename = out_file_cov,
+                        overwrite = TRUE, gdal = gdal_settings)
+                      rm(
+                        pred_mean, pred_sd, pred_cov,
+                        envir = environment())
+                      invisible(gc())
+                    }
+
+                    tibble::tibble(
+                      pred_mean = out_file_mean, pred_sd = out_file_sd,
+                      pred_cov = out_file_cov)
+                  })) %>%
+              tidyr::unnest("projections") %>%
+              dplyr::select(-tidyselect::all_of("proj_file"))
+
+          } else {
+
+            models_cv_summary_sub <- models_cv_summary_sub %>%
+              dplyr::mutate(
+                projections = purrr::map(
+                  .x = proj_file,
+                  .f = function(proj_file) {
+
+                    pred_name <- basename(proj_file[1L]) %>%
+                      fs::path_ext_remove() %>%
+                      stringr::str_replace("_rep(\\d)+_", "_") #nolint
+
+                    pred_maps <- terra::rast(proj_file)
+
+                    out_file_mean <- fs::path(
+                      dir_proj_cv, paste0(pred_name, "_mean.tif"))
+                    mean_file_okay <- ecokit::check_tiff(
+                      out_file_mean, warning = FALSE)
+                    if (!mean_file_okay) {
+                      pred_mean <- terra::app(
+                        x = pred_maps, fun = mean, na.rm = TRUE) %>%
+                        stats::setNames(paste0(pred_name, "_mean"))
+                      terra::writeRaster(
+                        x = pred_mean, filename = out_file_mean,
+                        overwrite = TRUE, gdal = gdal_settings)
+                      rm(pred_mean, envir = environment())
+                      invisible(gc())
+                    }
+
+                    rm(pred_maps, envir = environment())
+                    invisible(gc())
+
+                    tibble::tibble(
+                      pred_mean = out_file_mean, pred_sd = NA_character_,
+                      pred_cov = NA_character_)
+                  })) %>%
+              tidyr::unnest("projections") %>%
+              dplyr::select(-tidyselect::all_of("proj_file"))
+          }
+
+          models_cv_summary_sub <- models_cv_summary_sub %>%
+            dplyr::select(-tidyselect::all_of("n_model_reps"))
+
+        },
+        "The following object is masked from",
+        "Attaching package: ", "Loading required package",
+        "Loaded ", "This version of "))
+    })
+  models_cv_summary_sub
+}
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ------
+
+# # ========================================================================= #
+# summarise_preds -------
+# # ========================================================================= #
+
+summarise_preds <- function(model_id, models_summary, dir_proj) {
+
+  proj_file <- pred_mean <- climate_option <- climate_model <-
+    climate_scenario <- year <- NULL
+
+  suppressPackageStartupMessages(
+    ecokit::quietly({
+
+      gdal_settings <- c("COMPRESS=ZSTD", "ZSTD_LEVEL=22", "TILED=YES")
+
+      models_summary_sub <- dplyr::slice(models_summary, model_id) %>%
+        dplyr::select(tidyselect::all_of(c("sdm_method", "projections"))) %>%
+        tidyr::unnest(cols = "projections") %>%
+        dplyr::group_by(
+          climate_model, climate_scenario, year, climate_option) %>%
+        dplyr::summarise(proj_file = list(pred_mean), .groups = "drop") %>%
+        dplyr::mutate(
+          projections = purrr::map(
+            .x = proj_file,
+            .f = function(proj_file) {
+
+              pred_name <- basename(proj_file[1L]) %>%
+                fs::path_ext_remove() %>%
+                stringr::str_replace("_mean", "") %>%
+                stringr::str_replace("_cv(\\d)+_", "_") #nolint
+
+              pred_maps <- terra::rast(proj_file)
+
+              out_file_mean <- fs::path(
+                dir_proj, paste0(pred_name, "_mean.tif"))
+              mean_file_okay <- ecokit::check_tiff(
+                out_file_mean, warning = FALSE)
+              if (!mean_file_okay) {
+                pred_mean <- terra::app(
+                  x = pred_maps, fun = mean, na.rm = TRUE) %>%
+                  stats::setNames(paste0(pred_name, "_mean"))
+                terra::writeRaster(
+                  x = pred_mean, filename = out_file_mean,
+                  overwrite = TRUE, gdal = gdal_settings)
+                rm(pred_mean, envir = environment())
+                invisible(gc())
+              }
+
+              out_file_sd <- fs::path(dir_proj, paste0(pred_name, "_sd.tif"))
+              sd_file_okay <- ecokit::check_tiff(out_file_sd, warning = FALSE)
+              if (!sd_file_okay) {
+                pred_sd <- terra::app(
+                  x = pred_maps, fun = stats::sd, na.rm = TRUE) %>%
+                  stats::setNames(paste0(pred_name, "_sd"))
+                terra::writeRaster(
+                  x = pred_sd, filename = out_file_sd,
+                  overwrite = TRUE, gdal = gdal_settings)
+                rm(pred_sd, envir = environment())
+                invisible(gc())
+              }
+
+              rm(pred_maps, envir = environment())
+              invisible(gc())
+
+              out_file_cov <- fs::path(dir_proj, paste0(pred_name, "_cov.tif"))
+              cov_file_okay <- ecokit::check_tiff(out_file_cov, warning = FALSE)
+              if (!cov_file_okay) {
+                pred_mean <- terra::rast(out_file_mean)
+                # Replace very small mean values with reasonably small
+                # number to avoid overflow warning
+                pred_mean[pred_mean < 1e-8] <- 1e-8
+                pred_sd <- terra::rast(out_file_sd)
+                pred_cov <- (pred_sd / pred_mean) %>%
+                  stats::setNames(paste0(pred_name, "_cov"))
+                terra::writeRaster(
+                  x = pred_cov, filename = out_file_cov,
+                  overwrite = TRUE, gdal = gdal_settings)
+                rm(pred_mean, pred_sd, pred_cov, envir = environment())
+                invisible(gc())
+              }
+
+              tibble::tibble(
+                pred_mean = out_file_mean, pred_sd = out_file_sd,
+                pred_cov = out_file_cov)
+            })) %>%
+        tidyr::unnest("projections") %>%
+        dplyr::select(-tidyselect::all_of("proj_file"))
+
+    },
+    "The following object is masked from",
+    "Attaching package: ", "Loading required package",
+    "Loaded ", "This version of "))
+
+  models_summary_sub
 }

@@ -14,6 +14,8 @@
 #'   are stored. If `NULL` (default), a temporary file is created.
 #' @param verbose Logical. Should a download progress bar be shown? Default is
 #'   `FALSE`.
+#' @param europe_only Logical. If `TRUE`, downloads the Europe-only mask layer.
+#'   Default is `FALSE`.
 #' @param overwrite Logical. Should existing files be overwritten? Default is
 #'   `FALSE`.
 #' @param return_spatraster Logical. If `TRUE` (default), returns a `SpatRaster`
@@ -37,7 +39,7 @@
 #' @author Ahmed El-Gabbas
 
 get_mask_layer <- function(
-    resolution = NULL, climate_dir = NULL, verbose = FALSE,
+    resolution = NULL, climate_dir = NULL, verbose = FALSE, europe_only = FALSE,
     overwrite = FALSE, return_spatraster = TRUE, wrap = FALSE) {
 
   name <- NULL
@@ -57,7 +59,7 @@ get_mask_layer <- function(
     verbose, "onesdm_verbose", "logical")
 
   ecokit::check_args(
-    c("overwrite", "wrap", "return_spatraster"), "logical")
+    c("overwrite", "wrap", "return_spatraster", "europe_only"), "logical")
 
   ## resolution -----
 
@@ -81,11 +83,22 @@ get_mask_layer <- function(
   ## climate_dir -----
 
   if (is.null(climate_dir)) {
-    save_path <- fs::file_temp(
-      pattern = paste0("mask_agg", resolution, "_"), ext = ".tif")
+    if (europe_only) {
+      save_path <- fs::file_temp(
+        pattern = paste0("mask_europe_agg", resolution, "_"), ext = ".tif")
+    } else {
+      save_path <- fs::file_temp(
+        pattern = paste0("mask_agg", resolution, "_"), ext = ".tif")
+    }
   } else {
     fs::dir_create(climate_dir)
-    save_path <- fs::path(climate_dir, paste0("mask_agg_", resolution, ".tif"))
+    if (europe_only) {
+      save_path <- fs::path(
+        climate_dir, paste0("mask_europe_agg_", resolution, ".tif"))
+    } else {
+      save_path <- fs::path(
+        climate_dir, paste0("mask_agg_", resolution, ".tif"))
+    }
   }
 
   # # ********************************************************************** #
@@ -93,9 +106,18 @@ get_mask_layer <- function(
   # # ********************************************************************** #
 
   if (!ecokit::check_tiff(save_path, warning = FALSE) || overwrite) {
-    mask_file <- osfr::osf_retrieve_node("zarx2") %>%
-      osfr::osf_ls_files(n_max = 20L) %>%
-      dplyr::filter(name == paste0("mask_agg_", resolution, ".tif"))
+
+    if (europe_only) {
+      mask_file <- osfr::osf_retrieve_node("zarx2") %>%
+        osfr::osf_ls_files(n_max = 20L) %>%
+        dplyr::filter(name == "europe") %>%
+        osfr::osf_ls_files(n_max = 20L) %>%
+        dplyr::filter(name == paste0("europe_mask_", resolution, ".tif"))
+    } else {
+      mask_file <- osfr::osf_retrieve_node("zarx2") %>%
+        osfr::osf_ls_files(n_max = 20L) %>%
+        dplyr::filter(name == paste0("mask_agg_", resolution, ".tif"))
+    }
 
     if (nrow(mask_file) == 0L) {
       ecokit::stop_ctx(
