@@ -166,6 +166,20 @@
 #' @param n_cores Integer. Number of CPU cores to use for parallel processing of
 #'   data for cross-validation folds and for model fitting. This can also be set
 #'   via the "`onesdm_model_n_cores`" option. Default is `4`.
+#' @param sdm_methods Character vector. List of SDM methods to be used for model
+#'   fitting. Valid methods are those supported by the `sdm` R package:
+#'   `c("glm", "glmpoly", "gam", "glmnet", "mars", "gbm", "rf", "ranger",
+#'   "cart", "rpart", "maxent", "mlp", "svm", "svm2", "mda", "fda")`. `svm`
+#'   refers to the `kernlab::ksvm` implementation of SVM, while `svm2` refers to
+#'   the `e1071::svm` implementation. Default is c("glm", "glmnet", "gam",
+#'   "maxent", "ranger"). This can also be set via the "`onesdm_sdm_methods`"
+#'   option.
+#' @param sdm_settings List or `NULL`. A named list of lists, each containing
+#'   method-specific settings for SDM methods. Each list element should be named
+#'   after a valid SDM method (see `sdm_methods` above), and contain a list of
+#'   settings specific to that method. If `NULL` (default), pre-defined default
+#'   settings are used; see [sdm_model_settings]. This can also be set via the
+#'   "`onesdm_sdm_settings`" option.
 #'
 #' @inheritParams prepare_species_data
 #' @inheritParams get_climate_data
@@ -775,7 +789,7 @@ prepare_model_data <- function(
 
   if (is.null(sdm_settings)) {
     ecokit::cat_time("Loading default model settings")
-    sdm_settings <- sdm_model_settings()
+    sdm_settings <- OneSDM::sdm_model_settings
   }
 
   if (all(sdm_methods %in% names(sdm_settings))) {
@@ -1632,7 +1646,7 @@ prepare_model_data <- function(
   }
   ecokit::cat_time(
     paste0(
-      "Modeling methods to be used: ", crayon::blue(toString(sdm_methods))),
+      "Modelling methods to be used: ", crayon::blue(toString(sdm_methods))),
     level = 1L, cat_timestamp = FALSE, verbose = verbose)
   ecokit::cat_time(
     paste0(

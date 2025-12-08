@@ -53,3 +53,7 @@ terra
 th
 GeoTIFFs
 VIF
+gam
+glm
+glmnet
+maxent

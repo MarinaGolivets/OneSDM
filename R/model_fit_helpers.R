@@ -517,56 +517,6 @@ extract_sdm_info <- function(model = NULL) {
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ------
 
 # # ========================================================================= #
-# sdm_model_settings ------
-# # ========================================================================= #
-
-#' @title Species Distribution Model (SDM) Model Settings
-#'
-#' @description Defines a list of default settings for various species
-#'   distribution modelling algorithms. Each element in the list corresponds to
-#'   a specific modelling method and contains its associated control parameters.
-#'
-#' @return A named list containing model-specific default settings for use in
-#'   SDM workflows.
-#' @author Ahmed El-Gabbas
-#' @noRd
-#' @keywords internal
-
-sdm_model_settings <- function() {
-  list(
-    glm = list(control = list(maxit = 200L)),
-    glmpoly = list(degree = 2L),
-    gam = list(method = "REML", select = TRUE, gamma = 1.2),
-    glmnet = list(maxit = 100000L),
-    mars = list(pmethod = "backward", glm = list(maxit = 200L)),
-    gbm = list(n.trees = 2000L, interaction.depth = 2L),
-    rf = list(ntree = 1000L, nodesize = 5L),
-    ranger = list(
-      num.trees = 1000L, importance = "impurity", min.node.size = 5L),
-    cart = list(),
-    rpart = list(),
-    maxent = list(
-      removeDuplicates = FALSE,
-      args = c(
-        "maximumiterations=2000",
-        # "betamultiplier=1",
-        "convergencethreshold=0.000005",
-        "noautofeature", "hinge", "linear",
-        "noproduct", "noquadratic", "nothreshold",
-        "writeplotdata", "-J", "-P",
-        "noremoveduplicates", "noaddsamplestobackground",
-        "doclamp", "nowriteclampgrid", "outputformat=cloglog")),
-    mlp = list(maxit = 250L),
-    # rbf = list(maxit = 200L),
-    svm = list(),
-    svm2 = list(),
-    mda = list(),
-    fda = list())
-}
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ------
-
-# # ========================================================================= #
 # prep_model_data -------
 # # ========================================================================= #
 

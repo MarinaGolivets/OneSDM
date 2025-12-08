@@ -248,6 +248,21 @@ be set via the "\code{onesdm_model_n_reps}" option.
 \item{n_cores}{Integer. Number of CPU cores to use for parallel processing of
 data for cross-validation folds and for model fitting. This can also be set
 via the "\code{onesdm_model_n_cores}" option. Default is \code{4}.}
+
+\item{sdm_methods}{Character vector. List of SDM methods to be used for model
+fitting. Valid methods are those supported by the \code{sdm} R package:
+\code{c("glm", "glmpoly", "gam", "glmnet", "mars", "gbm", "rf", "ranger", "cart", "rpart", "maxent", "mlp", "svm", "svm2", "mda", "fda")}. \code{svm}
+refers to the \code{kernlab::ksvm} implementation of SVM, while \code{svm2} refers to
+the \code{e1071::svm} implementation. Default is c("glm", "glmnet", "gam",
+"maxent", "ranger"). This can also be set via the "\code{onesdm_sdm_methods}"
+option.}
+
+\item{sdm_settings}{List or \code{NULL}. A named list of lists, each containing
+method-specific settings for SDM methods. Each list element should be named
+after a valid SDM method (see \code{sdm_methods} above), and contain a list of
+settings specific to that method. If \code{NULL} (default), pre-defined default
+settings are used; see \link{sdm_model_settings}. This can also be set via the
+"\code{onesdm_sdm_settings}" option.}
 }
 \value{
 Invisibly returns a tibble (\code{model_data_cv}) with one row per

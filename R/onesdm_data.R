@@ -89,3 +89,23 @@
 #' head(landuse_data)
 
 "landuse_data"
+
+
+# # ********************************************************************** #
+# # ********************************************************************** #
+
+
+# sdm_model_settings ------
+
+#' A list of default settings for species distribution modelling algorithms used
+#' in `OneSDM`.
+#'
+#' @format A named list where each element corresponds to a specific modelling
+#'   method and contains its default control parameters.
+#' @docType data
+#' @examples
+#' # View the SDM model settings
+#' data("sdm_model_settings")
+#' str(sdm_model_settings)
+
+"sdm_model_settings"
