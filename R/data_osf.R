@@ -593,7 +593,7 @@ get_climate_data <- function(
           }
           return(TRUE)
         },
-        .progress = verbose))
+        .progress = FALSE))
 
   # # ********************************************************************** #
   # Check download results ------
@@ -1080,7 +1080,7 @@ get_landuse_data <- function(
           }
           return(TRUE)
         },
-        .progress = verbose))
+        .progress = FALSE))
 
   # # ********************************************************************** #
   # Check download results ------

@@ -4,5 +4,34 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"cSpell.words": [
+			"AUCtest",
+			"betamultiplier",
+			"cloglog",
+			"convergencethreshold",
+			"doclamp",
+			"glmnet",
+			"glmpoly",
+			"indep",
+			"maxent",
+			"maximumiterations",
+			"maxit",
+			"newx",
+			"noaddsamplestobackground",
+			"noautofeature",
+			"nodesize",
+			"noproduct",
+			"noquadratic",
+			"noremoveduplicates",
+			"nothreshold",
+			"nowriteclampgrid",
+			"ntree",
+			"outputformat",
+			"pmethod",
+			"REML",
+			"rpart",
+			"writeplotdata"
+		]
+	}
 }

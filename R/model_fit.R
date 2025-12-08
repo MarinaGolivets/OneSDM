@@ -68,10 +68,10 @@
 #'
 #' @param bias_group Character scalar. Taxonomic group used to compute sampling
 #'   effort surface. Valid options are `"amphibians"`, `"birds"`, `"mammals"`,
-#'   `"molluscs"`, `"plants"`, `"reptiles"`, or `"none"`. Default is `"none"`;
-#'   i.e., no sampling-effort predictor is used. If not "none", the function
-#'   downloads sampling-effort raster of the specified group from
-#'   [Zenodo](https://zenodo.org/records/7556851). See
+#'   `"molluscs"`, `"plants"`, `"reptiles"`, or `"none"`; all in small case.
+#'   Default is `"none"`; i.e., no sampling-effort predictor is used. If not
+#'   "none", the function downloads sampling-effort raster of the specified
+#'   group from [Zenodo](https://zenodo.org/records/7556851). See
 #'   [OneSDM::get_sampling_efforts] for details. This can also be set via the
 #'   "`onesdm_bias_group`" option.
 #'   - When not "none", the sampling-effort raster
@@ -147,12 +147,11 @@
 #'   [blockCV::cv_spatial] can be computationally intensive for large study
 #'   areas and small block sizes. This can also be set via the
 #'   "`onesdm_cv_random`" option.
-#' @param abs_ratio,model_n_reps,n_cores Parameters for sampling
-#'   pseudo-absences.
+#' @param abs_ratio,model_n_reps Parameters for sampling pseudo-absences.
 #'   - **`abs_ratio`**: Integer scalar. Desired ratio of pseudo-absences to
 #'   training presences used when sampling pseudo-absences grid cells for each
-#'   cross-validation fold. Default is `10`, which means that for each training
-#'   presence grid cell, 10 pseudo-absence grid cells will be sampled. This can
+#'   cross-validation fold. Default is `20`, which means that for each training
+#'   presence grid cell, 20 pseudo-absence grid cells will be sampled. This can
 #'   also be set via the "`onesdm_abs_ratio`" option.
 #'   - **`model_n_reps`**: Integer scalar. Number of repetition datasets
 #'   (different sets of pseudo-absences) to generate for each cross-validation
@@ -164,13 +163,9 @@
 #'   available non-presence grid cells), the function will reduce the number of
 #'   repetitions to `1` as further repetitions would be redundant. This can also
 #'   be set via the "`onesdm_model_n_reps`" option.
-#'   - **`n_cores`**: Integer. Number of CPU cores to use for parallel
-#'   processing of data for cross-validation folds. Default is equal to
-#'   `cv_folds`. Parallel processing helps to speed up the preparation of
-#'   cross-validation modelling data; however, the `sdm::background` can be
-#'   memory-intensive when sampling many pseudo-absences over large study areas,
-#'   so care should be taken when setting this value. This can also be set via
-#'   the "`onesdm_model_n_cores`" option.
+#' @param n_cores Integer. Number of CPU cores to use for parallel processing of
+#'   data for cross-validation folds and for model fitting. This can also be set
+#'   via the "`onesdm_model_n_cores`" option. Default is `4`.
 #'
 #' @inheritParams prepare_species_data
 #' @inheritParams get_climate_data
@@ -206,8 +201,8 @@
 #'   per-fold data to disk and samples pseudo-absences per cross-validation
 #'   fold/repetition.
 #'   - Saves a tibble describing all cross-validation folds and model
-#'   repetitions with file paths to persisted datasets (training/testing
-#'   rasters and pseudo-absence objects).
+#'   repetitions with file paths to persisted datasets (training/testing rasters
+#'   and pseudo-absence objects).
 #'
 #'   The function also saves a summary list for the parameters used and file
 #'   paths to important intermediate data objects under
@@ -291,10 +286,16 @@ prepare_model_data <- function(
     bias_group = "none", vif_th = 10L, pres_buffer = 1000L, abs_buffer = 10L,
     abs_exclude_ext = list(), min_pres_grids = 50L,
     cv_folds = 5L, cv_block_size = 500L,
-    cv_random = TRUE, abs_ratio = 10L, model_n_reps = 5L, n_cores = cv_folds) {
+    cv_random = TRUE, abs_ratio = 20L, model_n_reps = 5L, n_cores = 4L,
+    sdm_methods = c("glm", "glmnet", "gam", "maxent", "ranger"), # XXXX
+    sdm_settings = NULL) {
 
   down_clim <- down_lu <- species <- block_group <- cv <- n_pseudo_abs <-
-    training_abs <- training_pres <- test_abs <- test_pres <- valid <- NULL
+    training_abs <- training_pres <- test_abs <- test_pres <- valid <-
+    var_name <- out_file <- out_file_name <- year <- lu_file <- climate_file <-
+    mod_method <- climate_model_abb <- climate_option <- proj_file <-
+    packages <- projections <- response_curves <- n_model_reps <- cv_summary <-
+    model_rep_id <- model_rep_results <- sdm_method <- NULL
 
   ecokit::check_packages(
     c("usdm", "sdm", "parallelly", "future.apply", "future", "gtools", "fs",
@@ -356,6 +357,7 @@ prepare_model_data <- function(
     vif_th, "onesdm_vif_th", c("numeric", "integer"))
   bias_group <- ecokit::assign_from_options(
     bias_group, "onesdm_bias_group", "character")
+  bias_group <- tolower(bias_group)
 
   # Modelling parameters
   pres_buffer <- ecokit::assign_from_options(
@@ -382,10 +384,15 @@ prepare_model_data <- function(
     n_cores, "onesdm_model_n_cores", c("numeric", "integer"))
 
   # # ********************************************************************** #
+  # Creating directories ------
+  # # ********************************************************************** #
 
   dir_sub <- fs::path(model_dir, paste0("models_res_", resolution))
   dir_model_data <- fs::path(dir_sub, "modelling_data")
-  fs::dir_create(c(dir_sub, dir_model_data))
+  dir_fit <- fs::path(dir_sub, "fitted_models")
+  dir_proj_raw <- fs::path(dir_sub, "projections_raw")
+  dir_proj <- fs::path(dir_sub, "projections")
+  fs::dir_create(c(dir_sub, dir_model_data, dir_fit, dir_proj_raw, dir_proj))
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
@@ -438,13 +445,13 @@ prepare_model_data <- function(
 
   if (make_future_predictions) {
 
-    if (climate_scenario == "all") {
+    if (all(climate_scenario == "all")) {
       climate_scenario <- c("ssp126", "ssp370", "ssp585")
     }
-    if (climate_model == "all") {
+    if (all(climate_model == "all")) {
       climate_model <- c("gfdl", "ipsl", "mpi", "mri", "ukesm1")
     }
-    if (climate_year == "all") {
+    if (all(climate_year == "all")) {
       climate_year <- c("2011_2040", "2041_2070", "2071_2100")
     }
 
@@ -636,15 +643,6 @@ prepare_model_data <- function(
     n_cores <- parallelly::availableCores()
   }
 
-  if (n_cores > cv_folds) {
-    warning(
-      "Argument `n_cores` exceeds the number of CV folds (`cv_folds`).\n",
-      "`n_cores`: ", n_cores, "; cv_folds: ", cv_folds,
-      ". Setting `n_cores` to ", cv_folds,
-      call. = FALSE)
-    n_cores <- cv_folds
-  }
-
   # # ********************************************************************** #
 
   ## `cv_block_size` ------
@@ -715,10 +713,80 @@ prepare_model_data <- function(
     min_pres_grids <- as.integer(min_pres_grids)
   }
 
+  # # ********************************************************************** #
+
+  ## `sdm_methods` -----
+
+  sdm_method_valid <- any(
+    is.null(sdm_methods), length(sdm_methods) == 0L, !is.character(sdm_methods))
+  if (sdm_method_valid) {
+    ecokit::stop_ctx(
+      "Invalid model method",
+      sdm_methods = sdm_methods, class_sdm_method = class(sdm_methods),
+      valid_sdm_methods = valid_sdm_methods)
+  }
+
+  sdm_methods <- sort(unique(tolower(sdm_methods)))
+  valid_sdm_methods <- c(
+    "glm", "glmpoly", "gam", "glmnet", "mars", "gbm", "rf", "ranger",
+    "cart", "rpart", "maxent", "mlp", "svm", "svm2", "mda", "fda")
+  if (!all(sdm_methods %in% valid_sdm_methods)) {
+    invalid_sdm_methods <- setdiff(sdm_methods, valid_sdm_methods)
+    ecokit::stop_ctx(
+      paste0(
+        "One or more model methods in `sdm_methods` are invalid.\n",
+        "Invalid methods: ", toString(invalid_sdm_methods), "\n",
+        "Valid methods are: ", toString(valid_sdm_methods)),
+      sdm_methods = sdm_methods, invalid_sdm_methods = invalid_sdm_methods,
+      valid_sdm_methods = valid_sdm_methods, cat_timestamp = FALSE)
+  }
+
+  sdm_packages <- tibble::tribble(
+    ~mod_method, ~packages,
+    "glm", NA_character_,
+    "glmpoly", NA_character_,
+    "gam", "mgcv",
+    "glmnet", "glmnet",
+    "mars", "earth",
+    "gbm", "gbm",
+    "rf", "randomForest",
+    "ranger", "ranger",
+    "cart", "tree",
+    "rpart", "rpart",
+    "maxent", c("dismo", "rJava"),
+    "mlp", "RSNNS",
+    # "rbf", "RSNNS",
+    "svm", "kernlab",
+    "svm", "e1071",
+    "mda", "mda",
+    "fda", "mda") %>%
+    tidyr::unnest_longer("packages") %>%
+    dplyr::filter(mod_method %in% sdm_methods, !is.na(packages))
+  ecokit::check_packages(sdm_packages$packages)
+
+  # Ensure that svm2 method is registered
+  if ("svm2" %in% sdm_methods) {
+    copy_svm2()
+  }
 
   # # ********************************************************************** #
 
-  ## parameters set via options -----
+  ## `sdm_settings` -----
+
+  if (is.null(sdm_settings)) {
+    ecokit::cat_time("Loading default model settings")
+    sdm_settings <- sdm_model_settings()
+  }
+
+  if (all(sdm_methods %in% names(sdm_settings))) {
+    sdm_settings <- sdm_settings[sdm_methods]
+  } else {
+    sdm_settings <- list()
+  }
+
+  # # ********************************************************************** #
+
+  ## Parameters set via options -----
 
   vif_sample <- getOption("onesdm_vif_sample")
 
@@ -783,7 +851,8 @@ prepare_model_data <- function(
       species_pa_file = species_pa_file, cat_timestamp = FALSE)
   }
 
-  species_pa_r <- terra::rast(species_pa_file)
+  species_pa_r <- terra::rast(species_pa_file) %>%
+    stats::setNames("species")
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
@@ -996,7 +1065,7 @@ prepare_model_data <- function(
     ecokit::cat_time(
       paste0(
         "Using sampling efforts for '", crayon::blue(bias_group),
-        "' group as predictor to correct for sampling bias"),
+        "' group as predictor"),
       cat_timestamp = FALSE, verbose = verbose)
 
     bias_r <- OneSDM::get_sampling_efforts(
@@ -1029,6 +1098,7 @@ prepare_model_data <- function(
     verbose = verbose)
   model_predictors_f <- fs::path(
     dir_sub, paste0("model_predictors_res_", resolution, ".RData"))
+  model_predictors <- terra::toMemory(model_predictors)
   ecokit::save_as(
     object = terra::wrap(model_predictors), object_name = "model_predictors",
     out_path = model_predictors_f)
@@ -1061,16 +1131,26 @@ prepare_model_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "Performing VIF-based predictor selection (VIF threshold = ",
+      "Performing VIF-based predictor selection (threshold = ",
       ecokit::format_number(vif_th), ")"),
     cat_timestamp = FALSE, verbose = verbose)
 
+  if (bias_as_predictor) {
+    model_predictors_4vif <- terra::subset(
+      x = model_predictors, subset = "bias_fixed", negate = TRUE)
+  } else {
+    model_predictors_4vif <- model_predictors
+  }
   vif_results <- usdm::vifstep(
-    model_predictors, th = vif_th, keep = vif_keep, size = vif_sample,
-    method = "pearson")
+    x = model_predictors_4vif, th = vif_th, keep = vif_keep,
+    size = vif_sample, method = "pearson")
+
   vif_file <- fs::path(dir_sub, "vif_results.RData")
   save(vif_results, file = vif_file)
   excluded_vars <- vif_results@excluded
+
+  rm(model_predictors_4vif, vif_results, envir = environment())
+  invisible(gc())
 
   if (length(excluded_vars) > 0L) {
 
@@ -1236,9 +1316,9 @@ prepare_model_data <- function(
     # aggregate species_pa_r to larger blocks, calculating sum of presences
     ecokit::cat_time(
       paste0(
-        "Aggregating presence-absence raster to blocks of approx. ",
+        "Aggregating presence-absence raster to blocks of ~",
         ecokit::format_number(cv_block_size),
-        " km (aggregation factor: ", ecokit::format_number(agg_factor), ")"),
+        " km (agg. factor: ", ecokit::format_number(agg_factor), ")"),
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     species_blocks <- terra::aggregate(
@@ -1347,12 +1427,14 @@ prepare_model_data <- function(
     "Preparing modelling data",
     line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
 
-  model_data_r <- c(species_pa_r, model_predictors, species_blocks)
+  model_data_r <- c(species_pa_r, model_predictors, species_blocks) %>%
+    terra::toMemory()
   model_data <- as.data.frame(model_data_r, xy = TRUE, na.rm = TRUE) %>%
     tibble::tibble()
-  model_data_f <- fs::path(dir_model_data, "model_data_res_.RData")
+  model_data_file <- fs::path(
+    dir_model_data, paste0("model_data_res_", resolution, ".RData"))
   ecokit::save_as(
-    object = model_data, object_name = "model_data", out_path = model_data_f)
+    object = model_data, object_name = "model_data", out_path = model_data_file)
 
   # save model_data_r raster as wrapped terra SpatRaster, and load as needed to
   # free up memory
@@ -1360,11 +1442,13 @@ prepare_model_data <- function(
   ecokit::save_as(
     object = terra::wrap(model_data_r), object_name = "model_data_r",
     out_path = model_data_r_file)
-  rm(species_pa_r, model_data_r, species_blocks, envir = environment())
+  rm(
+    species_pa_r, model_data_r, species_blocks, model_predictors,
+    envir = environment())
   invisible(gc())
 
   if (model_n_reps >= 1L) {
-    pseudo_abs_check <- model_data  %>%
+    pseudo_abs_check <- model_data %>%
       dplyr::select(tidyselect::all_of(c("species", "cv"))) %>%
       dplyr::group_by(cv) %>%
       dplyr::summarise(
@@ -1405,198 +1489,617 @@ prepare_model_data <- function(
   par_packages <- c(
     "fs", "terra", "ecokit", "dplyr", "magrittr", "sdm", "tibble", "purrr")
   par_globals <- c(
-    "model_data", "dir_model_data", "verbose", "abs_ratio",
-    "bias_fix_value", "model_n_reps",  "model_data_r_file", "bias_as_predictor")
+    "model_data", "dir_model_data", "abs_ratio", "bias_fix_value",
+    "model_n_reps",  "model_data_r_file", "bias_as_predictor",
+    "prep_model_data")
 
   model_data_cv <- future.apply::future_lapply(
-    X = seq_len(cv_folds),
-    FUN = function(cv_fold) {
-
-      model_rep_id <- NULL
-
-      # Training data - tibble -----
-      training_data_file <- fs::path(
-        dir_model_data, paste0("training_data_cv_", cv_fold, ".RData"))
-      if (ecokit::check_data(training_data_file, warning = FALSE)) {
-        training_data <- ecokit::load_as(training_data_file)
-      } else {
-        training_data <- dplyr::filter(model_data, cv != cv_fold)
-        ecokit::save_as(
-          object = training_data, object_name = "training_data",
-          out_path = training_data_file)
-      }
-
-      # Training presences - tibble  ------
-      training_pres_file <- fs::path(
-        dir_model_data, paste0("training_pres_cv_", cv_fold, ".RData"))
-      if (ecokit::check_data(training_pres_file, warning = FALSE)) {
-        training_pres <- ecokit::load_as(training_pres_file)
-      } else {
-        training_pres <- dplyr::filter(training_data, species == 1L)
-        ecokit::save_as(
-          object = training_pres, object_name = "training_pres",
-          out_path = training_pres_file)
-      }
-      n_training_pres <- nrow(training_pres)
-      rm(training_pres, envir = environment())
-      invisible(gc())
-
-      # Training absences - tibble ------
-      training_abs_file <- fs::path(
-        dir_model_data, paste0("training_abs_cv_", cv_fold, ".RData"))
-      if (ecokit::check_data(training_abs_file, warning = FALSE)) {
-        training_abs <- ecokit::load_as(training_abs_file)
-      } else {
-        training_abs <- dplyr::filter(training_data, species == 0L)
-        ecokit::save_as(
-          object = training_abs, object_name = "training_abs",
-          out_path = training_abs_file)
-      }
-      n_training_abs <- nrow(training_abs)
-
-      rm(training_data, training_abs, envir = environment())
-      invisible(gc())
-
-      # Training data - raster -----
-      training_r_file <- fs::path(
-        dir_model_data, paste0("training_r_cv_", cv_fold, ".RData"))
-      if (ecokit::check_data(training_r_file, warning = FALSE)) {
-        training_r <- ecokit::load_as(training_r_file, unwrap_r = TRUE)
-      } else {
-        training_r <- ecokit::load_as(model_data_r_file, unwrap_r = TRUE)
-        training_r[training_r$cv == cv_fold] <- NA
-        ecokit::save_as(
-          object = terra::wrap(training_r),
-          object_name = paste0("training_r_cv_", cv_fold),
-          out_path = training_r_file)
-      }
-
-      # Pseudo-absences -------
-      n_pseudo_abs <- pmin(n_training_pres * abs_ratio, n_training_abs)
-
-      training_r_sub <- terra::subset(
-        x = training_r, subset = "species", negate = TRUE)
-      if (bias_as_predictor) {
-        training_r_sub$bias_fixed <- NULL
-      }
-      training_r_pres <- training_r
-      training_r_pres[training_r_pres$species == 0L] <- NA
-      training_r_pres <- terra::subset(
-        x = training_r_pres, subset = "species") %>%
-        terra::as.points()
-      rm(training_r, envir = environment())
-      invisible(gc())
-
-      pseudo_abs <- tibble::tibble(model_rep_id = seq_len(model_n_reps)) %>%
-        dplyr::mutate(
-          pseudo_abs_file = purrr::map_chr(
-            .x = model_rep_id,
-            .f = function(rep_id) {
-
-              pseudo_abs_file <- fs::path(
-                dir_model_data,
-                paste0("pseudo_abs_cv_", cv_fold, "_rep_", rep_id, ".RData"))
-
-              if (!ecokit::check_data(pseudo_abs_file, warning = FALSE)) {
-                pseudo_abs <- sdm::background(
-                  x = training_r_sub, n = n_pseudo_abs,
-                  method = "eDist", sp = training_r_pres)
-
-                ecokit::save_as(
-                  object = pseudo_abs,
-                  object_name = paste0(
-                    "pseudo_abs_cv_", cv_fold, "_rep_", rep_id),
-                  out_path = pseudo_abs_file)
-              }
-              pseudo_abs_file
-            }
-          ))
-
-      rm(training_r_sub, training_r_pres, envir = environment())
-      invisible(gc())
-
-
-      # Testing data -----
-      testing_data_file <- fs::path(
-        dir_model_data, paste0("testing_data_cv_", cv_fold, ".RData"))
-      if (ecokit::check_data(testing_data_file, warning = FALSE)) {
-        testing_data <- ecokit::load_as(testing_data_file)
-      } else {
-        testing_data <- dplyr::filter(model_data, cv != cv_fold)
-        # if bias correction is used, add bias_fixed column
-        if (bias_as_predictor) {
-          testing_data <- dplyr::mutate(
-            testing_data, bias_fixed = bias_fix_value)
-        }
-        ecokit::save_as(
-          object = testing_data, object_name = "testing_data",
-          out_path = testing_data_file)
-      }
-      n_test_pres <- sum(testing_data$species == 1L)
-      n_test_abs <- sum(testing_data$species == 0L)
-
-      rm(testing_data, envir = environment())
-      invisible(gc())
-
-
-      # Testing raster -----
-      testing_r_file <- fs::path(
-        dir_model_data, paste0("testing_r_cv_", cv_fold, ".RData"))
-      if (!ecokit::check_data(testing_r_file, warning = FALSE)) {
-        testing_r <- ecokit::load_as(model_data_r_file, unwrap_r = TRUE)
-        testing_r[testing_r$cv == cv_fold] <- NA
-
-        # if bias correction is used, set bias values to fixed value
-        if (bias_as_predictor) {
-          testing_r$bias_fixed <- terra::classify(
-            testing_r$bias, rbind(cbind(-Inf, Inf, bias_fix_value)))
-        }
-
-        ecokit::save_as(
-          object = terra::wrap(testing_r),
-          object_name = paste0("testing_r_cv_", cv_fold),
-          out_path = testing_r_file)
-        rm(testing_r, envir = environment())
-        invisible(gc())
-      }
-
-      tibble::tibble(
-        cv = cv_fold,
-        training_data = training_data_file,
-        training_data_r = training_r_file,
-        training_pres = training_pres_file,
-        n_training_pres = n_training_pres,
-        training_abs = training_abs_file,
-        n_training_abs = n_training_abs,
-        n_model_reps = model_n_reps,
-        n_pseudo_abs = n_pseudo_abs,
-        pseudo_abs = pseudo_abs,
-        testing_data = testing_data_file,
-        testing_data_r = testing_r_file,
-        n_test_pres = n_test_pres,
-        n_test_abs = n_test_abs) %>%
-        tidyr::unnest(col = "pseudo_abs")
-
-    },
+    X = seq_len(cv_folds), FUN = prep_model_data,
+    dir_model_data = dir_model_data, model_data = model_data,
+    abs_ratio = abs_ratio, bias_fix_value = bias_fix_value,
+    model_n_reps = model_n_reps, model_data_r_file = model_data_r_file,
+    bias_as_predictor = bias_as_predictor,
     future.scheduling = Inf, future.seed = TRUE,
-    future.packages = par_packages,
-    future.globals = par_globals) %>%
+    future.packages = par_packages, future.globals = par_globals) %>%
     dplyr::bind_rows()
 
+  # expand model_data_cv for all sdm_methods, except for maxent which will be
+  # run only for a single repetition per CV fold
+  model_data_cv_0 <- model_data_cv %>%
+    tidyr::crossing(
+      sdm_method = stringr::str_subset(sdm_methods, "maxent", negate = TRUE))
+
+  if ("maxent" %in% sdm_methods) {
+    model_data_cv_maxent <- model_data_cv %>%
+      dplyr::filter(model_rep_id == 1L) %>%
+      dplyr::mutate(
+        n_pseudo_abs = NA_integer_, pseudo_abs_file = NA_character_,
+        n_model_reps = 1L, sdm_method = "maxent")
+    model_data_cv <- dplyr::bind_rows(model_data_cv_0, model_data_cv_maxent)
+  } else {
+    model_data_cv <- model_data_cv_0
+  }
+
+  model_data_cv <- dplyr::arrange(model_data_cv, cv, sdm_method, model_rep_id)
+
   future::plan("sequential", gc = TRUE)
+  rm(
+    model_data_cv_0, model_data_cv_maxent, par_globals, par_packages,
+    envir = environment())
+  invisible(gc())
 
   ## Saving model data
   ecokit::cat_time(
     "Saving model data", cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
+  model_data_cv_file <- fs::path(dir_model_data, "model_data_cv.RData")
   ecokit::save_as(
     object = model_data_cv, object_name = "model_data_cv",
-    out_path = fs::path(dir_model_data, "model_data_cv.RData"))
+    out_path = model_data_cv_file)
+
+  # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+  # Projection data -------
+  # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  ecokit::info_chunk(
+    "Preparing projection data",
+    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+
+  # XXXXXX - projection extent!
+
+
+  ## current ----
+  projection_inputs <- dplyr::filter(
+    climate_preds, var_name %in% predictor_names) %>%
+    dplyr::pull(out_file)
+
+  if (length(pft_id) > 0L) {
+    projection_inputs <- dplyr::filter(
+      lu_preds, out_file_name %in% predictor_names) %>%
+      dplyr::pull(out_file) %>%
+      c(projection_inputs, .)
+  }
+  projection_inputs <- tibble::tibble(
+    climate_model = "current", climate_scenario = "current",
+    year = "current", map_paths = list(projection_inputs))
+
+  ## future -----
+  if (make_future_predictions) {
+
+    predictors_future <- dplyr::filter(
+      climate_future, var_name %in% predictor_names) %>%
+      dplyr::summarise(
+        climate_file = list(out_file),
+        .by = c(climate_model_abb, climate_scenario, year)) %>%
+      dplyr::rename(climate_model = climate_model_abb)
+
+    if (length(pft_id) > 0L) {
+      lu_future_files <- dplyr::filter(
+        lu_future, out_file_name %in% predictor_names) %>%
+        dplyr::summarise(
+          lu_file = list(out_file), .by = c(climate_scenario, year))
+      predictors_future <- dplyr::left_join(
+        predictors_future, lu_future_files,
+        by = c("climate_scenario", "year"))
+    } else {
+      predictors_future <- dplyr::mutate(
+        predictors_future, lu_file = NA_character_)
+    }
+
+    predictors_future <- predictors_future %>%
+      dplyr::mutate(
+        map_paths = purrr::map2(.x = climate_file, .y = lu_file, .f = c),
+        climate_file = NULL, lu_file = NULL) %>%
+      dplyr::arrange(climate_model, climate_scenario, year)
+
+    projection_inputs <- dplyr::bind_rows(
+      projection_inputs, predictors_future) %>%
+      dplyr::mutate(
+        climate_option = paste0(
+          climate_model, "_", climate_scenario, "_", year),
+        climate_option = stringr::str_replace_all(
+          climate_option, "current_current_current", "current"))
+
+    rm(predictors_future, lu_future_files, envir = environment())
+    invisible(gc())
+  }
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   # # ********************************************************************** #
-  # Summary of modelling data ------
+  # Model fitting and predictions ------
+  # # ********************************************************************** #
+
+  ecokit::info_chunk(
+    "Model fitting and predictions",
+    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+
+  ecokit::cat_time(
+    paste0(
+      "Total model fitting tasks: ",
+      ecokit::format_number(nrow(model_data_cv), bold = TRUE), ": ",
+      ecokit::format_number(length(sdm_methods)), " modelling methods \u00D7 ",
+      ecokit::format_number(cv_folds), " CV folds \u00D7 ",
+      ecokit::format_number(model_n_reps), " repetitions"),
+    cat_timestamp = FALSE, verbose = verbose)
+
+  if ("maxent" %in% sdm_methods) {
+    ecokit::cat_time(
+      "Maxent models will be fitted only for a single repetition per CV fold",
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+  }
+  ecokit::cat_time(
+    paste0(
+      "Modeling methods to be used: ", crayon::blue(toString(sdm_methods))),
+    level = 1L, cat_timestamp = FALSE, verbose = verbose)
+  ecokit::cat_time(
+    paste0(
+      "Predictor variables to be used: ",
+      crayon::blue(toString(predictor_names))),
+    level = 1L, cat_timestamp = FALSE, verbose = verbose)
+
+  n_projections <- ecokit::format_number(nrow(projection_inputs))
+  ecokit::cat_time(
+    paste0(
+      "For each model fitting task, predictions will be made for ",
+      n_projections, " projection scenarios"),
+    cat_timestamp = FALSE, verbose = verbose)
+  n_tiff_files <- ecokit::format_number(
+    nrow(model_data_cv) * nrow(projection_inputs))
+  ecokit::cat_time(
+    paste0("Total projection GeoTIFF files: ", n_tiff_files),
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
+
+  proj_n_cores <- ecokit::format_number(min(n_cores, nrow(model_data_cv)))
+  ecokit::cat_time(
+    paste0(
+      "Using ", proj_n_cores,
+      " parallel cores for model fitting and projections"),
+    cat_timestamp = FALSE, verbose = verbose)
+
+  if (n_cores == 1L) {
+    future::plan("sequential", gc = TRUE)
+  } else {
+    ecokit::set_parallel(
+      min(n_cores, nrow(model_data_cv)), show_log = FALSE,
+      future_max_size = 2000L)
+    withr::defer(future::plan("sequential", gc = TRUE))
+  }
+
+  par_packages <- c(
+    "fs", "terra", "ecokit", "dplyr", "magrittr", "tidyselect",
+    "sdm", "tibble", "purrr", "tidyr", "withr")
+  par_globals <- c(
+    "bias_fix_value", "bias_as_predictor", "projection_inputs",
+    "predictor_names", "model_data_cv", "sdm_settings", "reduce_sdm_formulas",
+    "dir_fit", "extract_sdm_info", "dir_proj_raw", "sdm_packages",
+    "fit_predict")
+
+  model_fitting_pp <- future.apply::future_lapply(
+    X = seq_len(nrow(model_data_cv)),
+    FUN = function(cv_rep_id) {
+      withr::with_envvar(
+        new = c(NOAWT = "TRUE"),
+        code = {
+          suppressPackageStartupMessages(
+            ecokit::quietly(
+              fit_predict(
+                cv_rep_id = cv_rep_id, bias_fix_value = bias_fix_value,
+                bias_as_predictor = bias_as_predictor,
+                projection_inputs = projection_inputs,
+                predictor_names = predictor_names,
+                model_data_cv = model_data_cv, sdm_settings = sdm_settings,
+                dir_fit = dir_fit, dir_proj_raw = dir_proj_raw,
+                sdm_packages = sdm_packages),
+              "The following object is masked from",
+              "Attaching package: ", "Loading required package",
+              "Loaded ", "This version of "))
+        })
+    },
+    future.scheduling = Inf, future.seed = TRUE,
+    future.packages = par_packages, future.globals = par_globals)
+
+  future::plan("sequential", gc = TRUE)
+  invisible(gc())
+
+  # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  # # ********************************************************************** #
+  # Summarise model repetition outputs ------
+  # # ********************************************************************** #
+
+  ecokit::info_chunk(
+    "Summarise model repetition outputs",
+    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+
+  model_data_cv_summary <- model_data_cv %>%
+    dplyr::mutate(
+      model_rep_results = as.character(model_fitting_pp),
+      model_fitting = purrr::map(model_rep_results, ecokit::load_as)) %>%
+    tidyr::unnest(col = "model_fitting") %>%
+    tidyr::nest(cv_summary = -c("cv", "sdm_method", "n_model_reps")) %>%
+    dplyr::mutate(
+
+      # Model repetition data
+      reps_data = purrr::map(
+        .x = cv_summary,
+        .f = function(cv_data) {
+
+          summary_columns_1 <- c(
+            "variable_importance", "response_curves", "projections",
+            "evaluation_training", "evaluation_testing", "pseudo_abs_file",
+            "model_rep_id", "model_rep_results", "model_fit_file")
+          df_1 <- cv_data %>%
+            dplyr::select(-tidyselect::all_of(summary_columns_1)) %>%
+            dplyr::distinct()
+
+          summary_columns_2 <- c(
+            "model_rep_id", "pseudo_abs_file", "model_rep_results",
+            "model_fit_file", "evaluation_training", "evaluation_testing",
+            "variable_importance", "response_curves", "projections")
+          df_2 <- dplyr::rename(cv_data, rep_id = model_rep_id) %>%
+            dplyr::summarise(
+              dplyr::across(
+                .cols = tidyselect::all_of(summary_columns_2[-1L]),
+                .fns = ~ {
+                  tibble::tibble(rep_id = rep_id, .x) %>%
+                    tidyr::unnest(cols = .x) %>%
+                    list()
+                }))
+
+          dplyr::bind_cols(df_1, df_2) %>%
+            dplyr::rename_with(~paste0("rep_", .x))
+        }),
+
+      # Clean up some columns
+      cv_summary = purrr::map(
+        .x = cv_summary,
+        .f = ~ {
+          summary_columns_3 <- c(
+            "evaluation_training", "evaluation_testing",
+            "variable_importance", "response_curves", "projections")
+          dplyr::select(.x, tidyselect::all_of(summary_columns_3))
+        })
+    )
+
+
+  # Summarised results for CV fold and modelling method
+  model_data_cv_summary <- model_data_cv_summary %>%
+    dplyr::mutate(
+      rep_summary = purrr::map2(
+        .x = cv_summary, .y = n_model_reps,
+        .f = function(cv_summary, n_reps) {
+
+          summ_fun <- function(.x, n_reps) { #nolint
+            if (n_reps > 1L) {
+              list(
+                mean = ~ mean(.x, na.rm = TRUE),
+                sd = ~ sd(.x, na.rm = TRUE))
+            } else {
+              list(
+                mean = ~ mean(.x, na.rm = TRUE),
+                sd = ~ NA_real_)
+            }
+          }
+
+          # |||||||||||||||||||||||||||||||||||||||||||||||||
+          # Train and test evaluation metrics
+          # |||||||||||||||||||||||||||||||||||||||||||||||||
+
+          cols_eval <- c("evaluation_training", "evaluation_testing")
+          eval_train_test <- cv_summary %>%
+            dplyr::summarize(
+              dplyr::across(
+                .cols = tidyselect::all_of(cols_eval),
+                .fns = ~ {
+                  dplyr::bind_rows(.x) %>%
+                    dplyr::summarize(
+                      dplyr::across(
+                        .cols = tidyselect::everything(),
+                        .fns = summ_fun(.x, n_reps),
+                        .names = "{.col}_{.fn}")) %>%
+                    list()
+                }))
+
+          # |||||||||||||||||||||||||||||||||||||||||||||||||
+          # Variable importance
+          # |||||||||||||||||||||||||||||||||||||||||||||||||
+
+          var_imp <- cv_summary %>%
+            dplyr::summarize(
+              dplyr::across(
+                .cols = tidyselect::all_of("variable_importance"),
+                .fns = ~ {
+                  dplyr::bind_rows(.x) %>%
+                    dplyr::group_by(variable) %>%
+                    dplyr::summarize(
+                      dplyr::across(
+                        .cols = tidyselect::all_of(c("cor_test", "auc_test")),
+                        .fns = summ_fun(.x, n_reps),
+                        .names = "{.col}_{.fn}"),
+                      .groups = "drop") %>%
+                    list()
+                }))
+
+          # |||||||||||||||||||||||||||||||||||||||||||||||||
+          # Response curves
+          # |||||||||||||||||||||||||||||||||||||||||||||||||
+
+          # For response curves, there might be different x_value points across
+          # repetitions. To properly summarize, we need to interpolate all reps
+          # to a common grid per variable before calculating mean and sd.
+
+          if (n_reps > 1L) {
+
+            resp_curv <- cv_summary %>%
+              dplyr::summarize(
+
+                dplyr::across(
+                  .cols = tidyselect::all_of("response_curves"),
+                  .fns = ~ {
+
+                    # Bind all response curve data
+                    resp <- dplyr::bind_rows(.x)
+
+                    # Build a per-variable grid from the overlap of all
+                    # repetitions’ ranges
+                    resp_grid <- dplyr::group_by(resp, variable) %>%
+                      dplyr::summarise(
+                        x_min = min(x_value), x_max = max(x_value),
+                        .groups = "drop") %>%
+                      dplyr::group_by(variable) %>%
+                      dplyr::summarise(
+                        x_min = x_min, x_max = x_max, n = 100L,
+                        grid = list(seq(x_min, x_max, length.out = n)),
+                        .groups = "drop") %>%
+                      dplyr::select(tidyselect::all_of(c("variable", "grid")))
+
+                    tidyr::nest(resp, rc_data = -variable) %>%
+                      dplyr::left_join(resp_grid, by = "variable") %>%
+                      tidyr::unnest(cols = "rc_data") %>%
+                      dplyr::mutate(
+                        x_value = purrr::map2_dbl(
+                          .x = x_value, .y = grid,
+                          .f = function(x_vals, grid) {
+                            grid[which.min(abs(grid - x_vals))[1L]]
+                          })) %>%
+                      dplyr::select(-tidyselect::all_of("grid")) %>%
+                      dplyr::group_by(variable, x_value) %>%
+                      dplyr::summarize(
+                        dplyr::across(
+                          .cols = tidyselect::all_of("prediction"),
+                          .fns = list(
+                            mean = ~ mean(.x, na.rm = TRUE),
+                            sd = ~ sd(.x, na.rm = TRUE)),
+                          .names = "{.col}_{.fn}"),
+                        .groups = "drop") %>%
+                      dplyr::mutate(
+                        prediction_plus = pmin(
+                          1.0, prediction_mean + prediction_sd),
+                        prediction_minus = pmax(
+                          0.0, prediction_mean - prediction_sd)) %>%
+                      list()
+                  }))
+
+          } else {
+
+            resp_curv <- dplyr::select(
+              cv_summary, tidyselect::all_of("response_curves")) %>%
+              dplyr::mutate(
+                response_curves = purrr::map(
+                  .x = response_curves,
+                  .f = ~{
+                    .x %>%
+                      dplyr::mutate(
+                        prediction_mean = prediction, prediction_sd = NA_real_,
+                        prediction_plus = NA_real_,
+                        prediction_minus = NA_real_) %>%
+                      dplyr::select(-tidyselect::all_of("prediction"))
+                  }))
+
+          }
+
+          # |||||||||||||||||||||||||||||||||||||||||||||||||
+          # Projections
+          # |||||||||||||||||||||||||||||||||||||||||||||||||
+
+
+          if (n_reps > 1L) {
+
+            preds <- cv_summary %>%
+              dplyr::summarize(
+                dplyr::across(
+                  .cols = tidyselect::all_of("projections"),
+                  .fns = ~ {
+
+                    rep_maps_data <- tidyr::nest(
+                      dplyr::bind_rows(.x),
+                      preds = -c(
+                        "climate_model", "climate_scenario",
+                        "year", "climate_option"))
+
+                    if (n_cores == 1L) {
+                      future::plan("sequential", gc = TRUE)
+                    } else {
+                      ecokit::set_parallel(
+                        min(n_cores, nrow(rep_maps_data)), show_log = FALSE,
+                        future_max_size = 2000L)
+                      withr::defer(future::plan("sequential", gc = TRUE))
+                    }
+
+                    gdal_settings <- c(
+                      "COMPRESS=ZSTD", "ZSTD_LEVEL=22", "TILED=YES")
+
+                    par_packages <- c(
+                      "fs", "terra", "ecokit", "dplyr", "magrittr",
+                      "tidyselect", "tibble")
+                    par_globals <- c("dir_proj", "gdal_settings")
+
+
+                    # cv_summary
+
+                    ecokit::quietly({
+
+                      rep_maps_summary <- future.apply::future_lapply(
+                        X = rep_maps_data$preds,
+                        FUN = function(pred) {
+
+                          pred_paths <- dplyr::filter(pred, proj_okay) %>%
+                            dplyr::pull(proj_file)
+                          pred_name <- basename(pred_paths[1L]) %>%
+                            fs::path_ext_remove() %>%
+                            stringr::str_replace("_rep(\\d)+_", "_") #nolint
+
+                          pred_maps <- terra::rast(pred_paths)
+
+                          out_file_mean <- fs::path(
+                            dir_proj, paste0(pred_name, "_mean.tif"))
+                          mean_file_okay <- ecokit::check_tiff(
+                            out_file_mean, warning = FALSE)
+                          if (!mean_file_okay) {
+                            pred_mean <- terra::app(
+                              x = pred_maps, fun = mean, na.rm = TRUE) %>%
+                              stats::setNames(paste0(pred_name, "_mean"))
+                            terra::writeRaster(
+                              x = pred_mean, filename = out_file_mean,
+                              overwrite = TRUE, gdal = gdal_settings)
+                            rm(pred_mean, envir = environment())
+                            invisible(gc())
+                          }
+
+                          out_file_sd <- fs::path(
+                            dir_proj, paste0(pred_name, "_sd.tif"))
+                          sd_file_okay <- ecokit::check_tiff(
+                            out_file_sd, warning = FALSE)
+                          if (!sd_file_okay) {
+                            pred_sd <- terra::app(
+                              x = pred_maps, fun = sd, na.rm = TRUE) %>%
+                              stats::setNames(paste0(pred_name, "_sd"))
+                            terra::writeRaster(
+                              x = pred_sd, filename = out_file_sd,
+                              overwrite = TRUE, gdal = gdal_settings)
+                            rm(pred_sd, envir = environment())
+                            invisible(gc())
+                          }
+
+                          out_file_cov <- fs::path(
+                            dir_proj, paste0(pred_name, "_cov.tif"))
+                          cov_file_okay <- ecokit::check_tiff(
+                            out_file_cov, warning = FALSE)
+
+                          if (!cov_file_okay) {
+                            pred_mean <- terra::rast(out_file_mean)
+                            pred_sd <- terra::rast(out_file_sd)
+                            pred_cov <- (pred_sd / pred_mean) %>%
+                              stats::setNames(paste0(pred_name, "_cov"))
+                            terra::writeRaster(
+                              x = pred_cov, filename = out_file_cov,
+                              overwrite = TRUE, gdal = gdal_settings)
+                            rm(
+                              pred_mean, pred_sd, pred_cov,
+                              envir = environment())
+                            invisible(gc())
+                          }
+
+                          rm(pred_maps, envir = environment())
+                          invisible(gc())
+
+                          tibble::tibble(
+                            pred_mean = out_file_mean, pred_sd = out_file_sd,
+                            pred_cov = out_file_cov)
+                        },
+                        future.scheduling = Inf, future.seed = TRUE,
+                        future.packages = par_packages,
+                        future.globals = par_globals) %>%
+                        dplyr::bind_rows()
+                    },
+                    "was built under R version")
+
+                    future::plan("sequential", gc = TRUE)
+                    invisible(gc())
+
+                    dplyr::bind_cols(rep_maps_data, rep_maps_summary) %>%
+                      dplyr::select(-tidyselect::all_of("preds")) %>%
+                      list()
+                  }))
+
+          } else {
+
+            preds <- dplyr::select(
+              cv_summary, tidyselect::all_of("projections")) %>%
+              dplyr::mutate(
+                projections = purrr::map(
+                  .x = projections,
+                  .f = function(projections) {
+
+                    projections %>%
+                      dplyr::mutate(
+                        pred_mean = purrr::map(
+                          .x = proj_file,
+                          .f = ~ {
+
+                            pred_name <- basename(.x) %>%
+                              fs::path_ext_remove() %>%
+                              stringr::str_replace("_rep(\\d)+_", "_") #nolint
+
+                            out_file_mean <- fs::path(
+                              dir_proj, paste0(pred_name, "_mean.tif"))
+                            mean_file_okay <- ecokit::check_tiff(
+                              out_file_mean, warning = FALSE)
+                            if (!mean_file_okay) {
+                              gdal_settings <- c(
+                                "COMPRESS=ZSTD", "ZSTD_LEVEL=22", "TILED=YES")
+
+                              pred_mean <- terra::rast(.x) %>%
+                                stats::setNames(paste0(pred_name, "_mean"))
+                              terra::writeRaster(
+                                x = pred_mean, filename = out_file_mean,
+                                overwrite = TRUE, gdal = gdal_settings)
+                              rm(pred_mean, envir = environment())
+                              invisible(gc())
+                            }
+
+                            tibble::tibble(
+                              pred_mean = out_file_mean,
+                              pred_sd = NA_character_,
+                              pred_cov = NA_character_)
+                          }
+                        )) %>%
+                      dplyr::select(
+                        -tidyselect::all_of(c("proj_file", "proj_okay"))) %>%
+                      tidyr::unnest(cols = "pred_mean")
+
+                  }))
+          }
+
+          # merge summary data
+          dplyr::bind_cols(eval_train_test, var_imp, resp_curv, preds)
+        }
+      )
+    ) %>%
+    dplyr::select(-tidyselect::all_of("cv_summary")) %>%
+    tidyr::unnest("rep_summary")
+
+  model_data_cv_summary_file <- fs::path(
+    dir_model_data, "model_data_cv_summary.RData")
+  ecokit::save_as(
+    object = model_data_cv_summary, object_name = "model_data_cv_summary",
+    out_path = model_data_cv_summary_file)
+
+  # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  # # ********************************************************************** #
+  # Overall summary ------
+  # # ********************************************************************** #
+
+
+
+  # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  # # ********************************************************************** #
+  # Overall summary ------
   # # ********************************************************************** #
 
   if (length(abs_exclude_ext) > 0L) {
@@ -1604,8 +2107,11 @@ prepare_model_data <- function(
   }
 
   model_data_summary <- list(
+    # root directory for species models
+    model_root_dir = model_dir, # XXXXX
     # model output directory
-    model_dir = model_dir,
+    model_dir = dir_sub,
+
     # species PA data
     species_data_raw = list(
       gbif_ids = gbif_ids,
@@ -1613,6 +2119,7 @@ prepare_model_data <- function(
       coordinates = coordinates,
       # path to species presence-absence GeoTIFF file
       species_data_tiff = species_pa_file),
+
     # climate options and data
     climate = list(
       # directory with climate data
@@ -1628,23 +2135,28 @@ prepare_model_data <- function(
       # tibble with current and future climate data
       climate_current = climate_preds,
       climate_future = climate_future),
+
     # land use options and data
     land_use = list(
       # land use PFT type and IDs
       pft_type = pft_type, pft_id = pft_id,
       # tibble with current and future land use data
       lu_current = lu_preds, lu_future = lu_future),
+
     # sampling bias options
     bias = list(
       bias_group = bias_group,
       bias_as_predictor = bias_as_predictor,
       bias_fix_value = bias_fix_value),
+
     # variable selection options and results
     var_selection = list(
       vif_th = vif_th,
       vif_keep = vif_keep,
       excluded_vars = excluded_vars,
       vif_results_file = vif_file),
+
+    # modelling options
     model_options = list(
       # modelling resolution
       resolution = resolution,
@@ -1661,10 +2173,16 @@ prepare_model_data <- function(
       # GeoTIFF file for spatial blocks
       species_blocks_file = species_blocks_file,
       # number of model fitting repetitions
-      model_n_reps = model_n_reps),
+      model_n_reps = model_n_reps,
+      # sdm methods
+      sdm_methods = sdm_methods,
+      # sdm settings
+      sdm_settings = sdm_settings),
+
+    # modelling data
     model_data = list(
       # final presence-absence GeoTIFF file
-      species_pa_file  = species_pa_r_file,
+      species_pa_file = species_pa_r_file,
       # final predictor names
       predictor_names = predictor_names,
       climate_predictor_names = climate_predictor_names,
@@ -1676,9 +2194,11 @@ prepare_model_data <- function(
       # model predictors raster file (include species and blocks)
       model_data_r_file = model_data_r_file,
       # model data tibble file
-      model_data_f = model_data_f,
+      model_data_file = model_data_file,
       # model data for cross-validation folds and repetitions
-      model_data_cv = model_data_cv)
+      model_data_cv = model_data_cv,
+      # paths for projection data
+      projection_inputs = projection_inputs)
   )
 
   ecokit::save_as(
