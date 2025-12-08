@@ -1640,6 +1640,7 @@ process_models <- function(
   if (is.character(proj_extent)) {
 
     proj_mask <- switch(
+      proj_extent,
       modeling_area = {
         ecokit::load_as(model_data_r_file) %>%
           terra::unwrap() %>%
