@@ -1654,7 +1654,7 @@ process_models <- function(
           europe_only = FALSE, return_spatraster = TRUE, wrap = FALSE) %>%
           stats::setNames("proj_extent")
       },
-      Europe = {
+      europe = {
         proj_mask <- OneSDM::get_mask_layer(
           resolution = resolution, climate_dir = climate_dir,
           europe_only = TRUE, return_spatraster = TRUE, wrap = FALSE) %>%
@@ -1682,7 +1682,6 @@ process_models <- function(
       terra::mask(proj_mask) %>%
       terra::trim()
   }
-
 
   proj_mask_file <- fs::path(dir_model_data, "projection_mask.tif")
   terra::writeRaster(
