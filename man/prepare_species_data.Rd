@@ -30,7 +30,7 @@ When multiple IDs are provided, data are collated across all IDs. If \code{NULL}
 "\code{onesdm_easin_ids}" option and skips the EASIN download if no IDs are set.
 For more details, see \link{prepare_easin_data}.}
 
-\item{gbif_ids}{character or numeric (optional). A vector of one or more GBIF
+\item{gbif_ids}{Character or numeric (optional). A vector of one or more GBIF
 taxon keys. When multiple IDs are supplied, data are combined across all
 keys. If \code{NULL} (default), the function attempts to retrieve IDs from the
 "\code{onesdm_gbif_ids}" option. If no IDs are set, the GBIF download step is
@@ -38,9 +38,9 @@ skipped. To request data from GBIF, GBIF credentials must be set for the
 current session, otherwise an error will be raised. For more, see
 \link{prepare_gbif_data}, and this
 \href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{article}
-from \code{rgbif} package documentation on how to set GBIF credentials.}
+from \code{rgbif} R package documentation on how to set the GBIF credentials.}
 
-\item{coordinates}{data frame or matrix (optional). A user-supplied object
+\item{coordinates}{A data frame or matrix (optional). A user-supplied object
 containing longitude and latitude values in two columns (in that order).
 Must have exactly two columns. If \code{NULL} (default), the function attempts
 to retrieve coordinates from the "\code{onesdm_coordinates}" option. See

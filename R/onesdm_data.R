@@ -38,12 +38,13 @@
 #'   `climate_dir` argument.
 #' @docType data
 #' @examples
+#' require(ecokit)
+#'
 #' # View the climate data
 #' data("climate_data")
-#' head(climate_data)
+#' ecokit::ht(climate_data)
 
 "climate_data"
-
 
 # # ********************************************************************** #
 # # ********************************************************************** #
@@ -84,9 +85,11 @@
 #'
 #' @docType data
 #' @examples
+#' require(ecokit)
+#'
 #' # View the land use data
 #' data("landuse_data")
-#' head(landuse_data)
+#' ecokit::ht(landuse_data)
 
 "landuse_data"
 

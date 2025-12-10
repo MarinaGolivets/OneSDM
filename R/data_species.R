@@ -19,7 +19,7 @@
 #'   (default), the function attempts to retrieve IDs from the
 #'   "`onesdm_easin_ids`" option and skips the EASIN download if no IDs are set.
 #'   For more details, see [prepare_easin_data].
-#' @param gbif_ids character or numeric (optional). A vector of one or more GBIF
+#' @param gbif_ids Character or numeric (optional). A vector of one or more GBIF
 #'   taxon keys. When multiple IDs are supplied, data are combined across all
 #'   keys. If `NULL` (default), the function attempts to retrieve IDs from the
 #'   "`onesdm_gbif_ids`" option. If no IDs are set, the GBIF download step is
@@ -27,8 +27,8 @@
 #'   current session, otherwise an error will be raised. For more, see
 #'   [prepare_gbif_data], and this
 #'   [article](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
-#'   from `rgbif` package documentation on how to set GBIF credentials.
-#' @param coordinates data frame or matrix (optional). A user-supplied object
+#'   from `rgbif` R package documentation on how to set the GBIF credentials.
+#' @param coordinates A data frame or matrix (optional). A user-supplied object
 #'   containing longitude and latitude values in two columns (in that order).
 #'   Must have exactly two columns. If `NULL` (default), the function attempts
 #'   to retrieve coordinates from the "`onesdm_coordinates`" option. See
@@ -787,6 +787,7 @@ prepare_species_data <- function(
     },
     "resampled to")
     rm(species_data_r_4_plot, species_data_r, envir = environment())
+    invisible(gc())
 
     if (length(exclude_extents) > 0L) {
       # Plot excluded extents if provided

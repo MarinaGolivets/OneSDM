@@ -37,8 +37,8 @@ is \code{"current"}.}
 \verb{2041_2070}, \verb{2071_2100}. Default is \code{"1981_2010"}.}
 
 \item{var_names}{Character vector of climate variable codes to download. See
-\link{climate_data} for the list of valid climate variable names. Can
-be set via the "\code{onesdm_var_names}" option. This parameter is required and
+\link{climate_data} for the list of valid climate variable names. Can be
+set via the "\code{onesdm_var_names}" option. This parameter is \emph{required} and
 cannot be \code{NULL}.}
 
 \item{verbose}{Logical scalar. If \code{TRUE} (default), prints progress and

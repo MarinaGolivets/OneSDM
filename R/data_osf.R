@@ -187,8 +187,8 @@ get_mask_layer <- function(
 #' @param year Character scalar. Time period; one of `1981_2010`, `2011_2040`,
 #'   `2041_2070`, `2071_2100`. Default is `"1981_2010"`.
 #' @param var_names Character vector of climate variable codes to download. See
-#'   [OneSDM::climate_data] for the list of valid climate variable names. Can
-#'   be set via the "`onesdm_var_names`" option. This parameter is required and
+#'   [OneSDM::climate_data] for the list of valid climate variable names. Can be
+#'   set via the "`onesdm_var_names`" option. This parameter is *required* and
 #'   cannot be `NULL`.
 #' @param verbose Logical scalar. If `TRUE` (default), prints progress and
 #'   informative messages.

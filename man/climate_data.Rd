@@ -50,8 +50,10 @@ A dataset containing information about climate data files available for
 download from OSF. See \code{\link[=prepare_climate]{prepare_climate()}} for more details.
 }
 \examples{
+require(ecokit)
+
 # View the climate data
 data("climate_data")
-head(climate_data)
+ecokit::ht(climate_data)
 }
 \keyword{datasets}

@@ -3,7 +3,7 @@ Package: OneSDM
 Title: Automated workflows for species distribution modelling under
     environmental change scenarios
 Version: 0.1.0
-Date: 2025-12-08
+Date: 2025-12-10
 Authors@R: c(
     person("Ahmed", "El-Gabbas", , "elgabbas@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2225-088X")),
@@ -11,7 +11,8 @@ Authors@R: c(
            comment = c(ORCID = "0000-0003-1278-2663"))
   )
 Maintainer: Ahmed El-Gabbas <elgabbas@outlook.com>
-Description: OneSTOP-Task-5.2 [more info!]
+Description: Automated workflows for species distribution modelling under
+    environmental change scenarios.
 License: MIT + file LICENSE
 URL: https://github.com/marinaGolivets/OneSDM
 BugReports: https://github.com/marinaGolivets/OneSDM/issues
@@ -37,6 +38,7 @@ Suggests:
     CoordinateCleaner (>= 3.0),
     curl (>= 7.0),
     ggplot2 (>= 3.5.2),
+    ggtext (>= 0.1.2),
     gtools (>= 3.9),
     httr (>= 1.4),
     jsonlite (>= 2.0),
@@ -53,6 +55,7 @@ Suggests:
     RCurl (>= 1.98-1),
     readr (>= 2.1),
     rworldmap (>= 1.3),
+    scales (>= 1.4.0),
     spelling (>= 2.3),
     stringr (>= 1.5),
     tibble (>= 3.2),

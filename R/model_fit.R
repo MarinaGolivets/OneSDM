@@ -2,45 +2,46 @@
 
 #' Prepare Modelling Data, Fitting Models, and Summarise Model Outputs
 #'
-#'
-#' Orchestrates the end-to-end Species Distribution Modelling (SDM) workflow:
-#' prepares species data, downloads and prepares predictors (climate and land
-#' use), handles sampling bias, performs collinearity filtering via VIF, builds
-#' spatial cross-validation blocks, assembles modelling datasets, fits multiple
-#' SDM methods with repetitions across CV folds, generates current and future
-#' projections, and produces comprehensive summaries at repetition, CV-fold, and
-#' overall levels. All intermediate artefacts and summaries are saved to a
+#' Orchestrates the end-to-end species distribution modelling (SDM) workflow.
+#' This includes preparing species data, downloading and preparing predictors
+#' (climate and land use), handling spatial sampling bias, variable selection
+#' (collinearity filtering via VIF), building spatial-blocks for
+#' cross-validation (CV), assembling modelling datasets, fitting multiple SDM
+#' methods with repetitions across CV folds, generating current and future
+#' projections, and producing comprehensive summaries at repetition, CV-fold,
+#' and overall levels. All intermediate artefacts and summaries are saved to a
 #' structured output directory.
 #'
-#' @param model_dir Character (required). Path to the root modelling directory
-#'   where data and fitted models will be saved. This should be a single
-#'   directory for all models of a given species (a separate directory is
+#' @param model_dir,models_prefix Character.
+#'   - `model_dir` (required) represents the path to the root modelling
+#'   directory where data and fitted models will be saved. This should be a
+#'   single directory for all models of a given species (a separate directory is
 #'   expected in case of modelling multiple species, otherwise data files may be
-#'   overwritten or mixed up). This can also be set via the "`onesdm_model_dir`"
+#'   overwritten or mixed up). It can also be set via the "`onesdm_model_dir`"
 #'   option.
-#' - The function creates a subdirectory "`data`" to store processed species
-#'   data.
-#' - The function creates a subdirectory "`<models_prefix>_res_<resolution>`" to
-#'   store model data and outputs for the specified resolution.
-#' @param models_prefix Character. Prefix for model subdirectory under
-#'   `model_dir`. This is helpful when fitting multiple sets of models for the
-#'   same species (e.g. using different sdm methods or settings) to avoid
-#'   overwriting files. Default is `"models"`.
+#'   - `models_prefix` (defaults to "`models`") is the character prefix for
+#'   model subdirectory under `model_dir`. This is helpful when fitting multiple
+#'   sets of models for the same species (e.g., using different SDM methods or
+#'   settings) to avoid overwriting files.
+#'   - The function creates two subdirectories: "`data`" to store processed
+#'   species data, and "`<models_prefix>_res_<resolution>`" to store model data
+#'   and outputs for the specified resolution.
 #' @param climate_dir Character (required). Directory path for climate data
 #'   files. This directory is used to load/download mask layers matching the
 #'   specified resolution and current/future climate and land use data (see
-#'   below). The same directory should be used in case of modelling multiple
-#'   species to ensure consistency and redundant re-download of large geospatial
-#'   data. Can be set via the "`onesdm_climate_dir`" option.
+#'   below). The same directory should be used across `OneSDM` workflows for
+#'   different models (including different species, predictors, resolutions,
+#'   etc.) to ensure consistency and redundant re-download of large geospatial
+#'   data. This can be set via the "`onesdm_climate_dir`" option.
 #' @param resolution Integer. Spatial resolution used to prepare data for
-#'   analysis and model fitting. valid values are 5, 10 (default), or 20,
+#'   analysis and model fitting. Valid values are 5, 10 (default), or 20,
 #'   corresponding to approximate spatial resolutions of 5, 10, and 20 km (2.5,
 #'   5, and 10 arc-minutes) respectively. This value can also be set via the
 #'   "`onesdm_resolution`" option.
-#' @param climate_scenario,climate_model,climate_year Character. Future climate
-#'   scenario(s), model(s), and year(s). These three parameters control which
-#'   future climate data will be prepared for future predictions (data for
-#'   selected variables at current climate conditions are always prepared):
+#' @param climate_scenario,climate_model,climate_year Character vectors. Future
+#'   climate scenario(s), model(s), and year(s). These three parameters control
+#'   which future climate data will be prepared for future predictions (data for
+#'   selected variables at current climate conditions will be always prepared):
 #'   - **`climate_scenario`**: Shared Socioeconomic Pathways (SSPs). Valid
 #'   values are: `"ssp126"`, `"ssp370"`, `"ssp585"`, `"all"` (default), or
 #'   `"none"`. This can also be set via the "`onesdm_climate_scenario`" option.
@@ -60,17 +61,15 @@
 #'   [OneSDM::get_climate_data].
 #'
 #' @param pft_type,pft_id Information on the plant functional type (PFT)
-#'   parameters for land-use predictors. See [OneSDM::landuse_data] and
-#'   [OneSDM::get_landuse_data] for details.
-#'   - **`pft_type`**: Character vector of length 1. Plant functional type
-#'   category to download land-use predictors for. Must be one of "`cross-walk`"
-#'   (default) or "`original`". This can be set via the "`onesdm_pft_type`"
-#'   option.
-#'   - **`pft_id`**: Numeric vector. One or more plant functional type
-#'   identifiers to download. Must be valid for the specified `pft_type`: 1-20
-#'   for `pft_type == "original"`, and 1-12 for `pft_type == "cross-walk"`. If
-#'   `NULL` (default), no land-use predictors are used. This can be set via the
-#'   "`onesdm_pft_id`" option.
+#'   parameters for land-use predictors (optional). See [OneSDM::landuse_data]
+#'   and [OneSDM::get_landuse_data] for details.
+#'   - **`pft_type`**: PFT to download land-use predictors for. Must be one of
+#'   "`cross-walk`" (default) or "`original`". This can be set via the
+#'   "`onesdm_pft_type`" option.
+#'   - **`pft_id`**: Numeric vector. One or more PFT identifiers to download.
+#'   Must be valid for the specified `pft_type`: 1-20 for `"original"`, and 1-12
+#'   for `"cross-walk"`. If `NULL` (default), no land-use predictors are used.
+#'   This can be set via the "`onesdm_pft_id`" option.
 #'
 #' @param bias_group Character scalar. Taxonomic group used to compute sampling
 #'   effort surface. Valid options are `"amphibians"`, `"birds"`, `"mammals"`,
@@ -83,9 +82,11 @@
 #'   - When not "none", the sampling-effort raster
 #'   (log<sub>10</sub> scale) is used as a predictor in the models. The
 #'   90<sup>th</sup>-percentile value of the  sampling-effort raster in the
-#'   modelling study area is used across the whole study area to correct for
-#'   sampling bias in projections (but not during models evaluation). For more
-#'   details on model-based sampling bias correction, see Warton et al.
+#'   modelling study area (after filtering; i.e., presence grid cells +
+#'   candidate grid cells for pseudo-absence sampling, see blow) is used across
+#'   the whole study area to correct for sampling bias in projections (but not
+#'   during models evaluation). For more details on model-based sampling bias
+#'   correction, see Warton et al.
 #'   ([2013](https://doi.org/10.1371/journal.pone.0079168)).
 #'   - The `bias` predictor, if used, is enforced to be kept during VIF
 #'   screening (see below).
@@ -123,27 +124,32 @@
 #'   occupied by the species. Larger values lead to more conservative
 #'   pseudo-absence sampling. If `NULL` or \eqn{\leq 0}, no presence-based
 #'   pseudo-absence exclusion buffer is applied (i.e., pseudo-absences can be
-#'   sampled anywhere outside presence grid cells, prior to sampling
-#'   pseudo-absences using [sdm::background]). Default is `10` km. This can be
-#'   set via the "`onesdm_abs_buffer`" option.
+#'   sampled anywhere in the study area except at presence grid cells). Default
+#'   is `10` km. This can be set via the "`onesdm_abs_buffer`" option.
 #' @param abs_exclude_ext List (Optional). A list of terra `SpatExtent` objects,
 #'   typically generated using [terra::ext]. Each extent defines a geographic
-#'   area where pseudo-absences will not be sampled. This is useful for
-#'   excluding regions such as areas outside the species' native range or
+#'   area (rectangles) where pseudo-absences will not be sampled. This is useful
+#'   for excluding regions such as areas outside the species' native range or
 #'   regions with specific environmental conditions that preclude the species'
 #'   presence. If an empty list (default), no additional exclusion extents are
 #'   applied. This can also be set via the "`onesdm_abs_exclude_ext`" option.
 #' @param min_pres_grids Integer. Minimum number of presence grid cells required
 #'   to proceed with modelling. If the number of presence grid cells after
 #'   filtering is less than this value, the function will stop with an error.
-#'   Default is `50`. This can also be set via "`onesdm_min_pres_grids`" option.
+#'   Default is **`50`** grids. This can also be set via
+#'   "`onesdm_min_pres_grids`" option.
 #' @param cv_folds,cv_block_size,cv_random Parameters controlling spatial-block
 #'   cross-validation.
 #'   - **`cv_folds`**: Integer. Number of cross-validation folds. Default is
 #'   `5`. This can also be set via the "`onesdm_cv_folds`" option.
 #'   - **`cv_block_size`**: Numeric. Approximate cross-validation block
-#'   size in kilometres. Default is `500` km. Larger block sizes lead to fewer,
-#'   more spatially distinct blocks. This can also be set via the
+#'   size in kilometres. Larger block sizes lead to fewer, more spatially
+#'   distinct blocks. The function checks if the provided value is feasible
+#'   given the study area extent and number of CV folds; if not, it adjusts the
+#'   block size to ensure at least `cv_folds` blocks can fit within the study
+#'   area. This helps to avoid situations where the block size is too large
+#'   relative to the study area, leading to insufficient blocks for
+#'   cross-validation. Default is `500` km. This can also be set via the
 #'   "`onesdm_cv_block_size`" option.
 #'   - **`cv_random`**: Logical. If `TRUE` (default), create random spatial
 #'   blocks by aggregating and randomly assigning blocks into `cv_folds` groups.
@@ -154,76 +160,94 @@
 #'   areas and small block sizes. This can also be set via the
 #'   "`onesdm_cv_random`" option.
 #' @param abs_ratio,model_n_reps Parameters for sampling pseudo-absences.
-#'   - **`abs_ratio`**: Integer scalar. Desired ratio of pseudo-absences to
-#'   training presences used when sampling pseudo-absences grid cells for each
-#'   cross-validation fold. Default is `20`, which means that for each training
-#'   presence grid cell, 20 pseudo-absence grid cells will be sampled. This can
-#'   also be set via the "`onesdm_abs_ratio`" option.
-#'   - **`model_n_reps`**: Integer scalar. Number of repetition datasets
-#'   (different sets of pseudo-absences) to generate for each cross-validation
-#'   fold. Pseudo-absences are sampled using [sdm::background] with method
-#'   `"eDist"`, which draws pseudo-absences weighted by environmental distance
-#'   from presence grid cells. Default is `5`, for five different pseudo-absence
-#'   sample datasets per fold. If the available non-presence grid cells become
-#'   limiting (when the number of requested pseudo-absences exceeds 80% of
-#'   available non-presence grid cells), the function will reduce the number of
-#'   repetitions to `1` as further repetitions would be redundant. This can also
-#'   be set via the "`onesdm_model_n_reps`" option.
+#'   - **`abs_ratio`**: Integer determining the ratio of sampled pseudo-absences
+#'   to training presences for each cross-validation fold. Default is `20`,
+#'   which means that for each training presence grid cell, 20 pseudo-absence
+#'   grid cells will be sampled. This can also be set via the
+#'   "`onesdm_abs_ratio`" option.
+#'   - **`model_n_reps`**: Integer representing the number of repetition
+#'   datasets (different sets of pseudo-absences) to generate for each
+#'   cross-validation fold. Default is `5`, for five different pseudo-absence
+#'   sample datasets per CV fold (i.e., 5 fitted models per CV). If the
+#'   available non-presence grid cells become limiting (when the number of
+#'   requested pseudo-absences exceeds 80% of available non-presence grid
+#'   cells), the function reduces the number of repetitions to `1` as further
+#'   repetitions would be redundant. This can also be set via the
+#'   "`onesdm_model_n_reps`" option.
+#'   - Pseudo-absences are sampled using [sdm::background] with method `"eDist"`
+#'   , which draws pseudo-absences weighted by environmental distance from
+#'   presence grid cells.
+#'
 #' @param n_cores Integer. Number of CPU cores to use for parallel processing of
 #'   data for cross-validation folds and for model fitting (capped to
 #'   [parallelly::availableCores]). This can also be set via the
 #'   "`onesdm_model_n_cores`" option. Default is `4`.
 #' @param sdm_methods Character vector. List of SDM methods to be used for model
-#'   fitting. Valid methods are those supported by the `sdm` R package:
-#'   `c("glm", "glmpoly", "gam", "glmnet", "mars", "gbm", "rf", "ranger",
-#'   "cart", "rpart", "maxent", "mlp", "svm", "svm2", "mda", "fda")`. `svm`
-#'   refers to the [kernlab::ksvm] implementation of SVM, while `svm2` refers to
-#'   the [e1071::svm] implementation. Default is c("glm", "glmnet", "gam",
-#'   "maxent", "ranger"). This can also be set via the "`onesdm_sdm_methods`"
-#'   option.
+#'   fitting.
+#'   - Default is c("glm", "glmnet", "gam", "maxent", "rf").
+#'   - Valid methods are those supported by the `sdm` R package: `glm`,
+#'   `glmpoly`, `gam`, `glmnet`, `mars`, `gbm`, `rf`, `ranger`, `cart`, `rpart`,
+#'   `maxent`, `mlp`, `svm`, `mda`, and `fda`. See documentation of the `sdm` R
+#'   package for more details.
+#'   - The `svm` method refers to the [kernlab::ksvm] implementation of SVM.
+#'   However, the function also support the SVM implementation from the
+#'   [e1071::svm] R package, referred to as `svm2` here. This can be useful if
+#'   users prefer this implementation or have specific reasons to use it.
+#'   - This can also be set via the "`onesdm_sdm_methods`" option.
 #' @param sdm_settings List or `NULL`. A named list of lists, each containing
 #'   method-specific settings for SDM methods. Each list element should be named
-#'   after a valid SDM method (see "`sdm_methods`" above), and contain a list of
-#'   settings specific to that method. If `NULL` (default), pre-defined default
-#'   settings are used; see [sdm_model_settings]. This can also be set via the
-#'   "`onesdm_sdm_settings`" option.
+#'   after a valid SDM method (see "`sdm_methods`" above) and contain a list of
+#'   settings specific to that method.
+#'   - For example: `list(glm = list(control = list(maxit = 200L)))`.
+#'   - If `NULL` (default), pre-defined default settings are used; see
+#'   [sdm_model_settings].
+#'   - If an empty list, no additional method-specific settings are applied, and
+#'   default settings of the `sdm` R package are used.
+#'   - This can also be set via the "`onesdm_sdm_settings`" option.
 #' @param proj_extent Character scalar or list of `terra::SpatExtent` objects.
 #'   This parameter controls the geographic extent for saving model projections
-#'   under current and future climate scenarios. Valid options are:
-#'   - `"modeling_area"` (default): predict only at grid cells within the
-#'   modelling study area (i.e., where presence/non-presences data are
-#'   prepared).
-#'   - `"europe"`: predict across Europe (using a predefined extent).
-#'   - `"world"`: predict across the whole world land.
-#'   - A list of `terra::SpatExtent` objects, each defining a custom geographic
-#'   extent for projections. In this case, global land grid cells overlap with
-#'   these extents will be used for projections (irrespective of the modelling
-#'   area).
+#'   under current and future climate scenarios.
+#'   - Projections are made for all combinations of SDM model types, model
+#'   repetitions, cross-validation folds, and climate options.
+#'   - Projections are run in parallel if `n_cores` is set to > 1.
+#'   - Processing time and memory consumption during projections can be high
+#'   depending on the extent of the study area, modelling resolution, and
+#'   modelling options used.
+#'   - Caution should be taken when projecting to areas very far from the model
+#'   fitting area due to high expected environmental extrapolation.
+#'   - Valid options are:
+#'     - `"modelling_area"` (*default*): predict only at grid cells within the
+#'   modelling study area (i.e., after filtering, where presence/non-presences
+#'   data are prepared).
+#'     - `"europe"`: predict across Europe (using a predefined extent).
+#'     - `"world"`: predict across the whole world land. This can highly slow
+#'   down the projection step (high memory consumption and processing time) and
+#'   should be chosen carefully only if needed.
+#'     - A list of `terra::SpatExtent` objects, each defining a custom
+#'   geographic extent for projections. In this case, global land grid cells
+#'   overlap with these extents will be used for projections (irrespective of
+#'   the modelling area).
 #'
 #' @inheritParams prepare_species_data
 #' @inheritParams get_climate_data
 #'
-#' @details The function writes GeoTIFFs and RData files under a subdirectory of
-#'   "`model_dir`" (folder "`<models_prefix>_res_<resolution>`"), and
-#'   download/process climate and land-use data via OneSDM utilities, if needed.
-#'
-#'   The function performs the following major steps:
+#' @details The function performs the following major steps:
 #'
 #'   - Validates input arguments and resolves defaults from package options.
 #'   - Calls [OneSDM::prepare_species_data] to check/prepare species
-#'   distribution data. This includes loading occurrence data from EASIN/GBIF or
-#'   user-provided coordinates.
+#'   distribution data. This includes processing/loading occurrence data from
+#'   EASIN/GBIF or user-provided coordinates.
 #'   - Masks and filters the study area using optional exclusion extents and
 #'   distances (`abs_exclude_ext`, `pres_buffer`, and `abs_buffer`).
 #'   -  Loads/download current climate (and optionally land-use) data for
 #'   selected predictors via [OneSDM::get_climate_data] and
 #'   [OneSDM::get_landuse_data], combines them and masks them to the study area.
 #'   - Loads/download future climate (and optionally land-use) predictors for
-#'   each requested scenario/model/year combination (if any) via
-#'   [OneSDM::get_climate_data] and [OneSDM::get_landuse_data], and masks them
-#'   to the study area.
+#'   each requested scenario \eqn{\times} model \eqn{\times} year combination
+#'   (if any) via [OneSDM::get_climate_data] and [OneSDM::get_landuse_data], and
+#'   masks them to the study area.
 #'   - Optionally adds a sampling-effort (bias) predictor when `bias_group`
-#'   is valid and != "none".
+#'   is valid.
 #'   - Performs VIF-based predictor selection (using [usdm::vifstep]) and
 #'   excludes highly collinear variables. The `bias` predictor, if used, is
 #'   always retained.
@@ -231,22 +255,25 @@
 #'   aggregation or via [blockCV::cv_spatial] (controlled by `cv_random`).
 #'   - Samples pseudo-absences per cross-validation fold/repetition.
 #'   - Assembles modelling data (species, predictors, CV fold) and persists both
-#'   data.frame and wrapped SpatRaster for memory efficiency.
-#'   - Determines feasible repetitions per fold based on available absences and
-#'   requested `abs_ratio`; restricts MaxEnt to a single repetition per fold..
+#'   data.frame and wrapped `SpatRaster` for memory efficiency.
+#'   - Determines feasible repetitions per CV fold based on available absences
+#'   and requested `abs_ratio`; restricts MaxEnt to a single repetition per fold
+#'   but use all available pseudo-absences (capped to 1,000,000).
 #'   - Enforces minimum presence count after filtering; otherwise, stops with
-#'   an error. This is controlled by `min_pres_count`.
+#'   an error; controlled by `min_pres_count`.
 #'   - Saves a tibble describing all model input data, including
 #'   cross-validation folds and model repetitions with file paths to persisted
 #'   datasets (training/testing rasters and pseudo-absence objects).
-#'   - Fits models in parallel across tasks, capturing: Fitted model path,
+#'   - Fits models in parallel across tasks, capturing: fitted model path,
 #'   training and testing evaluation metrics, variable importance, response
-#'   curve data, and projection outputs for current and future scenarios
-#'   - Summarizes results:
+#'   curve data, and projection outputs for current and future scenarios.
+#'   - Summarises results:
 #'     - Per-CV-fold: aggregates repetitions (mean and sd where applicable) for
 #'   evaluations, variable importance, response curves; compiles projections.
 #'     - Overall (per method): aggregates across folds for the same metrics and
 #'   summarizes projections.
+#'   - Plots maps for species distribution data to be used in the models,
+#'   sampling efforts data used, and cross-validation spatial blocks used.
 #'   - Saves all relevant intermediate files and final summaries to structured
 #'   directories: `modelling_data` (model inputs), `fitted_models` (fitted model
 #'   objects and results), "`projections_reps`" (raw projection maps per model
@@ -255,59 +282,98 @@
 #'
 #' @return A a summary list for the parameters used and file paths to important
 #'   intermediate data objects under
-#'   "`<model_dir>/<models_prefix>_res_<resolution>/model_data_summary.RData`".
-#'   This list contains the following elements:
-#'   - **`model_dir`**: Character. The modelling directory path.
-#'   - **`species_data_raw`**: list of GBIF and EASIN IDs and/or user-provided
+#'   "`<model_dir>/<models_prefix>_res_<resolution>/model_summary.RData`". This
+#'   list contains the following elements:
+#'   - **`dir_models_root`**: Character. The root modelling directory path
+#'   defined via the "`<model_dir>`" argument.
+#'   - **`dir_models`**: Character. The modelling directory path:
+#'   "`<model_dir>/<models_prefix>_res_<resolution>`".
+#'   - **`species_data_raw`**: List of GBIF and EASIN IDs and/or user-provided
 #'   coordinates used. This also includes the file path to the saved GeoTIFF
-#'   file for prepared species  distribution `species_data_tiff`.
-#'   - **`climate`**: list. Information on the current and future climate data
-#'   used, including climate directory path, climate variable names, scenarios,
-#'   models, years, and file paths to the downloaded GeoTIFF files.
-#'   - **`landuse`**: list. Information on the land-use data used, including PFT
-#'   type, PFT IDs, and file paths to the downloaded GeoTIFF files.
-#'   - **`bias`**: list. Information on the sampling-effort (bias) predictor
-#'   used, if any, including the taxonomic group and the value of the
-#'   90<sup>th</sup>-percentile used for bias correction `bias_fix_value`.
-#'   - **`var_selection`**: list. Information on the variable selection process,
-#'   including the VIF threshold used, names of always kept or excluded
-#'   predictors and file path for the VIF selection summary.
-#'   - **`model_options`**: list. Information on modelling options used,
-#'   including resolution, presence filtering buffer, absence exclusion buffer,
-#'   absence-to-presence ratio, minimum number of presence grid cells,
-#'   cross-validation parameters, and number of model repetitions.
-#'   - **`model_data`**: list. Information on the prepared modelling data,
-#'   including file paths to the saved presence/pseudo-absence GeoTIFF files,
-#'   predictor names, number of presence grid cells, and file paths to the saved
-#'   model predictors and modelling data `RData` files. This also includes the
-#'   tibble `models_cv` with one row per cross-validation fold × repetition,
-#'   saved as an RData file (see the `value` section below).
-#'  - **`models_cv_summary`/`models_cv_summary_file`**: Tibble summarizing
+#'   file for prepared species distribution (`species_data_tiff`).
+#'   - **`climate`**: List. Information on the current and future climate data
+#'   used, including climate directory path (`<climate_dir>`), climate variable
+#'   names (`<var_names>`), whether to make future projections
+#'   (`future_predictions`), future climate options (`<climate_scenario>`,
+#'   `<climate_model>`, and `<climate_year>`), and tibbles for processed current
+#'   and future climate data (`climate_current` and `climate_future`).
+#'   - **`landuse`**: List. Information on the land-use data used, including PFT
+#'   type (`<pft_type>`), PFT IDs (`<pft_id>`), and tibbles for processed
+#'   current and future land use data (`lu_current` and `lu_future`).
+#'   - **`bias`**: List. Information on the sampling-effort (bias) predictor
+#'   used, if any, including the taxonomic group `<bias_group>`, whether
+#'   sampling-effort predictor is used (`bias_as_predictor`), and the value of
+#'   the 90<sup>th</sup>-percentile used for bias correction (`bias_fix_value`).
+#'   - **`var_selection`**: List. Information on the variable selection process,
+#'   including the VIF threshold used (`<vif_th>`), names of always kept
+#'   (`vif_keep`) or excluded (`excluded_vars`) predictors and file path for the
+#'   VIF selection summary (`vif_results_file`).
+#'   - **`model_options`**: List. Information on modelling options used,
+#'   including resolution (`<resolution>`), minimum required presence grid cells
+#'   (`<min_pres_grids>`), pseudo-absence sampling options (`<pres_buffer>` ,
+#'   `<abs_buffer>`, `<abs_exclude_ext>`, and `<abs_ratio>`), cross-validation
+#'   options (`<cv_folds>`, `<cv_block_size>`, and `<cv_random>`), spatial
+#'   blocks files if used blockCV package (`species_block_cv_file`), GeoTIFF
+#'   file for spatial blocks (`species_blocks_file`), number of model fitting
+#'   repetitions (`<model_n_reps>`), and SDM methods and settings used
+#'   (`<sdm_methods>` and `<sdm_settings>`).
+#'   - **`model_data`**: List. Information on the prepared modelling data and
+#'   raw outputs, including final presence-absence GeoTIFF file
+#'   (`species_pa_file`), final filtered predictor names (`predictor_names`,
+#'   `climate_predictor_names`, and `lu_predictor_names`), number of presence
+#'   grid cells (`n_pres_grids`), predictors as `PackedSpatRaster` file
+#'   (`model_predictors`, and `model_data_r_file`; the latter also includes
+#'   species distribution and CV blocks), modelling data as tibble
+#'   (`model_data_file`, including paths to cv \eqn{\times} repetition training
+#'   and testing datasets and sampled pseudo-absences), paths to climate and
+#'   land use data needed for making spatial projections (`projection_inputs`),
+#'   projection extent (`<proj_extent>` and `proj_mask_file` for projection
+#'   extent as `PackedSpatRaster`), and tibble for fitted models, raw model
+#'   repetition outputs, and spatial projection paths (`models_cv`).
+#'   - **`models_cv_summary`/`models_cv_summary_file`**: A tibble summarising
 #'   model outputs (evaluation metrics, variable importance, response curves,
-#'   and projections) per cross-validation fold and method. Saved as an `RData`
-#'   file under
+#'   and projections) per cross-validation fold and method (i.e., summarised
+#'   over model repetitions). Saved as an `RData` file under
 #'   "`<model_dir>/<models_prefix>_res_<resolution>/models_cv_summary.RData`".
-#'  - **`models_summary`/`models_summary_file`**: Tibble summarizing overall
-#'   model outputs (evaluation metrics, variable importance, response curves,
-#'   and projections) per method. Saved as an `RData` file under
+#'  - **`models_summary`/`models_summary_file`**: A tibble summarising the
+#'   overall model outputs (evaluation metrics, variable importance, response
+#'   curves, and projections) per SDM method. Saved as an `RData` file under
 #'   "`<model_dir>/<models_prefix>_res_<resolution>/models_summary.RData`".
 #'
 #' @examples
 #' \dontrun{
 #'
-#'   models_cv_tbl <- process_models(
+#'   OneSDM::process_models(
 #'     model_dir = "test/Acacia_karroo",
+#'     models_prefix = "model_test2",
 #'     climate_dir = "test/climate_data",
+#'     # resolution = 10L,
+#'     # verbose = TRUE,
 #'     easin_ids = "R00042",
 #'     gbif_ids = 2979128,
-#'     coordinates = NULL,
-#'     resolution = 10L,
-#'     var_names = c("bio1","bio12","bio15"),
-#'     pft_id = NULL,
+#'     # coordinates = NULL,
+#'     climate_scenario = c("ssp370", "ssp585"),
+#'     climate_model = c("mri", "ukesm1"),
+#'     climate_year = c("2041_2070", "2071_2100"),
+#'     var_names = c("bio1", "bio2", "bio12", "bio15", "bio18"),
+#'     # pft_type = "cross-walk",
+#'     pft_id = c(5L, 8L, 10L),
 #'     bias_group = "plants",
-#'     cv_folds = 5L,
-#'     model_n_reps = 4L,
-#'     n_cores = 2L)
+#'     # vif_th = 10L
+#'     # pres_buffer = 1000L,
+#'     # abs_buffer = 10L,
+#'     # abs_exclude_ext = list(),
+#'     # min_pres_grids = 50L,
+#'     # cv_folds = 5L,
+#'     # cv_block_size = 500L,
+#'     # cv_random = TRUE,
+#'     # abs_ratio = 20L,
+#'     # model_n_reps = 5L,
+#'     # n_cores = 4L,
+#'     sdm_methods = c("glm", "glmnet", "gam", "maxent"),
+#'     # sdm_settings = NULL,
+#'     proj_extent = "europe"
+#'   )
 #' }
 #'
 #' @author Ahmed El-Gabbas
@@ -323,19 +389,21 @@ process_models <- function(
     abs_exclude_ext = list(), min_pres_grids = 50L,
     cv_folds = 5L, cv_block_size = 500L,
     cv_random = TRUE, abs_ratio = 20L, model_n_reps = 5L, n_cores = 4L,
-    sdm_methods = c("glm", "glmnet", "gam", "maxent", "ranger"),
-    sdm_settings = NULL, proj_extent = "modeling_area") {
+    sdm_methods = c("glm", "glmnet", "gam", "maxent", "rf"),
+    sdm_settings = NULL, proj_extent = "modelling_area") {
 
-  down_clim <- down_lu <- species <- block_group <- cv <- n_pseudo_abs <-
-    training_abs <- training_pres <- test_abs <- test_pres <- valid <-
+  down_clim <- down_lu <- species <- block_group <- cv <- n_pseudo_abs <- x <-
+    training_abs <- training_pres <- test_abs <- test_pres <- valid <- label <-
     var_name <- out_file <- out_file_name <- year <- lu_file <- climate_file <-
-    mod_method <- climate_model_abb <- climate_option <- packages <-
-    response_curves <- n_model_reps <- cv_summary <- model_rep_id <-
+    mod_method <- climate_model_abb <- climate_option <- packages <- y <-
+    response_curves <- n_model_reps <- cv_summary <- model_rep_id <- value <-
     model_rep_results <- sdm_method <- variable_importance <- NULL
 
   ecokit::check_packages(
     c("usdm", "sdm", "parallelly", "future.apply", "future", "gtools", "fs",
-      "tidyr", "withr", "sf", "terra", "crayon", "purrr", "tibble", "dplyr"))
+      "tidyr", "withr", "sf", "terra", "crayon", "purrr", "tibble", "dplyr",
+      "rworldmap", "rworldxtra", "tidyterra", "ragg", "ggplot2", "stringr",
+      "grid", "ggtext", "scales"))
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
@@ -852,13 +920,17 @@ process_models <- function(
 
   if (is.character(proj_extent)) {
     proj_extent <- tolower(proj_extent)
-    valid_proj_extents <- c("modeling_area", "global", "europe")
+    valid_proj_extents <- c(
+      "modelling_area", "modeling_area", "global", "europe")
     if (length(proj_extent) != 1L || !(proj_extent %in% valid_proj_extents)) {
       ecokit::stop_ctx(
         paste0(
           "Invalid `proj_extent` value. Valid options are: ",
           toString(valid_proj_extents), "."),
         proj_extent = proj_extent, cat_timestamp = FALSE)
+    }
+    if (proj_extent == "modeling_area") {
+      proj_extent <- "modelling_area"
     }
   } else if (is.list(proj_extent)) {
     valid_extents <- purrr::map_lgl(proj_extent, inherits, "SpatExtent")
@@ -1086,14 +1158,95 @@ process_models <- function(
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   # # ********************************************************************** #
-  # Save species presence-absence raster ------
+  # Save species presence-non-presence raster ------
   # # ********************************************************************** #
 
+  ecokit::cat_time(
+    "Saving species presence-non-presence raster",
+    cat_timestamp = FALSE, verbose = verbose)
   species_pa_r_file <- fs::path(
     dir_models, paste0("species_pa_res_", resolution, ".tif"))
   terra::writeRaster(
     species_pa_r, filename = species_pa_r_file,
     overwrite = TRUE, gdal = c("COMPRESS=ZSTD", "ZSTD_LEVEL=22", "TILED=YES"))
+
+  # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
+
+  # # ********************************************************************** #
+  # Plotting species presence-non-presence raster ------
+  # # ********************************************************************** #
+
+  ecokit::cat_time(
+    "Plotting species distribution", cat_timestamp = FALSE, verbose = verbose)
+
+  species_pa_4_plot <- species_pa_r %>%
+    terra::aggregate(
+      fact = round(0.3333 / (resolution / 111.32)),
+      fun = "max", na.rm = TRUE) %>%
+    terra::as.factor() %>%
+    terra::trim()
+  p_ext <- terra::ext(species_pa_4_plot)
+  file_plot <- fs::path(dir_model_data, "species_pa_distribution.jpeg")
+  plot_width <- 18L
+  aspect_ratio <- (p_ext[2L] - p_ext[1L]) / (p_ext[4L] - p_ext[3L])
+  plot_height <- plot_width / (aspect_ratio * 0.975)
+  world_outline <- sf::st_as_sf(rworldmap::getMap(resolution = "high"))
+
+  ecokit::quietly({
+    species_pa_plot <- ggplot2::ggplot() +
+      ggplot2::geom_sf(
+        data = world_outline, fill = "gray95", color = "black",
+        linewidth = 0.05, show.legend = FALSE) +
+      tidyterra::geom_spatraster(
+        data = species_pa_4_plot, maxcell = 25e4L, na.rm = TRUE,
+        mapping = ggplot2::aes(fill = ggplot2::after_stat(value))) +
+      ggplot2::scale_fill_manual(
+        values = c("0" = "grey70", "1" = "blue"), na.translate = FALSE,
+        labels = c("0" = "potential pseudo-absences", "1" = "presences"),
+        name = NULL, na.value = "transparent", drop = TRUE) +
+      ggtext::geom_richtext(
+        inherit.aes = FALSE, hjust = 0L, vjust = 1L, size = 3L,
+        data = tibble::tibble(
+          x = -Inf, y = Inf,
+          label = paste0(
+            "**Species presence-potential pseudo-absences**<br/>",
+            "(aggregated to 1/3 degree resolution for visualization)")), #nolint
+        mapping = ggplot2::aes(x = x, y = y, label = label),
+        fill = scales::alpha("lightblue", 0.4), label.color = NA) +
+      ggplot2::geom_sf(
+        data = world_outline, fill = "transparent", color = "black",
+        linewidth = 0.05, show.legend = FALSE) +
+      ggplot2::coord_sf(
+        xlim = p_ext[1L:2L], ylim = p_ext[3L:4L], expand = FALSE) +
+      ggplot2::theme(
+        text = ggplot2::element_text(size = 6L),
+        axis.title = ggplot2::element_blank(),
+        axis.ticks = ggplot2::element_blank(),
+        axis.text.x = ggplot2::element_text(
+          size = 5L, margin = ggplot2::margin(t = 0L, b = -0.5), vjust = 0L),
+        axis.text.y = ggplot2::element_text(
+          size = 5L, margin = ggplot2::margin(r = -0.25, l = -0.5), hjust = 0L),
+        panel.grid = ggplot2::element_line(linewidth = 0.1, color = "gray85"),
+        panel.background = ggplot2::element_rect(fill = "white"),
+        plot.margin = grid::unit(c(-2L, 1L, 1L, 1L), "mm"),
+        plot.background = ggplot2::element_blank(),
+        legend.position = "bottom",
+        legend.key.size = ggplot2::unit(0.2, "cm"),
+        legend.margin = ggplot2::margin(t = -7L, b = -7L),
+        legend.text = ggplot2::element_text(size = 6L))
+  },
+  "resampled to")
+
+  ragg::agg_jpeg(
+    filename = file_plot, width = plot_width, height = plot_height,
+    res = 600L, quality = 100L, units = "cm")
+  print(species_pa_plot)
+  grDevices::dev.off()
+
+  rm(
+    species_pa_4_plot, p_ext, species_pa_plot, file_plot, plot_width,
+    aspect_ratio, plot_height, envir = environment())
+  invisible(gc())
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
@@ -1177,10 +1330,82 @@ process_models <- function(
     # Add bias raster to predictors
     model_predictors <- c(model_predictors, bias_r, bias_fixed_r)
 
-    rm(bias_fixed_r, bias_r, envir = environment())
+    # |||||||||||||||||||||||||||||||||||||||||||| #
+    ## Plotting sampling effort predictor ----
+    # |||||||||||||||||||||||||||||||||||||||||||| #
+
+    ecokit::cat_time(
+      "Plotting sampling effort predictor", cat_timestamp = FALSE,
+      verbose = verbose, level = 1L)
+
+    bias_r_4_plot <- terra::trim(bias_r)
+    p_ext <- terra::ext(bias_r_4_plot)
+    file_plot <- fs::path(dir_model_data, "sampling_efforts_log.jpeg")
+    plot_width <- 18L
+    aspect_ratio <- (p_ext[2L] - p_ext[1L]) / (p_ext[4L] - p_ext[3L])
+    plot_height <- plot_width / (aspect_ratio * 0.97)
+
+    ecokit::quietly({
+      bias_plot <- ggplot2::ggplot() +
+        ggplot2::geom_sf(
+          data = world_outline, fill = "gray95", color = "black",
+          linewidth = 0.05, show.legend = FALSE) +
+        tidyterra::geom_spatraster(
+          data = bias_r_4_plot, maxcell = 25e4L, na.rm = TRUE) +
+        ggplot2::scale_fill_viridis_c(
+          option = "magma", na.value = "transparent", name = NULL) +
+        ggplot2::geom_sf(
+          data = world_outline, fill = "transparent", color = "black",
+          linewidth = 0.05, show.legend = FALSE) +
+        ggplot2::coord_sf(
+          xlim = p_ext[1L:2L], ylim = p_ext[3L:4L], expand = FALSE) +
+        ggtext::geom_richtext(
+          inherit.aes = FALSE, hjust = 0L, vjust = 1L, size = 3L,
+          data = tibble::tibble(
+            x = -Inf, y = Inf,
+            label = "Sampling efforts (log<sub>10</sub> scale)"),
+          mapping = ggplot2::aes(x = x, y = y, label = label),
+          fill = scales::alpha("lightblue", 0.4), label.color = NA) +
+        ggplot2::theme(
+          text = ggplot2::element_text(size = 6L),
+          axis.title = ggplot2::element_blank(),
+          axis.ticks = ggplot2::element_blank(),
+          axis.text.x = ggplot2::element_text(
+            size = 5L, margin = ggplot2::margin(t = 0L, b = -0.5), vjust = 0L),
+          axis.text.y = ggplot2::element_text(
+            size = 5L, margin = ggplot2::margin(r = -0.25, l = -0.5),
+            hjust = 0L),
+          panel.grid = ggplot2::element_line(linewidth = 0.1, color = "gray85"),
+          panel.background = ggplot2::element_rect(fill = "white"),
+          plot.margin = grid::unit(c(-2L, 1L, 1L, 1L), "mm"),
+          plot.background = ggplot2::element_blank(),
+          legend.position = "bottom",
+          legend.key.width = ggplot2::unit(0.4, "cm"),
+          legend.key.height = ggplot2::unit(0.2, "cm"),
+          legend.key.spacing = ggplot2::unit(0.05, "cm"),
+          legend.margin = ggplot2::margin(t = -7L, b = -7L),
+          legend.text = ggplot2::element_text(size = 4L),
+          legend.title = ggtext::element_markdown(
+            size = 6L, margin = ggplot2::margin(r = 4L)))
+    },
+    "resampled to")
+
+    ragg::agg_jpeg(
+      filename = file_plot, width = plot_width, height = plot_height,
+      res = 600L, quality = 100L, units = "cm")
+    print(bias_plot)
+    grDevices::dev.off()
+
+    rm(
+      bias_r_4_plot, p_ext, bias_plot, file_plot, plot_width,
+      bias_fixed_r, bias_r, aspect_ratio, plot_height, envir = environment())
     invisible(gc())
 
   }
+
+  # |||||||||||||||||||||||||||||||||||||||||||| #
+  # Saving masked predictors
+  # |||||||||||||||||||||||||||||||||||||||||||| #
 
   ecokit::cat_time(
     "Saving masked predictors", cat_timestamp = FALSE,
@@ -1392,26 +1617,132 @@ process_models <- function(
     sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose,
     line_char_rep = 65L)
 
+  # |||||||||||||||||||||||||||||||||||||||||||| #
+  # Check if `cv_block_size` is appropriate for the filtered species data
+  # |||||||||||||||||||||||||||||||||||||||||||| #
+
+  ecokit::cat_time(
+    "Checking spatial cross-validation block size",
+    cat_timestamp = FALSE, verbose = verbose)
+
+  # resolution in degrees
+  resol <- terra::res(species_pa_r)[[1L]]
+  # resolution in km
+  resol_km <- resol * 111.320
+
+  # extent width and height in km
+  ext_dim <- ecokit::raster_dims_km(species_pa_r, exclude_na = TRUE)
+  ext_w <- ext_dim$extent_width_occupied
+  ext_h <- ext_dim$extent_height_occupied
+
+  # Estimate number of blocks, ensure at least 1 block per direction
+  n_blocks_x <- max(1L, floor(ext_w / cv_block_size))
+  n_blocks_y <- max(1L, floor(ext_h / cv_block_size))
+  potential_blocks <- n_blocks_x * n_blocks_y
+
+  # If current `cv_block_size` cannot provide enough folds, reduce block size
+  # appropriately
+  if (potential_blocks < cv_folds) {
+
+    ecokit::cat_time(
+      paste0(
+        "`cv_block_size` (", ecokit::format_number(cv_block_size),
+        " km) is large to allow ", ecokit::format_number(cv_folds),
+        " spatial folds"),
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+    ecokit::cat_time(
+      paste0(
+        "Occupied extent (excluding NA rows and columns): ",
+        ecokit::format_number(round(ext_w, 1L)),
+        " [width] \u00D7 ", ecokit::format_number(round(ext_h, 1L)),
+        " [height] km."),
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+
+    # Compute block size so that area is evenly split among folds
+    cv_block_size <- sqrt((ext_w * ext_h) / cv_folds)
+
+    # Ensure block size is at least one raster cell (avoid too small block)
+    if (cv_block_size < resol_km) {
+      cv_block_size <- resol_km
+    }
+
+    ecokit::cat_time(
+      paste0(
+        "`cv_block_size` is set to ", ecokit::format_number(cv_block_size),
+        " km to accommodate ", ecokit::format_number(cv_folds),
+        " spatial folds."),
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+  }
+
+  # Further check if enough spatial blocks can be created with chosen block
+  # size, by aggregating raster cells into blocks (to account for blocks with
+  # only NA values)
+
+  # Find aggregation factor (number of raster cells merged per block) based on
+  # chosen block size and raster resolution
+  agg_factor <- ceiling(cv_block_size / resol_km)
+
+  # Aggregate raster to spatial blocks according to aggregation factor
+  species_blocks <- terra::aggregate(
+    x = species_pa_r, fact = agg_factor, fun = "sum", na.rm = TRUE)
+
+  # Count how many aggregated blocks have data
+  n_agg_cells <- terra::global(x = species_blocks, fun = "notNA")[[1L]] %>%
+    as.integer()
+
+  # If not enough spatial blocks remain after aggregating, recompute aggregation
+  # factor and block size to allow required number of folds
+  if (n_agg_cells < cv_folds) {
+
+    ecokit::cat_time(
+      paste0(
+        "`cv_block_size` (", ecokit::format_number(cv_block_size),
+        " km) is large to allow ", ecokit::format_number(cv_folds),
+        " spatial folds"),
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+    ecokit::cat_time(
+      paste0(
+        "Occupied extent (excluding NA rows and columns): ",
+        ecokit::format_number(round(ext_w, 1L)),
+        " [width] \u00D7 ", ecokit::format_number(round(ext_h, 1L)),
+        " [height] km."),
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+
+    # Use geometric means to set aggregation so that blocks = cv_folds
+    agg_factor <- ceiling(sqrt((ext_w * ext_h) / (cv_folds * resol_km^2L)))
+
+    # Update block size to match aggregation factor
+    cv_block_size <- agg_factor * resol_km
+
+    ecokit::cat_time(
+      paste0(
+        "`cv_block_size` is set to ", ecokit::format_number(cv_block_size),
+        " km to accommodate ", ecokit::format_number(cv_folds),
+        " spatial folds."),
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+  }
+
+
+  # |||||||||||||||||||||||||||||||||||||||||||| #
+  ## Create spatial blocks -----
+  # |||||||||||||||||||||||||||||||||||||||||||| #
+
   if (cv_random) {
 
     ecokit::cat_time(
       "Creating spatial cross-validation blocks using random blocks",
       cat_timestamp = FALSE, verbose = verbose)
 
-    # Find aggregation factor based on cv_block_size and map resolution
-    resol <- terra::res(species_pa_r)[[1L]]
-    agg_factor <- ceiling(cv_block_size / (resol * 111.320))
-
     # aggregate species_pa_r to larger blocks, calculating sum of presences
+    agg_factor <- ceiling(cv_block_size / (resol_km))
     ecokit::cat_time(
       paste0(
-        "Aggregating presence-absence raster to blocks of ~",
-        ecokit::format_number(cv_block_size),
-        " km (agg. factor: ", ecokit::format_number(agg_factor), ")"),
+        "Aggregating presence-non-presence raster to blocks of ~",
+        ecokit::format_number(cv_block_size), " km"),
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
-
-    species_blocks <- terra::aggregate(
-      x = species_pa_r, fact = agg_factor, fun = "sum", na.rm = TRUE)
+    ecokit::cat_time(
+      paste0("Aggregation factor: ", ecokit::format_number(agg_factor)),
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     # convert aggregated blocks to polygons and assign cv folds. Folds are
     # assigned randomly but maintaining balance of presences across folds
@@ -1419,7 +1750,8 @@ process_models <- function(
       "Assigning cross-validation folds to spatial blocks",
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
-    species_blocks <- species_blocks %>%
+    species_blocks <- terra::aggregate(
+      x = species_pa_r, fact = agg_factor, fun = "sum", na.rm = TRUE) %>%
       terra::as.polygons(aggregate = FALSE) %>%
       sf::st_as_sf() %>%
       dplyr::arrange(dplyr::desc(species)) %>%
@@ -1427,7 +1759,7 @@ process_models <- function(
       dplyr::group_by(block_group) %>%
       dplyr::mutate(cv = sample.int(cv_folds, size = dplyr::n())) %>%
       dplyr::ungroup() %>%
-      dplyr::select(-block_group) %>%
+      dplyr::select(-tidyselect::all_of("block_group")) %>%
       # Convert back to raster
       terra::vect() %>%
       terra::rasterize(y = species_blocks, field = "cv", background = NA) %>%
@@ -1438,9 +1770,6 @@ process_models <- function(
       stats::setNames("cv")
 
     species_block_cv_file <- NA_character_
-
-    rm(agg_factor, resol, envir = environment())
-    invisible(gc())
 
   } else {
 
@@ -1496,6 +1825,88 @@ process_models <- function(
     invisible(gc())
 
   }
+
+  # |||||||||||||||||||||||||||||||||||||||||||| #
+  ## Plotting spatial blocks -----
+  # |||||||||||||||||||||||||||||||||||||||||||| #
+
+  ecokit::cat_time(
+    "Plotting spatial cross-validation blocks",
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
+
+  cv_r_4_plot <- as.factor(terra::trim(species_blocks))
+  p_ext <- terra::ext(cv_r_4_plot)
+  file_plot <- fs::path(dir_model_data, "cv_blocks.jpeg")
+  plot_width <- 18L
+  aspect_ratio <- (p_ext[2L] - p_ext[1L]) / (p_ext[4L] - p_ext[3L])
+  plot_height <- plot_width / (aspect_ratio * 0.97)
+
+  species_pa_4_plot <- terra::classify(species_pa_r, cbind(0L, NA)) %>%
+    terra::trim() %>%
+    terra::as.points() %>%
+    sf::st_as_sf()
+
+  ecokit::quietly({
+    cv_plot <- ggplot2::ggplot() +
+      ggplot2::geom_sf(
+        data = world_outline, fill = "gray95", color = "black",
+        linewidth = 0.05, show.legend = FALSE) +
+      tidyterra::geom_spatraster(
+        data = cv_r_4_plot, maxcell = 25e4L, na.rm = TRUE,
+        mapping = ggplot2::aes(fill = ggplot2::after_stat(value))) +
+      ggplot2::scale_fill_discrete(
+        na.value = "transparent", name = NULL, na.translate = FALSE) +
+      ggplot2::geom_sf(
+        data = species_pa_4_plot, fill = "gray97", color = "black",
+        size = 0.125, shape = 19L, linewidth = 0.05, show.legend = FALSE) +
+      ggplot2::geom_sf(
+        data = world_outline, fill = "transparent", color = "black",
+        linewidth = 0.05, show.legend = FALSE) +
+      ggplot2::coord_sf(
+        xlim = p_ext[1L:2L], ylim = p_ext[3L:4L], expand = FALSE) +
+      ggtext::geom_richtext(
+        inherit.aes = FALSE, hjust = 0L, vjust = 1L, size = 3L,
+        data = tibble::tibble(
+          x = -Inf, y = Inf, label = "Cross-validation folds"),
+        mapping = ggplot2::aes(x = x, y = y, label = label),
+        fill = scales::alpha("lightblue", 0.4), label.color = NA) +
+      ggplot2::theme(
+        text = ggplot2::element_text(size = 6L),
+        axis.title = ggplot2::element_blank(),
+        axis.ticks = ggplot2::element_blank(),
+        axis.text.x = ggplot2::element_text(
+          size = 5L, margin = ggplot2::margin(t = 0L, b = -0.5), vjust = 0L),
+        axis.text.y = ggplot2::element_text(
+          size = 5L, margin = ggplot2::margin(r = -0.25, l = -0.5), hjust = 0L),
+        panel.grid = ggplot2::element_line(linewidth = 0.1, color = "gray85"),
+        panel.background = ggplot2::element_rect(fill = "white"),
+        plot.margin = grid::unit(c(-2L, 1L, 1L, 1L), "mm"),
+        plot.background = ggplot2::element_blank(),
+        legend.position = "bottom",
+        legend.key.size = ggplot2::unit(0.35, "cm"),
+        legend.key.spacing = ggplot2::unit(0.05, "cm"),
+        legend.margin = ggplot2::margin(t = -7L, b = -7L),
+        legend.text = ggplot2::element_text(size = 6L),
+        legend.title = ggtext::element_markdown(
+          size = 6L, margin = ggplot2::margin(r = 4L)))
+  },
+  "resampled to")
+
+  ragg::agg_jpeg(
+    filename = file_plot, width = plot_width, height = plot_height,
+    res = 600L, quality = 100L, units = "cm")
+  print(cv_plot)
+  grDevices::dev.off()
+
+  rm(
+    cv_r_4_plot, p_ext, cv_plot, file_plot, plot_width, species_pa_4_plot,
+    ext_dim, ext_w, ext_h, n_blocks_x, n_blocks_y, n_agg_cells, resol, resol_km,
+    aspect_ratio, plot_height, envir = environment())
+  invisible(gc())
+
+  # |||||||||||||||||||||||||||||||||||||||||||| #
+  # Save spatial blocks to GeoTIFF file
+  # |||||||||||||||||||||||||||||||||||||||||||| #
 
   ecokit::cat_time(
     "Save spatial blocks to GeoTIFF file",
@@ -1641,7 +2052,10 @@ process_models <- function(
 
     proj_mask <- switch(
       proj_extent,
-      modeling_area = {
+      modelling_area = {
+        ecokit::cat_time(
+          "Models will be projected to the modelling area",
+          cat_timestamp = FALSE, verbose = verbose, level = 1L)
         ecokit::load_as(model_data_r_file) %>%
           terra::unwrap() %>%
           terra::subset("species") %>%
@@ -1649,12 +2063,18 @@ process_models <- function(
           stats::setNames("proj_extent")
       },
       global = {
+        ecokit::cat_time(
+          "Models will be projected globally",
+          cat_timestamp = FALSE, verbose = verbose, level = 1L)
         OneSDM::get_mask_layer(
           resolution = resolution, climate_dir = climate_dir,
           europe_only = FALSE, return_spatraster = TRUE, wrap = FALSE) %>%
           stats::setNames("proj_extent")
       },
       europe = {
+        ecokit::cat_time(
+          "Models will be projected to Europe",
+          cat_timestamp = FALSE, verbose = verbose, level = 1L)
         proj_mask <- OneSDM::get_mask_layer(
           resolution = resolution, climate_dir = climate_dir,
           europe_only = TRUE, return_spatraster = TRUE, wrap = FALSE) %>%
@@ -1664,6 +2084,9 @@ process_models <- function(
   }
 
   if (is.list(proj_extent)) {
+    ecokit::cat_time(
+      "Models will be projected to custom extent(s)",
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
     proj_mask <- OneSDM::get_mask_layer(
       resolution = resolution, climate_dir = climate_dir, europe_only = FALSE,
       return_spatraster = TRUE, wrap = FALSE)
@@ -1691,11 +2114,18 @@ process_models <- function(
   invisible(gc())
 
   ## Current ----
+  ecokit::cat_time(
+    "Preparing projection inputs for current climate",
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
+  ecokit::cat_time(
+    "climate data", cat_timestamp = FALSE, verbose = verbose, level = 2L)
   projection_inputs <- dplyr::filter(
     climate_preds, var_name %in% predictor_names) %>%
     dplyr::pull(out_file)
 
   if (length(pft_id) > 0L) {
+    ecokit::cat_time(
+      "Land use data", cat_timestamp = FALSE, verbose = verbose, level = 2L)
     projection_inputs <- dplyr::filter(
       lu_preds, out_file_name %in% predictor_names) %>%
       dplyr::pull(out_file) %>%
@@ -1708,6 +2138,12 @@ process_models <- function(
   ## Future -----
   if (make_future_predictions) {
 
+    ecokit::cat_time(
+      "Preparing projection inputs for future climate scenarios",
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+    ecokit::cat_time(
+      "climate data", cat_timestamp = FALSE, verbose = verbose, level = 2L)
+
     predictors_future <- dplyr::filter(
       climate_future, var_name %in% predictor_names) %>%
       dplyr::summarise(
@@ -1716,6 +2152,8 @@ process_models <- function(
       dplyr::rename(climate_model = climate_model_abb)
 
     if (length(pft_id) > 0L) {
+      ecokit::cat_time(
+        "Land use data", cat_timestamp = FALSE, verbose = verbose, level = 2L)
       lu_future_files <- dplyr::filter(
         lu_future, out_file_name %in% predictor_names) %>%
         dplyr::summarise(
@@ -2076,8 +2514,12 @@ process_models <- function(
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   # # ********************************************************************** #
-  # Overall summary ------
+  # Overall summary of cross-validated models ------
   # # ********************************************************************** #
+
+  ecokit::info_chunk(
+    "Overall summary of cross-validated models",
+    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
 
   models_summary <- models_cv_summary %>%
     dplyr::select(-tidyselect::all_of(c("cv", "n_model_reps", "reps_data"))) %>%
@@ -2185,7 +2627,6 @@ process_models <- function(
         })
     )
 
-
   # |||||||||||||||||||||||||||||||||||||||||||||||||
   # Projections
   # |||||||||||||||||||||||||||||||||||||||||||||||||
@@ -2226,8 +2667,12 @@ process_models <- function(
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   # # ********************************************************************** #
-  # Overall summary ------
+  # Overall modelling summary ------
   # # ********************************************************************** #
+
+  ecokit::info_chunk(
+    "Overall modelling summary",
+    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
 
   if (length(abs_exclude_ext) > 0L) {
     abs_exclude_ext <- purrr::map(abs_exclude_ext, terra::wrap)
@@ -2325,14 +2770,14 @@ process_models <- function(
       model_data_r_file = model_data_r_file,
       # model data tibble file
       model_data_file = model_data_file,
-      # model data for cross-validation folds and repetitions
-      models_cv = models_cv,
       # paths for projection data
       projection_inputs = projection_inputs,
       # input projection extent
       proj_extent = proj_extent,
       # projection extent as PackedSpatRaster
-      proj_mask = proj_mask),
+      proj_mask_file = proj_mask_file,
+      # model data for cross-validation folds and repetitions
+      models_cv = models_cv),
 
     # Summary of model repetitions
     models_cv_summary = models_cv_summary,

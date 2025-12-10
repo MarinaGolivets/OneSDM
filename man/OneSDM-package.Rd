@@ -6,7 +6,7 @@
 \alias{OneSDM-package}
 \title{OneSDM: Automated workflows for species distribution modelling under environmental change scenarios}
 \description{
-OneSTOP-Task-5.2 [more info!]
+Automated workflows for species distribution modelling under environmental change scenarios.
 }
 \seealso{
 Useful links:
