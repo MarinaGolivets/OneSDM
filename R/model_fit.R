@@ -1834,7 +1834,7 @@ process_models <- function(
     "Plotting spatial cross-validation blocks",
     cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
-  cv_r_4_plot <- as.factor(terra::trim(species_blocks))
+  cv_r_4_plot <- terra::as.factor(terra::trim(species_blocks))
   p_ext <- terra::ext(cv_r_4_plot)
   file_plot <- fs::path(dir_model_data, "cv_blocks.jpeg")
   plot_width <- 18L
