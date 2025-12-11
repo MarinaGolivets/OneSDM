@@ -1,0 +1,57 @@
+url: https://github.com/marinaGolivets/onesdm
+template:
+  bootstrap: 5
+  light-switch: true
+
+authors:
+  Ahmed El-Gabbas:
+    href: https://elgabbas.netlify.app/
+  Marina Golivetes:
+    href: https://www.ufz.de/index.php?en=47682
+home:
+  title: OneSDM
+
+development:
+  mode: auto
+
+navbar:
+  title: OneSDM
+  type: default
+  left:
+  - text: Functions
+    icon: fa-file-code-o
+    href: reference/index.html
+
+reference:
+- title: Package info
+  contents:
+  - OneSDM-package
+
+- title: Climate and landuse data
+  contents:
+  - prepare_climate
+  - get_climate_data
+  - climate_data
+
+- title: Land use data
+  contents:
+  - prepare_landuse
+  - get_landuse_data
+  - landuse_data
+
+- title: Species data
+  contents:
+  - prepare_gbif_data
+  - prepare_easin_data
+  - prepare_user_data
+  - prepare_species_data
+
+- title: Mask and sampling efforts
+  contents:
+  - get_mask_layer
+  - get_sampling_efforts
+
+- title: Model fitting and settings
+  contents:
+  - process_models
+  - sdm_model_settings

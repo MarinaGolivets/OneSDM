@@ -44,8 +44,6 @@ A dataset containing information about land use data files available for
 download from OSF. For more details, see \code{\link[=prepare_landuse]{prepare_landuse()}}.
 }
 \examples{
-require(ecokit)
-
 # View the land use data
 data("landuse_data")
 ecokit::ht(landuse_data)

@@ -257,6 +257,11 @@ repetitions would be redundant. This can also be set via the
 \item Pseudo-absences are sampled using \link[sdm:background]{sdm::background} with method \code{"eDist"}
 , which draws pseudo-absences weighted by environmental distance from
 presence grid cells.
+\item No pseudo-absences are sampled for maxent models; instead, all
+available non-presence grid cells are used as background points (capped to
+1,000,000 points for memory efficiency; can also be set using the
+"\code{onesdm_max_n_bg_maxent}") option. Therefore, for maxent models,
+\code{model_n_reps} is set to \code{1} regardless of the provided value.
 }}
 
 \item{n_cores}{Integer. Number of CPU cores to use for parallel processing of
@@ -421,8 +426,7 @@ aggregation or via \link[blockCV:cv_spatial]{blockCV::cv_spatial} (controlled by
 \item Assembles modelling data (species, predictors, CV fold) and persists both
 data.frame and wrapped \code{SpatRaster} for memory efficiency.
 \item Determines feasible repetitions per CV fold based on available absences
-and requested \code{abs_ratio}; restricts MaxEnt to a single repetition per fold
-but use all available pseudo-absences (capped to 1,000,000).
+and requested \code{abs_ratio}.
 \item Enforces minimum presence count after filtering; otherwise, stops with
 an error; controlled by \code{min_pres_count}.
 \item Saves a tibble describing all model input data, including

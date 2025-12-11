@@ -38,8 +38,6 @@
 #'   `climate_dir` argument.
 #' @docType data
 #' @examples
-#' require(ecokit)
-#'
 #' # View the climate data
 #' data("climate_data")
 #' ecokit::ht(climate_data)
@@ -85,8 +83,6 @@
 #'
 #' @docType data
 #' @examples
-#' require(ecokit)
-#'
 #' # View the land use data
 #' data("landuse_data")
 #' ecokit::ht(landuse_data)
@@ -109,6 +105,6 @@
 #' @examples
 #' # View the SDM model settings
 #' data("sdm_model_settings")
-#' str(sdm_model_settings)
+#' print(sdm_model_settings)
 
 "sdm_model_settings"

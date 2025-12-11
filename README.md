@@ -1,8 +1,6 @@
 OneSDM: Automated Workflows for Species Distribution Modelling
 ================
 
-# OneSTOP-Task-5.2 Automated workflows for species distribution modelling under environmental change scenarios
-
 ## Overview
 
 To identify species likely to establish, spread and impose threats on
@@ -27,23 +25,40 @@ and climate change (Representative Concentration Pathways)
 ## Installation
 
 You can install the development version of `OneSDM` from GitHub using
-the `devtools` package:
+the `remotes` package:
 
 ``` r
-# Install devtools if not already installed
-if (!require("devtools")) install.packages("devtools")
+# Install remotes if not already installed
+if (!require("remotes")) install.packages("remotes")
 
 # Install OneSDM from GitHub
-devtools::install_github("MarinaGolivets/OneSDM", dependencies = TRUE)
+remotes::install_github("MarinaGolivets/OneSDM", dependencies = TRUE)
+```
+
+## Dependencies
+
+The `OneSDM` package depends on several R packages for its
+functionality. Check the [`DESCRIPTION`](DESCRIPTION) file for a
+complete list of dependencies.
+
+The
+<a href="https://github.com/elgabbas/ecokit" target="_blank">`ecokit`</a>
+package is one of the key dependencies used for ecological data handling
+and analysis. Make sure to install/update it before using `OneSDM`:
+
+``` r
+if (!require("ecokit")) remotes::install_github("elgabbas/ecokit", dependencies = TRUE)
+# or update if already installed
+remotes::update_packages("ecokit")
 ```
 
 <br/>
 
 ## Contributing
 
-`OneSDM` is an open-source project and still in early development
-stages. We welcome contributions from the community! If you encounter
-issues, have suggestions, or want to add new features, please:
+`OneSDM` is an open-source project and still in development stage. We
+welcome contributions from the community! If you encounter issues, have
+suggestions, or want to add new features, please:
 
 - **Report issues** or suggest features on the [GitHub issue
   tracker](https://github.com/MarinaGolivets/OneSDM/issues).

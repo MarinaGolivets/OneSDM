@@ -19,6 +19,6 @@ in \code{OneSDM}.
 \examples{
 # View the SDM model settings
 data("sdm_model_settings")
-str(sdm_model_settings)
+print(sdm_model_settings)
 }
 \keyword{datasets}
