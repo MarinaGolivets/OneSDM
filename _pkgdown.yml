@@ -8,8 +8,14 @@ authors:
     href: https://elgabbas.netlify.app/
   Marina Golivetes:
     href: https://www.ufz.de/index.php?en=47682
+
 home:
   title: OneSDM
+  links:
+  - text: OneSTOP project
+    href: https://onestop-project.eu/
+  - text: Community ecology @ UFZ
+    href: https://www.ufz.de/index.php?en=36737
 
 development:
   mode: auto
@@ -27,13 +33,14 @@ reference:
   contents:
   - OneSDM-package
 
-- title: Climate and landuse data
+- title: Climate and land use data
+  desc: Functions to prepare and get climate and land use data
+- subtitle: Climate data
   contents:
   - prepare_climate
   - get_climate_data
   - climate_data
-
-- title: Land use data
+- subtitle: Land use data
   contents:
   - prepare_landuse
   - get_landuse_data
