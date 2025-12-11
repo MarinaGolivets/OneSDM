@@ -177,7 +177,11 @@
 #'   - Pseudo-absences are sampled using [sdm::background] with method `"eDist"`
 #'   , which draws pseudo-absences weighted by environmental distance from
 #'   presence grid cells.
-#'
+#'   - No pseudo-absences are sampled for maxent models; instead, all
+#'   available non-presence grid cells are used as background points (capped to
+#'   1,000,000 points for memory efficiency; can also be set using the
+#'   "`onesdm_max_n_bg_maxent`") option. Therefore, for maxent models,
+#'   `model_n_reps` is set to `1` regardless of the provided value.
 #' @param n_cores Integer. Number of CPU cores to use for parallel processing of
 #'   data for cross-validation folds and for model fitting (capped to
 #'   [parallelly::availableCores]). This can also be set via the
@@ -257,8 +261,7 @@
 #'   - Assembles modelling data (species, predictors, CV fold) and persists both
 #'   data.frame and wrapped `SpatRaster` for memory efficiency.
 #'   - Determines feasible repetitions per CV fold based on available absences
-#'   and requested `abs_ratio`; restricts MaxEnt to a single repetition per fold
-#'   but use all available pseudo-absences (capped to 1,000,000).
+#'   and requested `abs_ratio`.
 #'   - Enforces minimum presence count after filtering; otherwise, stops with
 #'   an error; controlled by `min_pres_count`.
 #'   - Saves a tibble describing all model input data, including
@@ -1043,7 +1046,7 @@ process_models <- function(
     paste0(
       "Number of presence grid cells: ",
       ecokit::format_number(n_pres_grids)),
-    cat_timestamp = FALSE, verbose = verbose)
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
@@ -1051,13 +1054,17 @@ process_models <- function(
   # Defining study area and exclude pseudo-absences ------
   # # ********************************************************************** #
 
-  # Exclude pseudo-absences based on provided extents
+  ecokit::cat_time(
+    "\nDefining study area and exclude pseudo-absences",
+    cat_timestamp = FALSE, verbose = verbose)
 
+
+  # Exclude pseudo-absences based on provided extents
   if (length(abs_exclude_ext) > 0L) {
 
     ecokit::cat_time(
-      "\nExcluding pseudo-absences based on provided extents",
-      cat_timestamp = FALSE, verbose = verbose)
+      "Excluding pseudo-absences based on provided extents",
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     for (ext in abs_exclude_ext) {
       ecokit::cat_time(
@@ -1075,7 +1082,7 @@ process_models <- function(
       paste0(
         "No pseudo-absences were excluded based on provided extents as ",
         "`abs_exclude_ext` is NULL or invalid."),
-      cat_timestamp = FALSE, verbose = verbose)
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
   }
 
   invisible(gc())
@@ -1092,7 +1099,7 @@ process_models <- function(
       paste0(
         "Excluding grid cells beyond ", ecokit::format_number(pres_buffer),
         " km from presence locations"),
-      cat_timestamp = FALSE, verbose = verbose)
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     species_pa_r <- terra::classify(species_pa_r, cbind(0L, NA)) %>%
       # Aggregate to coarser resolution to speed up distance calculation
@@ -1114,7 +1121,7 @@ process_models <- function(
       paste0(
         "No grid cells were excluded based on distance from presence ",
         "locations as `pres_buffer` is NULL or non-positive."),
-      cat_timestamp = FALSE, verbose = verbose)
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
   }
 
   # # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
@@ -1122,17 +1129,16 @@ process_models <- function(
   # Exclude grid cells that are too close to presence locations from
   # pseudo-absences (< `abs_buffer` km). This is needed for sampling
   # pseudo-absences only beyond a certain distance from presences, which is
-  # relevant for model types other than MaxEnt.
+  # relevant for model types other than maxent.
 
   if (!is.null(abs_buffer) && is.numeric(abs_buffer) &&
       length(abs_buffer) == 1L && abs_buffer > 0L) {
 
     ecokit::cat_time(
       paste0(
-        "Excluding pseudo-absences within ",
-        ecokit::format_number(abs_buffer),
+        "Excluding pseudo-absences within ", ecokit::format_number(abs_buffer),
         " km of presence locations"),
-      cat_timestamp = FALSE, verbose = verbose)
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     buffered_pres <- terra::classify(species_pa_r, cbind(0L, NA)) %>%
       terra::as.polygons(aggregate = TRUE) %>%
@@ -1152,7 +1158,7 @@ process_models <- function(
       paste0(
         "No pseudo-absences were excluded based on distance from presence ",
         "locations as `abs_buffer` is NULL or non-positive."),
-      cat_timestamp = FALSE, verbose = verbose)
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
   }
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
@@ -1162,7 +1168,7 @@ process_models <- function(
   # # ********************************************************************** #
 
   ecokit::cat_time(
-    "Saving species presence-non-presence raster",
+    "\nSaving species presence-non-presence raster",
     cat_timestamp = FALSE, verbose = verbose)
   species_pa_r_file <- fs::path(
     dir_models, paste0("species_pa_res_", resolution, ".tif"))
@@ -1293,13 +1299,17 @@ process_models <- function(
   # Sampling efforts ------
   # # ********************************************************************** #
 
+  ecokit::cat_time(
+    "Processing sampling effort predictor",
+    cat_timestamp = FALSE, verbose = verbose)
+
   if (bias_group == "none") {
 
     bias_as_predictor <- FALSE
     bias_fix_value <- NA_real_
     ecokit::cat_time(
       "No sampling effort predictor will be used.",
-      cat_timestamp = FALSE, verbose = verbose)
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
   } else {
 
@@ -1308,7 +1318,7 @@ process_models <- function(
       paste0(
         "Using sampling efforts for '", crayon::blue(bias_group),
         "' group as predictor"),
-      cat_timestamp = FALSE, verbose = verbose)
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     bias_r <- OneSDM::get_sampling_efforts(
       bias_group = bias_group, resolution = resolution,
@@ -1323,6 +1333,11 @@ process_models <- function(
       x = bias_r,
       fun = function(x, ...) {
         stats::quantile(x, probs = 0.9, na.rm = TRUE)})[[1L]]
+    ecokit::cat_time(
+      paste0(
+        "90th percentile value of sampling effort predictor: ",
+        ecokit::format_number(bias_fix_value)),
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     bias_fixed_r <- stats::setNames(bias_r, "bias_fixed")
     bias_fixed_r[bias_fixed_r <= bias_fixed_r] <- bias_fix_value
@@ -1408,8 +1423,7 @@ process_models <- function(
   # |||||||||||||||||||||||||||||||||||||||||||| #
 
   ecokit::cat_time(
-    "Saving masked predictors", cat_timestamp = FALSE,
-    verbose = verbose)
+    "Saving masked predictors", cat_timestamp = FALSE, verbose = verbose)
   model_predictors_f <- fs::path(
     dir_model_data, paste0("model_predictors_res_", resolution, ".RData"))
   model_predictors <- terra::toMemory(model_predictors)
@@ -1444,10 +1458,10 @@ process_models <- function(
   }
 
   ecokit::cat_time(
-    paste0(
-      "Performing VIF-based predictor selection (threshold = ",
-      ecokit::format_number(vif_th), ")"),
-    cat_timestamp = FALSE, verbose = verbose)
+    "VIF-based predictor selection", cat_timestamp = FALSE, verbose = verbose)
+  ecokit::cat_time(
+    paste0("threshold = ", ecokit::format_number(vif_th)),
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
   if (bias_as_predictor) {
     model_predictors_4vif <- terra::subset(
@@ -1455,6 +1469,7 @@ process_models <- function(
   } else {
     model_predictors_4vif <- model_predictors
   }
+
   vif_results <- usdm::vifstep(
     x = model_predictors_4vif, th = vif_th, keep = vif_keep,
     size = vif_sample, method = "pearson")
@@ -1481,7 +1496,7 @@ process_models <- function(
   } else {
 
     ecokit::cat_time(
-      "No predictor variables were excluded based on VIF.",
+      "No predictors were excluded based on VIF.",
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
   }
@@ -1511,11 +1526,14 @@ process_models <- function(
   # Predictors - future ------
   # # ********************************************************************** #
 
+  ecokit::info_chunk(
+    "Future predictors", line_char_rep = 65L, verbose = verbose,
+    cat_date = FALSE)
+
   if (make_future_predictions) {
 
-    ecokit::info_chunk(
-      "Preparing future climate predictors",
-      line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+    ecokit::cat_time(
+      "future climate predictors", cat_timestamp = FALSE, verbose = verbose)
 
     climate_future <- tidyr::expand_grid(
       climate_scenario = climate_scenario,
@@ -1526,10 +1544,6 @@ process_models <- function(
       paste0(
         "Total climate scenario combinations to process: ",
         nrow(climate_future)),
-      cat_timestamp = FALSE, verbose = verbose, level = 1L)
-
-    ecokit::cat_time(
-      "Downloading and processing future climate predictors",
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     climate_future <- climate_future %>%
@@ -1543,7 +1557,7 @@ process_models <- function(
                 "scenario: ", crayon::blue(climate_scenario),
                 "; model: ", crayon::blue(climate_model),
                 "; year: ", crayon::blue(climate_year)),
-              cat_timestamp = FALSE, verbose = verbose, level = 2L)
+              cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
             OneSDM::get_climate_data(
               climate_dir = climate_dir, resolution = resolution,
@@ -1559,9 +1573,8 @@ process_models <- function(
 
     if (!is.null(pft_id) && !all(is.na(lu_predictor_names))) {
 
-      ecokit::info_chunk(
-        "Preparing future landuse predictors",
-        line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+      ecokit::cat_time(
+        "Future land use predictors", cat_timestamp = FALSE, verbose = verbose)
 
       lu_future <- tidyr::expand_grid(
         climate_scenario = climate_scenario,
@@ -1570,10 +1583,6 @@ process_models <- function(
       ecokit::cat_time(
         paste0(
           "Total land use scenario combinations to process: ", nrow(lu_future)),
-        cat_timestamp = FALSE, verbose = verbose, level = 1L)
-
-      ecokit::cat_time(
-        "Downloading and processing future land use predictors",
         cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
       lu_future <- lu_future %>%
@@ -1585,7 +1594,7 @@ process_models <- function(
               ecokit::cat_time(
                 paste0(
                   "scenario: ", crayon::blue(.x), "; year: ", crayon::blue(.y)),
-                cat_timestamp = FALSE, verbose = verbose, level = 2L)
+                cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
               OneSDM::get_landuse_data(
                 climate_dir = climate_dir, resolution = resolution,
@@ -1613,9 +1622,9 @@ process_models <- function(
   # Spatial blocks ------
   # # ********************************************************************** #
 
-  ecokit::cat_sep(
-    sep_lines_before = 1L, sep_lines_after = 2L, verbose = verbose,
-    line_char_rep = 65L)
+  ecokit::info_chunk(
+    "spatial block cross-validation", line_char_rep = 65L, verbose = verbose,
+    cat_date = FALSE)
 
   # |||||||||||||||||||||||||||||||||||||||||||| #
   # Check if `cv_block_size` is appropriate for the filtered species data
@@ -1722,7 +1731,6 @@ process_models <- function(
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
   }
 
-
   # |||||||||||||||||||||||||||||||||||||||||||| #
   ## Create spatial blocks -----
   # |||||||||||||||||||||||||||||||||||||||||||| #
@@ -1730,7 +1738,7 @@ process_models <- function(
   if (cv_random) {
 
     ecokit::cat_time(
-      "Creating spatial cross-validation blocks using random blocks",
+      "Creating blocks using random blocks",
       cat_timestamp = FALSE, verbose = verbose)
 
     # aggregate species_pa_r to larger blocks, calculating sum of presences
@@ -1747,7 +1755,7 @@ process_models <- function(
     # convert aggregated blocks to polygons and assign cv folds. Folds are
     # assigned randomly but maintaining balance of presences across folds
     ecokit::cat_time(
-      "Assigning cross-validation folds to spatial blocks",
+      "Assigning CV folds to spatial blocks",
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     species_blocks <- terra::aggregate(
@@ -1774,13 +1782,13 @@ process_models <- function(
   } else {
 
     ecokit::cat_time(
-      "Creating spatial cross-validation blocks using `blockCV` package",
+      "Creating blocks using `blockCV` package",
       cat_timestamp = FALSE, verbose = verbose)
 
     ecokit::check_packages("blockCV")
 
     ecokit::cat_time(
-      "Converting presence-absence raster to points",
+      "Converting presence-non-presence raster to points",
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
     species_pa_sf <- terra::as.points(species_pa_r) %>%
       sf::st_as_sf() %>%
@@ -1788,29 +1796,30 @@ process_models <- function(
 
     ecokit::cat_time(
       paste0(
-        "Creating spatial cross-validation blocks using `blockCV` package.",
+        "Creating blocks using `blockCV` package.",
         "\n  >>>  This could take a while, depending on the size ",
         "of the study area"),
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     species_blocks <- blockCV::cv_spatial(
       x = species_pa_sf, column = "species", r = species_pa_r, hexagon = FALSE,
-      # selection = "random", iteration = 100L,
       k = cv_folds, size = cv_block_size * 1000L, plot = FALSE,
       progress = verbose, report = verbose)
 
-    ecokit::cat_time(
-      "Save output of `blockCV` spatial blocks",
-      cat_timestamp = FALSE, verbose = verbose, level = 1L)
     species_block_cv_file <- fs::path(
       dir_models, paste0("species_cv_blockCV_", resolution, ".RData"))
+    ecokit::cat_time(
+      paste0(
+        "Save output of `blockCV` blocks to: ",
+        crayon::blue(species_block_cv_file)),
+      cat_timestamp = FALSE, verbose = verbose, level = 1L)
     ecokit::save_as(
       object = species_blocks, object_name = "species_blocks",
       out_path = species_block_cv_file)
 
     # Extract raster of spatial blocks
     ecokit::cat_time(
-      "Extracting spatial blocks raster from `blockCV` output",
+      "Extracting blocks raster from `blockCV` output",
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     species_blocks <- dplyr::select(
@@ -1831,8 +1840,8 @@ process_models <- function(
   # |||||||||||||||||||||||||||||||||||||||||||| #
 
   ecokit::cat_time(
-    "Plotting spatial cross-validation blocks",
-    cat_timestamp = FALSE, verbose = verbose, level = 1L)
+    "Plotting cross-validation blocks",
+    cat_timestamp = FALSE, verbose = verbose)
 
   cv_r_4_plot <- terra::as.factor(terra::trim(species_blocks))
   p_ext <- terra::ext(cv_r_4_plot)
@@ -1892,6 +1901,10 @@ process_models <- function(
   },
   "resampled to")
 
+  ecokit::cat_time(
+    paste0("Saving cross-validation blocks plot to: ", crayon::blue(file_plot)),
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
+
   ragg::agg_jpeg(
     filename = file_plot, width = plot_width, height = plot_height,
     res = 600L, quality = 100L, units = "cm")
@@ -1908,11 +1921,13 @@ process_models <- function(
   # Save spatial blocks to GeoTIFF file
   # |||||||||||||||||||||||||||||||||||||||||||| #
 
-  ecokit::cat_time(
-    "Save spatial blocks to GeoTIFF file",
-    cat_timestamp = FALSE, verbose = verbose, level = 1L)
   species_blocks_file <- fs::path(
     dir_models, paste0("species_cv_blocks_", resolution, ".tif"))
+  ecokit::cat_time(
+    paste0(
+      "Save spatial blocks to GeoTIFF file: ",
+      crayon::blue(species_blocks_file)),
+    cat_timestamp = FALSE, verbose = verbose)
   terra::writeRaster(
     species_blocks, filename = species_blocks_file,
     overwrite = TRUE, gdal = c("COMPRESS=ZSTD", "ZSTD_LEVEL=22", "TILED=YES"))
@@ -1926,6 +1941,10 @@ process_models <- function(
   ecokit::info_chunk(
     "Preparing modelling data",
     line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+
+  ecokit::cat_time(
+    "Extracting modelling data from rasters",
+    cat_timestamp = FALSE, verbose = verbose)
 
   model_data_r <- c(species_pa_r, model_predictors, species_blocks) %>%
     terra::toMemory()
@@ -1978,6 +1997,13 @@ process_models <- function(
     }
   }
 
+  n_cores_modelling <- min(n_cores, cv_folds)
+  ecokit::cat_time(
+    paste0(
+      "Preparing modelling data in parallel using ",
+      ecokit::format_number(n_cores_modelling), " core(s)"),
+    cat_timestamp = FALSE, verbose = verbose)
+
   if (n_cores == 1L) {
     future::plan("sequential", gc = TRUE)
   } else {
@@ -2029,13 +2055,12 @@ process_models <- function(
   invisible(gc())
 
   ## Saving model data
-  ecokit::cat_time(
-    "Saving model data", cat_timestamp = FALSE, verbose = verbose, level = 1L)
-
   models_cv_file <- fs::path(dir_models, "models_cv.RData")
+  ecokit::cat_time(
+    paste0("Saving model data to: ", crayon::blue(models_cv_file)),
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
   ecokit::save_as(
-    object = models_cv, object_name = "models_cv",
-    out_path = models_cv_file)
+    object = models_cv, object_name = "models_cv", out_path = models_cv_file)
 
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
@@ -2054,8 +2079,8 @@ process_models <- function(
       proj_extent,
       modelling_area = {
         ecokit::cat_time(
-          "Models will be projected to the modelling area",
-          cat_timestamp = FALSE, verbose = verbose, level = 1L)
+          "Models will be projected to the `modelling area`",
+          cat_timestamp = FALSE, verbose = verbose)
         ecokit::load_as(model_data_r_file) %>%
           terra::unwrap() %>%
           terra::subset("species") %>%
@@ -2064,8 +2089,8 @@ process_models <- function(
       },
       global = {
         ecokit::cat_time(
-          "Models will be projected globally",
-          cat_timestamp = FALSE, verbose = verbose, level = 1L)
+          "Models will be projected `globally`",
+          cat_timestamp = FALSE, verbose = verbose)
         OneSDM::get_mask_layer(
           resolution = resolution, climate_dir = climate_dir,
           europe_only = FALSE, return_spatraster = TRUE, wrap = FALSE) %>%
@@ -2073,8 +2098,8 @@ process_models <- function(
       },
       europe = {
         ecokit::cat_time(
-          "Models will be projected to Europe",
-          cat_timestamp = FALSE, verbose = verbose, level = 1L)
+          "Models will be projected to `Europe`",
+          cat_timestamp = FALSE, verbose = verbose)
         proj_mask <- OneSDM::get_mask_layer(
           resolution = resolution, climate_dir = climate_dir,
           europe_only = TRUE, return_spatraster = TRUE, wrap = FALSE) %>%
@@ -2086,7 +2111,7 @@ process_models <- function(
   if (is.list(proj_extent)) {
     ecokit::cat_time(
       "Models will be projected to custom extent(s)",
-      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+      cat_timestamp = FALSE, verbose = verbose)
     proj_mask <- OneSDM::get_mask_layer(
       resolution = resolution, climate_dir = climate_dir, europe_only = FALSE,
       return_spatraster = TRUE, wrap = FALSE)
@@ -2107,6 +2132,9 @@ process_models <- function(
   }
 
   proj_mask_file <- fs::path(dir_model_data, "projection_mask.tif")
+  ecokit::cat_time(
+    paste0("Saving projection mask to: ", crayon::blue(proj_mask_file)),
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
   terra::writeRaster(
     proj_mask, filename = proj_mask_file,
     overwrite = TRUE, gdal = c("COMPRESS=ZSTD", "ZSTD_LEVEL=22", "TILED=YES"))
@@ -2116,16 +2144,16 @@ process_models <- function(
   ## Current ----
   ecokit::cat_time(
     "Preparing projection inputs for current climate",
-    cat_timestamp = FALSE, verbose = verbose, level = 1L)
+    cat_timestamp = FALSE, verbose = verbose)
   ecokit::cat_time(
-    "climate data", cat_timestamp = FALSE, verbose = verbose, level = 2L)
+    "climate data", cat_timestamp = FALSE, verbose = verbose, level = 1L)
   projection_inputs <- dplyr::filter(
     climate_preds, var_name %in% predictor_names) %>%
     dplyr::pull(out_file)
 
   if (length(pft_id) > 0L) {
     ecokit::cat_time(
-      "Land use data", cat_timestamp = FALSE, verbose = verbose, level = 2L)
+      "Land use data", cat_timestamp = FALSE, verbose = verbose, level = 1L)
     projection_inputs <- dplyr::filter(
       lu_preds, out_file_name %in% predictor_names) %>%
       dplyr::pull(out_file) %>%
@@ -2139,10 +2167,10 @@ process_models <- function(
   if (make_future_predictions) {
 
     ecokit::cat_time(
-      "Preparing projection inputs for future climate scenarios",
-      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+      "Preparing projection inputs for future scenarios",
+      cat_timestamp = FALSE, verbose = verbose)
     ecokit::cat_time(
-      "climate data", cat_timestamp = FALSE, verbose = verbose, level = 2L)
+      "climate data", cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
     predictors_future <- dplyr::filter(
       climate_future, var_name %in% predictor_names) %>%
@@ -2153,7 +2181,7 @@ process_models <- function(
 
     if (length(pft_id) > 0L) {
       ecokit::cat_time(
-        "Land use data", cat_timestamp = FALSE, verbose = verbose, level = 2L)
+        "Land use data", cat_timestamp = FALSE, verbose = verbose, level = 1L)
       lu_future_files <- dplyr::filter(
         lu_future, out_file_name %in% predictor_names) %>%
         dplyr::summarise(
@@ -2187,62 +2215,63 @@ process_models <- function(
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   # # ********************************************************************** #
-  # Model fitting and predictions ------
+  # Model fitting and projections ------
   # # ********************************************************************** #
 
   ecokit::info_chunk(
-    "Model fitting and predictions",
+    "Model fitting and projections",
     line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
 
   ecokit::cat_time(
     paste0(
       "Total model fitting tasks: ",
-      ecokit::format_number(nrow(models_cv), bold = TRUE), ": ",
+      ecokit::format_number(nrow(models_cv), bold = TRUE)),
+    cat_timestamp = FALSE, verbose = verbose)
+  ecokit::cat_time(
+    paste0(
       ecokit::format_number(length(sdm_methods)), " modelling methods \u00D7 ",
       ecokit::format_number(cv_folds), " CV folds \u00D7 ",
       ecokit::format_number(model_n_reps), " repetitions"),
-    cat_timestamp = FALSE, verbose = verbose)
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
   if ("maxent" %in% sdm_methods) {
     ecokit::cat_time(
-      "Maxent models will be fitted only for a single repetition per CV fold",
+      "`Maxent` models will be fitted only for a single repetition per CV fold",
       cat_timestamp = FALSE, verbose = verbose, level = 1L)
   }
   ecokit::cat_time(
     paste0(
-      "Modelling methods to be used: ", crayon::blue(toString(sdm_methods))),
+      "Modelling methods: ", crayon::blue(toString(sdm_methods))),
     level = 1L, cat_timestamp = FALSE, verbose = verbose)
   ecokit::cat_time(
     paste0(
-      "Predictor variables to be used: ",
+      "Predictor variables: ",
       crayon::blue(toString(predictor_names))),
     level = 1L, cat_timestamp = FALSE, verbose = verbose)
 
+  ecokit::cat_time(
+    "Model projections", cat_timestamp = FALSE, verbose = verbose)
   n_projections <- ecokit::format_number(nrow(projection_inputs))
   ecokit::cat_time(
-    paste0(
-      "For each model fitting task, predictions will be made for ",
-      n_projections, " projection scenarios"),
-    cat_timestamp = FALSE, verbose = verbose)
+    paste0(n_projections, " projection options for each model fitting task"),
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
   n_tiff_files <- ecokit::format_number(
     nrow(models_cv) * nrow(projection_inputs))
   ecokit::cat_time(
     paste0("Total projection GeoTIFF files: ", n_tiff_files),
     cat_timestamp = FALSE, verbose = verbose, level = 1L)
 
-  proj_n_cores <- ecokit::format_number(min(n_cores, nrow(models_cv)))
+  n_cores_fit <- min(n_cores, nrow(models_cv))
   ecokit::cat_time(
     paste0(
-      "Using ", proj_n_cores,
-      " parallel cores for model fitting and projections"),
+      "Model fitting and post-processing using ",
+      ecokit::format_number(n_cores_fit), " parallel core(s)"),
     cat_timestamp = FALSE, verbose = verbose)
 
   if (n_cores == 1L) {
     future::plan("sequential", gc = TRUE)
   } else {
-    ecokit::set_parallel(
-      min(n_cores, nrow(models_cv)), show_log = FALSE,
-      future_max_size = 2000L)
+    ecokit::set_parallel(n_cores_fit, show_log = FALSE, future_max_size = 2000L)
     withr::defer(future::plan("sequential", gc = TRUE))
   }
 
@@ -2285,12 +2314,16 @@ process_models <- function(
   # # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| #
 
   # # ********************************************************************** #
-  # Summarise model repetition outputs ------
+  # Summarising model repetition outputs per modelling method and CV fold------
   # # ********************************************************************** #
 
   ecokit::info_chunk(
-    "Summarise model repetition outputs",
+    "Summarise model outputs",
     line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+
+  ecokit::cat_time(
+    "Summarising model repetition outputs per modelling method and CV fold",
+    cat_timestamp = FALSE, verbose = verbose)
 
   summ_fun <- function(.x, n_reps) { #nolint
     if (n_reps > 1L) {
@@ -2469,7 +2502,6 @@ process_models <- function(
         })) %>%
     tidyr::unnest("rep_summary")
 
-
   # |||||||||||||||||||||||||||||||||||||||||||||||||
   # Projections
   # |||||||||||||||||||||||||||||||||||||||||||||||||
@@ -2507,6 +2539,9 @@ process_models <- function(
 
   # Saving cv summary data
   models_cv_summary_file <- fs::path(dir_models, "models_cv_summary.RData")
+  ecokit::cat_time(
+    paste0("Saving summary data to: ", crayon::blue(models_cv_summary_file)),
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
   ecokit::save_as(
     object = models_cv_summary, object_name = "models_cv_summary",
     out_path = models_cv_summary_file)
@@ -2517,9 +2552,9 @@ process_models <- function(
   # Overall summary of cross-validated models ------
   # # ********************************************************************** #
 
-  ecokit::info_chunk(
-    "Overall summary of cross-validated models",
-    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+  ecokit::cat_time(
+    "Summarising model cross-validated models per modelling method",
+    cat_timestamp = FALSE, verbose = verbose)
 
   models_summary <- models_cv_summary %>%
     dplyr::select(-tidyselect::all_of(c("cv", "n_model_reps", "reps_data"))) %>%
@@ -2660,6 +2695,9 @@ process_models <- function(
 
   # Saving summary data
   models_summary_file <- fs::path(dir_models, "models_summary.RData")
+  ecokit::cat_time(
+    paste0("Saving summary data to: ", crayon::blue(models_summary_file)),
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
   ecokit::save_as(
     object = models_summary, object_name = "models_summary",
     out_path = models_summary_file)
@@ -2670,9 +2708,9 @@ process_models <- function(
   # Overall modelling summary ------
   # # ********************************************************************** #
 
-  ecokit::info_chunk(
-    "Overall modelling summary",
-    line_char_rep = 65L, verbose = verbose, cat_date = FALSE)
+  ecokit::cat_time(
+    "Prepare list of overall modelling summary (inputs and outputs)",
+    cat_timestamp = FALSE, verbose = verbose)
 
   if (length(abs_exclude_ext) > 0L) {
     abs_exclude_ext <- purrr::map(abs_exclude_ext, terra::wrap)
@@ -2788,10 +2826,15 @@ process_models <- function(
     models_summary_file = models_summary_file
   )
 
+  overall_summary_file <- fs::path(dir_models, "model_summary.RData")
+  ecokit::cat_time(
+    paste0(
+      "Saving overall summary data to: ", crayon::blue(overall_summary_file)),
+    cat_timestamp = FALSE, verbose = verbose, level = 1L)
   ecokit::save_as(
     object = model_summary, object_name = "model_summary",
-    out_path = fs::path(dir_models, "model_summary.RData"))
+    out_path = overall_summary_file)
 
-  return(invisible(models_cv))
+  return(invisible(model_summary))
 
 }
