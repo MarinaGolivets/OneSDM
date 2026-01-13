@@ -1,14 +1,14 @@
 # process_models -------
 
-#' Prepare Modelling Data, Fitting Models, and Summarise Model Outputs
+#' Prepare Modelling Data, Fit Models, and Summarise Model Outputs
 #'
 #' Orchestrates the end-to-end species distribution modelling (SDM) workflow.
-#' This includes preparing species data, downloading and preparing predictors
+#' This includes preparing occurrence data, downloading and preparing predictors
 #' (climate and land use), handling spatial sampling bias, variable selection
 #' (collinearity filtering via VIF), building spatial-blocks for
-#' cross-validation (CV), assembling modelling datasets, fitting multiple SDM
-#' methods with repetitions across CV folds, generating current and future
-#' projections, and producing comprehensive summaries at repetition, CV-fold,
+#' cross-validation (CV), assembling modelling datasets, fitting multiple SDMs
+#' using different methods with repetitions across CV folds, generating current and 
+#' future projections, and producing comprehensive summaries at repetition, CV-fold,
 #' and overall levels. All intermediate artefacts and summaries are saved to a
 #' structured output directory.
 #'
