@@ -31,14 +31,14 @@ remotes::install_github("MarinaGolivets/OneSDM", dependencies = TRUE)
 
 ## Dependencies
 
-The `OneSDM` package depends on several R packages for its
-functionality. Check the [`DESCRIPTION`](DESCRIPTION) file for a
-complete list of dependencies.
+The `OneSDM` package relies on several R packages to provide its full
+functionality. For a complete list of dependencies, please refer to the
+[`DESCRIPTION`](DESCRIPTION) file.
 
-The
+One of the key dependencies is the
 <a href="https://github.com/elgabbas/ecokit" target="_blank">`ecokit`</a>
-package is one of the key dependencies used for ecological data handling
-and analysis. Make sure to install/update it before using `OneSDM`:
+package, which is used for ecological data handling and analysis. Please
+ensure that it is installaled/updated before using `OneSDM`:
 
 ``` r
 if (!require("ecokit")) remotes::install_github("elgabbas/ecokit", dependencies = TRUE)
@@ -50,9 +50,9 @@ remotes::update_packages("ecokit")
 
 ## Contributing
 
-`OneSDM` is an open-source project and still in development stage. We
-welcome contributions from the community! If you encounter issues, have
-suggestions, or want to add new features, please:
+`OneSDM` is an open-source project and is still under active
+development. We welcome contributions from the community! If you
+encounter issues, have suggestions, or want to add new features, please:
 
 - **Report issues** or suggest features on the [GitHub issue
   tracker](https://github.com/MarinaGolivets/OneSDM/issues).
