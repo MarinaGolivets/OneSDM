@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_fit.R
 \name{process_models}
 \alias{process_models}
-\title{Prepare Modelling Data, Fitting Models, and Summarise Model Outputs}
+\title{Prepare Modelling Data, Fit Models, and Summarise Model Outputs}
 \usage{
 process_models(
   model_dir = NULL,
@@ -390,12 +390,12 @@ curves, and projections) per SDM method. Saved as an \code{RData} file under
 }
 \description{
 Orchestrates the end-to-end species distribution modelling (SDM) workflow.
-This includes preparing species data, downloading and preparing predictors
+This includes preparing occurrence data, downloading and preparing predictors
 (climate and land use), handling spatial sampling bias, variable selection
 (collinearity filtering via VIF), building spatial-blocks for
-cross-validation (CV), assembling modelling datasets, fitting multiple SDM
-methods with repetitions across CV folds, generating current and future
-projections, and producing comprehensive summaries at repetition, CV-fold,
+cross-validation (CV), assembling modelling datasets, fitting multiple SDMs
+using different methods with repetitions across CV folds, generating current and
+future projections, and producing comprehensive summaries at repetition, CV-fold,
 and overall levels. All intermediate artefacts and summaries are saved to a
 structured output directory.
 }
