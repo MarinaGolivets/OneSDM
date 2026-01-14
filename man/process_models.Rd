@@ -71,30 +71,31 @@ corresponding to approximate spatial resolutions of 5, 10, and 20 km (2.5,
 \item{verbose}{Logical. If \code{TRUE} (default), prints progress and information
 messages. Can be set via the "\code{onesdm_verbose}" option.}
 
-\item{easin_ids}{Character vector (Optional). One or more EASIN species IDs,
-each starting with "R" followed by five digits (e.g., "R00544"). Species
-IDs can be obtained from the \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website} by searching
-for a species and checking its "EASIN ID" in the species details section.
-When multiple IDs are provided, data are collated across all IDs. If \code{NULL}
-(default), the function attempts to retrieve IDs from the
-"\code{onesdm_easin_ids}" option and skips the EASIN download if no IDs are set.
-For more details, see \link{prepare_easin_data}.}
+\item{easin_ids}{\emph{(character)} A vector of one or more EASIN species IDs, each
+starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
+be obtained from the
+\href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website}
+by searching for a species and checking its EASIN ID in the species details
+section. When multiple IDs are provided, data are collated across all IDs.
+If \code{NULL}(default), the function attempts to retrieve IDs from the
+"\code{onesdm_easin_ids}" option option and skips the EASIN download if no IDs
+are found. See \link{prepare_easin_data} for details. Optional.}
 
-\item{gbif_ids}{Character or numeric (optional). A vector of one or more GBIF
-taxon keys. When multiple IDs are supplied, data are combined across all
-keys. If \code{NULL} (default), the function attempts to retrieve IDs from the
-"\code{onesdm_gbif_ids}" option. If no IDs are set, the GBIF download step is
+\item{gbif_ids}{\emph{(character or numeric)}. A vector of one or more GBIF
+taxon keys. When multiple IDs are supplied, data are combined across all keys.
+If \code{NULL} (default), the function attempts to retrieve IDs from the
+"\code{onesdm_gbif_ids}" option. If no IDs are found, the GBIF download step is
 skipped. To request data from GBIF, GBIF credentials must be set for the
-current session, otherwise an error will be raised. For more, see
-\link{prepare_gbif_data}, and this
+current session. See
 \href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{article}
-from \code{rgbif} R package documentation on how to set the GBIF credentials.}
+from \code{rgbif} R package documentation on how to set the GBIF credentials. See
+\link{prepare_gbif_data} for details. Optional.}
 
-\item{coordinates}{A data frame or matrix (optional). A user-supplied object
+\item{coordinates}{\emph{(data frame or matrix)}. A user-supplied object
 containing longitude and latitude values in two columns (in that order).
 Must have exactly two columns. If \code{NULL} (default), the function attempts
 to retrieve coordinates from the "\code{onesdm_coordinates}" option. See
-\code{\link[=prepare_user_data]{prepare_user_data()}} for details.}
+\code{\link[=prepare_user_data]{prepare_user_data()}} for details. Optional.}
 
 \item{climate_scenario, climate_model, climate_year}{Character vectors. Future
 climate scenario(s), model(s), and year(s). These three parameters control

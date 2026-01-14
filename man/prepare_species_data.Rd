@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_species.R
 \name{prepare_species_data}
 \alias{prepare_species_data}
-\title{Prepare Species Occurrence Data for SDM Modelling using OneSDM}
+\title{Prepare Species Occurrence Data for Species Distribution Modelling using OneSDM}
 \usage{
 prepare_species_data(
   easin_ids = NULL,
@@ -21,36 +21,38 @@ prepare_species_data(
 )
 }
 \arguments{
-\item{easin_ids}{Character vector (Optional). One or more EASIN species IDs,
-each starting with "R" followed by five digits (e.g., "R00544"). Species
-IDs can be obtained from the \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website} by searching
-for a species and checking its "EASIN ID" in the species details section.
-When multiple IDs are provided, data are collated across all IDs. If \code{NULL}
-(default), the function attempts to retrieve IDs from the
-"\code{onesdm_easin_ids}" option and skips the EASIN download if no IDs are set.
-For more details, see \link{prepare_easin_data}.}
+\item{easin_ids}{\emph{(character)} A vector of one or more EASIN species IDs, each
+starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
+be obtained from the
+\href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website}
+by searching for a species and checking its EASIN ID in the species details
+section. When multiple IDs are provided, data are collated across all IDs.
+If \code{NULL}(default), the function attempts to retrieve IDs from the
+"\code{onesdm_easin_ids}" option option and skips the EASIN download if no IDs
+are found. See \link{prepare_easin_data} for details. Optional.}
 
-\item{gbif_ids}{Character or numeric (optional). A vector of one or more GBIF
-taxon keys. When multiple IDs are supplied, data are combined across all
-keys. If \code{NULL} (default), the function attempts to retrieve IDs from the
-"\code{onesdm_gbif_ids}" option. If no IDs are set, the GBIF download step is
+\item{gbif_ids}{\emph{(character or numeric)}. A vector of one or more GBIF
+taxon keys. When multiple IDs are supplied, data are combined across all keys.
+If \code{NULL} (default), the function attempts to retrieve IDs from the
+"\code{onesdm_gbif_ids}" option. If no IDs are found, the GBIF download step is
 skipped. To request data from GBIF, GBIF credentials must be set for the
-current session, otherwise an error will be raised. For more, see
-\link{prepare_gbif_data}, and this
+current session. See
 \href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{article}
-from \code{rgbif} R package documentation on how to set the GBIF credentials.}
+from \code{rgbif} R package documentation on how to set the GBIF credentials. See
+\link{prepare_gbif_data} for details. Optional.}
 
-\item{coordinates}{A data frame or matrix (optional). A user-supplied object
+\item{coordinates}{\emph{(data frame or matrix)}. A user-supplied object
 containing longitude and latitude values in two columns (in that order).
 Must have exactly two columns. If \code{NULL} (default), the function attempts
 to retrieve coordinates from the "\code{onesdm_coordinates}" option. See
-\code{\link[=prepare_user_data]{prepare_user_data()}} for details.}
+\code{\link[=prepare_user_data]{prepare_user_data()}} for details. Optional.}
 
-\item{model_dir}{Character. Directory path where model outputs will be saved.
-Can be set via the "\code{onesdm_model_dir}" option. A subdirectory \code{data} will
-be created within this directory to store processed species data. A
-separate directory is expected in case of modelling multiple species,
-otherwise data files may be overwritten or mixed up. Default is \code{NULL}.}
+\item{model_dir}{\emph{(character)}.Path to the directory where model outputs
+will be saved. A subdirectory named \code{data} is automatically created within this
+directory to store processed species data. When modelling multiple species,
+it is recommended to use a separate directory for each run to avoid overwriting
+or mixing data files. This path can also be set via the "\code{onesdm_model_dir}"
+option.  Default is \code{NULL}. \strong{Required}.}
 
 \item{climate_dir}{Character. Directory path for climate data files. Can be
 set via the "\code{onesdm_climate_dir}" option. This directory is used to load
@@ -100,13 +102,13 @@ file ("\verb{species_data_r_<resolution>_km_PA.tif}") saved in the "\code{data}"
 subdirectory of "\code{model_dir}".
 }
 \description{
-This function prepares species occurrence data from multiple
-sources (GBIF, EASIN, and user-provided coordinates) for species
-distribution modelling. It processes, validates, rasterizes the data, and
-optionally excludes spatial outliers and specified geographic extents.
-Internally, the function uses the \code{\link[=prepare_gbif_data]{prepare_gbif_data()}},
-\code{\link[=prepare_easin_data]{prepare_easin_data()}}, and \code{\link[=prepare_user_data]{prepare_user_data()}} functions to retrieve and
-process data from each source.
+This function prepares species occurrence data from one or more
+sources—GBIF, EASIN, and user-provided data sets—for species distribution modelling.
+It handles downloading, validating, integrating, and rasterising the data.
+Optional steps include excluding specified geographic areas and filtering spatial
+outliers. Internally, the function relies on \code{\link[=prepare_gbif_data]{prepare_gbif_data()}},
+\code{\link[=prepare_easin_data]{prepare_easin_data()}}, and \code{\link[=prepare_user_data]{prepare_user_data()}} to retrieve and process data
+from each respective source.
 }
 \details{
 \itemize{
