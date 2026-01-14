@@ -3,22 +3,13 @@
 #' Prepare Species Occurrence Data for Species Distribution Modelling using OneSDM
 #'
 #' @description This function prepares species occurrence data from one or more
-#' sources—GBIF, EASIN, and user-provided data sets—for species distribution modelling.
+#' sources — GBIF, EASIN, and user-provided data sets — for species distribution modelling.
 #' It handles downloading, validating, integrating, and rasterising the data.
 #' Optional steps include excluding specified geographic areas and filtering spatial
 #' outliers. Internally, the function relies on [prepare_gbif_data()],
 #'   [prepare_easin_data()], and [prepare_user_data()] to retrieve and process data
 #'   from each respective source.
 #'
-#' @param easin_ids \emph{(character)} A vector of one or more EASIN species IDs, each
-#'   starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
-#'   be obtained from the
-#'   [EASIN website](https://easin.jrc.ec.europa.eu/spexplorer/search/)
-#'   by searching for a species and checking its EASIN ID in the species details
-#'   section. When multiple IDs are provided, data are collated across all IDs.
-#'   If `NULL`(default), the function attempts to retrieve IDs from the
-#'   "`onesdm_easin_ids`" option option and skips the EASIN download if no IDs
-#'   are found. See [prepare_easin_data] for details. Optional.
 #' @param gbif_ids \emph{(character or numeric)}. A vector of one or more GBIF
 #'   taxon keys. When multiple IDs are supplied, data are combined across all keys.
 #'   If `NULL` (default), the function attempts to retrieve IDs from the
@@ -28,6 +19,15 @@
 #'   [article](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
 #'   from `rgbif` R package documentation on how to set the GBIF credentials. See
 #'   [prepare_gbif_data] for details. Optional.
+#'   #' @param easin_ids \emph{(character)} A vector of one or more EASIN species IDs,
+#'   each starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
+#'   be obtained from the
+#'   [EASIN website](https://easin.jrc.ec.europa.eu/spexplorer/search/)
+#'   by searching for a species and checking its EASIN ID in the species details
+#'   section. When multiple IDs are provided, data are collated across all IDs.
+#'   If `NULL`(default), the function attempts to retrieve IDs from the
+#'   "`onesdm_easin_ids`" option option and skips the EASIN download if no IDs
+#'   are found. See [prepare_easin_data] for details. Optional.
 #' @param coordinates \emph{(data frame or matrix)}. A user-supplied object
 #'   containing longitude and latitude values in two columns (in that order).
 #'   Must have exactly two columns. If `NULL` (default), the function attempts
@@ -81,7 +81,7 @@
 #' outputs, including raw data, processed data, rasterised data, and optional
 #' visualisations.
 #' The function performs the following steps:
-#'   - \strong{Validates input parameters}
+#'   - \strong{Validates input parameters}.
 #'   - \strong{Retrieves species data} from from GBIF, EASIN, and/or user-provided coordinates
 #'    using [prepare_gbif_data], [prepare_easin_data], and [prepare_user_data].
 #'     - At least one of `easin_ids`, `gbif_ids`, or `coordinates` must be
@@ -101,19 +101,19 @@
 #' Default argument values can also be set globally using the the [base::options]
 #' function, which allows users to avoid repeatedly specifying them in function calls.
 #' Corresponding options for the function arguments are:
-#'   - "`onesdm_easin_ids`": for the `easin_ids` argument.
-#'   - "`onesdm_gbif_ids`": for the `gbif_ids` argument.
-#'   - "`onesdm_coordinates`": for the `coordinates` argument.
-#'   - "`onesdm_model_dir`": for the `model_dir` argument.
-#'   - "`onesdm_climate_dir`": for the `climate_dir` argument.
-#'   - "`onesdm_resolution`": for the `resolution` argument.
-#'   - "`onesdm_verbose`": for the `verbose` argument.
-#'   - "`onesdm_exclude_extents`": for the `exclude_extents` argument.
-#'   - "`onesdm_species_name`": for the `species_name` argument.
-#'   - "`onesdm_outlier_dist_km`": for the `outlier_dist_km` argument.
-#'   - "`onesdm_outlier_resolution`": for the `outlier_resolution` argument.
-#'   - "`onesdm_outlier_n_cores`": for the `outlier_n_cores` argument.
-#'   - "`onesdm_plot_distribution`": for the `plot_distribution` argument.
+#'   - `onesdm_easin_ids`: for `easin_ids`
+#'   - `onesdm_gbif_ids`: for `gbif_ids`
+#'   - `onesdm_coordinates`: for `coordinates`
+#'   - `onesdm_model_dir`: for `model_dir`
+#'   - `onesdm_climate_dir`: for `climate_dir`
+#'   - `onesdm_resolution`: for `resolution`
+#'   - `onesdm_verbose`: for `verbose`
+#'   - `onesdm_exclude_extents`: for `exclude_extents`
+#'   - `onesdm_species_name`: for `species_name`
+#'   - `onesdm_outlier_dist_km`: for `outlier_dist_km`
+#'   - `onesdm_outlier_resolution`: for `outlier_resolution`
+#'   - `onesdm_outlier_n_cores`: for `outlier_n_cores`
+#'   - `onesdm_plot_distribution`: for `plot_distribution`
 #' These options work in addition to those used by the internal functions called
 #' within this wrapper.
 #'
@@ -143,8 +143,8 @@
 #' @author Ahmed El-Gabbas
 
 prepare_species_data <- function(
-  easin_ids = NULL,
   gbif_ids = NULL,
+  easin_ids = NULL,
   coordinates = NULL,
   model_dir = NULL,
   climate_dir = NULL,

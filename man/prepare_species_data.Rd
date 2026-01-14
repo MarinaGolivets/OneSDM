@@ -5,8 +5,8 @@
 \title{Prepare Species Occurrence Data for Species Distribution Modelling using OneSDM}
 \usage{
 prepare_species_data(
-  easin_ids = NULL,
   gbif_ids = NULL,
+  easin_ids = NULL,
   coordinates = NULL,
   model_dir = NULL,
   climate_dir = NULL,
@@ -21,16 +21,6 @@ prepare_species_data(
 )
 }
 \arguments{
-\item{easin_ids}{\emph{(character)} A vector of one or more EASIN species IDs, each
-starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
-be obtained from the
-\href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website}
-by searching for a species and checking its EASIN ID in the species details
-section. When multiple IDs are provided, data are collated across all IDs.
-If \code{NULL}(default), the function attempts to retrieve IDs from the
-"\code{onesdm_easin_ids}" option option and skips the EASIN download if no IDs
-are found. See \link{prepare_easin_data} for details. Optional.}
-
 \item{gbif_ids}{\emph{(character or numeric)}. A vector of one or more GBIF
 taxon keys. When multiple IDs are supplied, data are combined across all keys.
 If \code{NULL} (default), the function attempts to retrieve IDs from the
@@ -39,7 +29,16 @@ skipped. To request data from GBIF, GBIF credentials must be set for the
 current session. See
 \href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{article}
 from \code{rgbif} R package documentation on how to set the GBIF credentials. See
-\link{prepare_gbif_data} for details. Optional.}
+\link{prepare_gbif_data} for details. Optional.
+#' @param easin_ids \emph{(character)} A vector of one or more EASIN species IDs,
+each starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
+be obtained from the
+\href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website}
+by searching for a species and checking its EASIN ID in the species details
+section. When multiple IDs are provided, data are collated across all IDs.
+If \code{NULL}(default), the function attempts to retrieve IDs from the
+"\code{onesdm_easin_ids}" option option and skips the EASIN download if no IDs
+are found. See \link{prepare_easin_data} for details. Optional.}
 
 \item{coordinates}{\emph{(data frame or matrix)}. A user-supplied object
 containing longitude and latitude values in two columns (in that order).
@@ -106,7 +105,7 @@ subdirectory of "\code{model_dir}".
 }
 \description{
 This function prepares species occurrence data from one or more
-sources—GBIF, EASIN, and user-provided data sets—for species distribution modelling.
+sources — GBIF, EASIN, and user-provided data sets — for species distribution modelling.
 It handles downloading, validating, integrating, and rasterising the data.
 Optional steps include excluding specified geographic areas and filtering spatial
 outliers. Internally, the function relies on \code{\link[=prepare_gbif_data]{prepare_gbif_data()}},
@@ -119,7 +118,7 @@ outputs, including raw data, processed data, rasterised data, and optional
 visualisations.
 The function performs the following steps:
 \itemize{
-\item \strong{Validates input parameters}
+\item \strong{Validates input parameters}.
 \item \strong{Retrieves species data} from from GBIF, EASIN, and/or user-provided coordinates
 using \link{prepare_gbif_data}, \link{prepare_easin_data}, and \link{prepare_user_data}.
 \itemize{
@@ -143,19 +142,19 @@ Default argument values can also be set globally using the the \link[base:option
 function, which allows users to avoid repeatedly specifying them in function calls.
 Corresponding options for the function arguments are:
 }
-\item "\code{onesdm_easin_ids}": for the \code{easin_ids} argument.
-\item "\code{onesdm_gbif_ids}": for the \code{gbif_ids} argument.
-\item "\code{onesdm_coordinates}": for the \code{coordinates} argument.
-\item "\code{onesdm_model_dir}": for the \code{model_dir} argument.
-\item "\code{onesdm_climate_dir}": for the \code{climate_dir} argument.
-\item "\code{onesdm_resolution}": for the \code{resolution} argument.
-\item "\code{onesdm_verbose}": for the \code{verbose} argument.
-\item "\code{onesdm_exclude_extents}": for the \code{exclude_extents} argument.
-\item "\code{onesdm_species_name}": for the \code{species_name} argument.
-\item "\code{onesdm_outlier_dist_km}": for the \code{outlier_dist_km} argument.
-\item "\code{onesdm_outlier_resolution}": for the \code{outlier_resolution} argument.
-\item "\code{onesdm_outlier_n_cores}": for the \code{outlier_n_cores} argument.
-\item "\code{onesdm_plot_distribution}": for the \code{plot_distribution} argument.
+\item \code{onesdm_easin_ids}: for \code{easin_ids}
+\item \code{onesdm_gbif_ids}: for \code{gbif_ids}
+\item \code{onesdm_coordinates}: for \code{coordinates}
+\item \code{onesdm_model_dir}: for \code{model_dir}
+\item \code{onesdm_climate_dir}: for \code{climate_dir}
+\item \code{onesdm_resolution}: for \code{resolution}
+\item \code{onesdm_verbose}: for \code{verbose}
+\item \code{onesdm_exclude_extents}: for \code{exclude_extents}
+\item \code{onesdm_species_name}: for \code{species_name}
+\item \code{onesdm_outlier_dist_km}: for \code{outlier_dist_km}
+\item \code{onesdm_outlier_resolution}: for \code{outlier_resolution}
+\item \code{onesdm_outlier_n_cores}: for \code{outlier_n_cores}
+\item \code{onesdm_plot_distribution}: for \code{plot_distribution}
 These options work in addition to those used by the internal functions called
 within this wrapper.
 }

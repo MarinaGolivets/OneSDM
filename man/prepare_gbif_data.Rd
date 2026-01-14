@@ -2,38 +2,34 @@
 % Please edit documentation in R/data_gbif.R
 \name{prepare_gbif_data}
 \alias{prepare_gbif_data}
-\title{Download and Process GBIF Occurrence Data for Specified Taxa}
+\title{Download and Process GBIF Occurrence Data}
 \usage{
 prepare_gbif_data(
   gbif_ids = NULL,
   model_dir = NULL,
-  verbose = TRUE,
-  start_year = 1981L,
   r_environ = ".Renviron",
+  start_year = 1981L,
   boundaries = c(-180L, 180L, -90L, 90L),
   max_uncertainty = 10L,
   overwrite = FALSE,
-  return_data = FALSE
+  return_data = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{gbif_ids}{Character or numeric vector of GBIF taxon keys (as numeric
-strings) to query. If \code{NULL}, attempts to retrieve from the
-"\code{onesdm_gbif_ids}" option.}
+\item{gbif_ids}{\emph{(character or numeric)}. A vector of one or more GBIF
+taxon keys. When multiple IDs are supplied, data are combined across all keys.
+If \code{NULL} (default), the function attempts to retrieve IDs from the
+"\code{onesdm_gbif_ids}" option. \strong{Required}.}
 
-\item{model_dir}{Character. Path to the modelling directory where data and
-fitted models will be saved. This can not be \code{NULL} (default) and should be
-the same directory used for the same species data. This can also be set via
-the "\code{onesdm_model_dir}" option.}
+\item{model_dir}{\emph{(character)}. Path to the directory where model outputs
+will be saved. A subdirectory named \code{data} is automatically created within this
+directory to store processed species data. When modelling multiple species,
+it is recommended to use a separate directory for each run to avoid overwriting
+or mixing data files. This path can also be set via the "\code{onesdm_model_dir}"
+option.  Default is \code{NULL}. \strong{Required}.}
 
-\item{verbose}{Logical. If \code{TRUE} (default), prints progress and information
-messages. Can also be set via the "\code{onesdm_gbif_verbose}" option.}
-
-\item{start_year}{Integer. Include only records from this year onward. The
-default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
-Can also be set via the "\code{onesdm_start_year}" option.}
-
-\item{r_environ}{Character. Path to \code{.Renviron} file containing GBIF
+\item{r_environ}{\emph{(character)}. Path to \code{.Renviron} file containing GBIF
 credentials (default: ".Renviron"). The function uses
 \code{\link[ecokit:check_gbif]{ecokit::check_gbif()}} to validate the presence of GBIF credentials. If the
 \code{GBIF_USER}, \code{GBIF_PWD}, and \code{GBIF_EMAIL} environment variables are not set
@@ -44,20 +40,27 @@ this
 from \code{rgbif} documentation on how to set GBIF credentials. If \code{r_environ = NULL}, the \code{prepare_gbif_data} function attempts to retrieve path to
 \code{.Renviron} file from the "\code{onesdm_r_environ}" option.}
 
-\item{boundaries}{Numeric vector of length 4. Spatial boundaries as (left,
+\item{start_year}{\emph{(integer)}. Include only records from this year onward. The
+default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
+Can also be set via the "\code{onesdm_start_year}" option.}
+
+\item{boundaries}{\emph{(numeric vector of length 4)}. Spatial boundaries as (left,
 right, bottom, top) in decimal degrees (default: \code{c(-180L, 180L, -90L, 90L)} for global extent). Can also be set via "\code{onesdm_gbif_boundaries}"
 option.}
 
-\item{max_uncertainty}{Numeric. Maximum allowed spatial uncertainty in
+\item{max_uncertainty}{\emph{(numeric)}. Maximum allowed spatial uncertainty in
 kilometres. Default is \code{10L}. Can also be set via
 "\code{onesdm_gbif_max_uncertainty}" option.}
 
-\item{overwrite}{Logical. If \code{TRUE}, overwrite existing cleaned GBIF data
+\item{overwrite}{\emph{(logical)}. If \code{TRUE}, overwrites existing cleaned GBIF data
 file in the model directory. Default is \code{FALSE}. Can also be set via
 "\code{onesdm_gbif_overwrite}" option.}
 
-\item{return_data}{Logical. If \code{TRUE}, returns the processed GBIF data as an
+\item{return_data}{\emph{(logical)}. If \code{TRUE}, returns the processed GBIF data as an
 \code{sf} object in addition to saving it. Default is \code{FALSE}.}
+
+\item{verbose}{\emph{(logical)}. If \code{TRUE} (default), prints progress messages during
+execution. Can also be set via the "\code{onesdm_verbose}" option. Default is \code{"TRUE"}.}
 }
 \value{
 If \code{return_data} is \code{TRUE}, return the cleaned GBIF data as an \code{sf}
@@ -75,12 +78,12 @@ GBIF data files:
 }
 }
 \description{
-Downloads, filters, and processes occurrence data from the
+Downloads, filters, and processes occurrence records from the
 Global Biodiversity Information Facility (\href{https://gbif.org/}{GBIF}) for
-specified taxon keys (GBIF IDs). The function handles data request,
-download, cleaning, and conversion to an \code{sf} object, with options for
-spatial and temporal filtering, uncertainty thresholds, and boundary
-constraints.
+specified taxon keys (GBIF IDs). The function handles data requests,
+downloading, cleaning, and conversion to an \code{sf} object, with optional
+spatial and temporal filters, coordinate uncertainty thresholds, and
+geographic boundary constraints.
 }
 \details{
 The function performs the following steps:
