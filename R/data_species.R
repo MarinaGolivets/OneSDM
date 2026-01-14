@@ -77,34 +77,30 @@
 #' the "`onesdm_plot_distribution`" option.
 #'
 #' @details
-#' - The function creates a `data` subdirectory in `model_dir` and saves
-#' multiple outputs including raw data, processed data, rasterized data, and
-#' optional plots.
-#' - The function performs the following steps:
-#'   - Validates input parameters
-#'   - Retrieves species data from GBIF, EASIN, and/or user coordinates using
-#' [prepare_gbif_data], [prepare_easin_data], and [prepare_user_data].
-#' **Note** that
-#'     - at least one of `easin_ids`, `gbif_ids`, or `coordinates` must be
-#' provided.
-#'     - not all arguments of these functions can be set via this wrapper
-#' function. Please use respective options to set those arguments and refer to
-#' the respective function documentation for details.
-#'
-#'   - Merges data from all sources
-#'   - Optionally removes spatial outliers based on nearest neighbour distances
-#'   - Rasterizes occurrence data to match the specified resolution
-#'   - Excludes specified geographic extents if provided
-#'   - Saves processed data and generates visualizations if requested. The map
-#' shows the rasterized species distribution overlaid on a world map. If
-#' `exclude_extents` is provided, these areas are highlighted on the map in red.
-#' If a specific extent is used to retrieve GBIF data (via the
-#' `onesdm_gbif_boundaries` option in [prepare_gbif_data]), it is also
-#' highlighted on the map in green
-#' - Function default arguments can be set globally using the [base::options]
-#' function. Users can set these options at the start of their R session to
-#' avoid repeatedly specifying them in function calls. The following options
-#' correspond to the function arguments:
+#' This function creates  a `data` subdirectory within `model_dir` saves multiple
+#' outputs, including raw data, processed data, rasterised data, and optional
+#' visualisations.
+#' The function performs the following steps:
+#'   - \strong{Validates input parameters}
+#'   - \strong{Retrieves species data} from from GBIF, EASIN, and/or user-provided coordinates
+#'    using [prepare_gbif_data], [prepare_easin_data], and [prepare_user_data].
+#'     - At least one of `easin_ids`, `gbif_ids`, or `coordinates` must be
+#'       provided.
+#'     - Not all arguments of these functions are exposed via this wrapper; use the
+#'       respective options and consult the function documentation for details.
+#'   - \strong{Merges data} from all sources.
+#'   - \strong{Optionally removes spatial outliers} based on nearest neighbour distances.
+#'   - \strong{Rasterises occurrence data} to match the specified resolution.
+#'   - \strong{Excludes geographic extents} if specified.
+#'   - \strong{Saves processed data and generates visualisations} if requested.
+#'      - The map the rasterised species distribution overlaid on a world map.
+#'      - Excluded areas (from `exclude_extents`) are highlighted on the map in red.
+#'      - If a specific extent is used for GBIF data retrieval (via
+#'        `onesdm_gbif_boundaries` option in [prepare_gbif_data]), it is
+#'        highlighted in green.
+#' Default argument values can also be set globally using the the [base::options]
+#' function, which allows users to avoid repeatedly specifying them in function calls.
+#' Corresponding options for the function arguments are:
 #'   - "`onesdm_easin_ids`": for the `easin_ids` argument.
 #'   - "`onesdm_gbif_ids`": for the `gbif_ids` argument.
 #'   - "`onesdm_coordinates`": for the `coordinates` argument.
@@ -118,7 +114,8 @@
 #'   - "`onesdm_outlier_resolution`": for the `outlier_resolution` argument.
 #'   - "`onesdm_outlier_n_cores`": for the `outlier_n_cores` argument.
 #'   - "`onesdm_plot_distribution`": for the `plot_distribution` argument.
-#'   - This in addition to options used in the internal functions called.
+#' These options work in addition to those used by the internal functions called
+#' within this wrapper.
 #'
 #' @return Invisibly returns path to the final processed species data raster
 #'   file ("`species_data_r_<resolution>_km_PA.tif`") saved in the "`data`"

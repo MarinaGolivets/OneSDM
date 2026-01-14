@@ -114,39 +114,35 @@ outliers. Internally, the function relies on \code{\link[=prepare_gbif_data]{pre
 from each respective source.
 }
 \details{
+This function creates  a \code{data} subdirectory within \code{model_dir} saves multiple
+outputs, including raw data, processed data, rasterised data, and optional
+visualisations.
+The function performs the following steps:
 \itemize{
-\item The function creates a \code{data} subdirectory in \code{model_dir} and saves
-multiple outputs including raw data, processed data, rasterized data, and
-optional plots.
-\item The function performs the following steps:
+\item \strong{Validates input parameters}
+\item \strong{Retrieves species data} from from GBIF, EASIN, and/or user-provided coordinates
+using \link{prepare_gbif_data}, \link{prepare_easin_data}, and \link{prepare_user_data}.
 \itemize{
-\item Validates input parameters
-\item Retrieves species data from GBIF, EASIN, and/or user coordinates using
-\link{prepare_gbif_data}, \link{prepare_easin_data}, and \link{prepare_user_data}.
-\strong{Note} that
-\itemize{
-\item at least one of \code{easin_ids}, \code{gbif_ids}, or \code{coordinates} must be
+\item At least one of \code{easin_ids}, \code{gbif_ids}, or \code{coordinates} must be
 provided.
-\item not all arguments of these functions can be set via this wrapper
-function. Please use respective options to set those arguments and refer to
-the respective function documentation for details.
+\item Not all arguments of these functions are exposed via this wrapper; use the
+respective options and consult the function documentation for details.
 }
-\item Merges data from all sources
-\item Optionally removes spatial outliers based on nearest neighbour distances
-\item Rasterizes occurrence data to match the specified resolution
-\item Excludes specified geographic extents if provided
-\item Saves processed data and generates visualizations if requested. The map
-shows the rasterized species distribution overlaid on a world map. If
-\code{exclude_extents} is provided, these areas are highlighted on the map in red.
-If a specific extent is used to retrieve GBIF data (via the
-\code{onesdm_gbif_boundaries} option in \link{prepare_gbif_data}), it is also
-highlighted on the map in green
-}
-\item Function default arguments can be set globally using the \link[base:options]{base::options}
-function. Users can set these options at the start of their R session to
-avoid repeatedly specifying them in function calls. The following options
-correspond to the function arguments:
+\item \strong{Merges data} from all sources.
+\item \strong{Optionally removes spatial outliers} based on nearest neighbour distances.
+\item \strong{Rasterises occurrence data} to match the specified resolution.
+\item \strong{Excludes geographic extents} if specified.
+\item \strong{Saves processed data and generates visualisations} if requested.
 \itemize{
+\item The map the rasterised species distribution overlaid on a world map.
+\item Excluded areas (from \code{exclude_extents}) are highlighted on the map in red.
+\item If a specific extent is used for GBIF data retrieval (via
+\code{onesdm_gbif_boundaries} option in \link{prepare_gbif_data}), it is
+highlighted in green.
+Default argument values can also be set globally using the the \link[base:options]{base::options}
+function, which allows users to avoid repeatedly specifying them in function calls.
+Corresponding options for the function arguments are:
+}
 \item "\code{onesdm_easin_ids}": for the \code{easin_ids} argument.
 \item "\code{onesdm_gbif_ids}": for the \code{gbif_ids} argument.
 \item "\code{onesdm_coordinates}": for the \code{coordinates} argument.
@@ -160,8 +156,8 @@ correspond to the function arguments:
 \item "\code{onesdm_outlier_resolution}": for the \code{outlier_resolution} argument.
 \item "\code{onesdm_outlier_n_cores}": for the \code{outlier_n_cores} argument.
 \item "\code{onesdm_plot_distribution}": for the \code{plot_distribution} argument.
-\item This in addition to options used in the internal functions called.
-}
+These options work in addition to those used by the internal functions called
+within this wrapper.
 }
 }
 \examples{
