@@ -47,7 +47,7 @@ Must have exactly two columns. If \code{NULL} (default), the function attempts
 to retrieve coordinates from the "\code{onesdm_coordinates}" option. See
 \code{\link[=prepare_user_data]{prepare_user_data()}} for details. Optional.}
 
-\item{model_dir}{\emph{(character)}.Path to the directory where model outputs
+\item{model_dir}{\emph{(character)}. Path to the directory where model outputs
 will be saved. A subdirectory named \code{data} is automatically created within this
 directory to store processed species data. When modelling multiple species,
 it is recommended to use a separate directory for each run to avoid overwriting
@@ -60,41 +60,44 @@ mask layers matching the specified resolution. The same directory should be
 used in case of modelling multiple species to ensure consistency. Default
 is \code{NULL}.}
 
-\item{resolution}{Numeric. Spatial resolution. valid values are 5, 10, or 20
-for resolutions of approximately 5, 10, and 20 km (2.5, 5, and 10
-arc-minutes) respectively. Can be set via the "\code{onesdm_resolution}" option.
-Default is \code{NULL}.}
+\item{resolution}{\emph{(numeric)}. Spatial resolution used to prepare data
+for analysis. Acceptable values are \strong{5, 10, or 20}, corresponding to
+approximate spatial resolutions of 5 km, 10 km, and 20 km (2.5, 5, and 10
+arc-minutes), respectively. This value can also be set via "\code{onesdm_resolution}"
+option. Default is \code{NULL}. \strong{Required}.}
 
-\item{verbose}{Logical. If \code{TRUE} (default), prints progress and information
-messages. Can be set via the "\code{onesdm_verbose}" option.}
+\item{verbose}{\emph{(logical)}. If \code{TRUE} (default), prints progress messages during
+execution. Can also be set via the "\code{onesdm_verbose}" option. Default is \code{"TRUE"}.}
 
-\item{exclude_extents}{List. A list of \code{SpatExtent} objects (created using
-\link[terra:ext]{terra::ext} function), defining geographic areas to exclude from the
-species data. Default is an empty list, meaning no areas are excluded. Can
-be set via the "\code{onesdm_exclude_extents}" option.}
+\item{exclude_extents}{\emph{(list)}. A list of \code{SpatExtent} objects (created with
+\link[terra:ext]{terra::ext} function) defining geographic areas to exclude from the data.
+An empty list (default) indicates that no areas are excluded. This argument can
+also be set via the "\code{onesdm_exclude_extents}" option. Optional.}
 
-\item{species_name}{Character. Name of the species for labelling outputs.
-This will not be used to retrieve data from \code{GBIF} or \code{EASIN}. Can be set
-via the "\code{onesdm_species_name}" option. Default is \code{"species"}.}
+\item{species_name}{\emph{(character)}. Name of the species used for labelling
+outputs, such as maps. This argument does \strong{not} affect data retrieval from
+\code{GBIF} or \code{EASIN}. Can be set via the "\code{onesdm_species_name}" option.
+Default is \code{"species"}.}
 
-\item{outlier_dist_km}{Numeric. Distance threshold in kilometres for
-identifying spatial outliers. If \code{0L} (default), no outlier detection is
-performed. Can be set via the "\code{onesdm_outlier_dist_km}" option. For more
-details, see \link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf}.}
+\item{outlier_dist_km}{\emph{(numeric)}. Distance threshold (in kilometres) used
+to identify spatial outliers. If set to \code{0L} (default), no outlier detection or
+filtering is applied. This value can also be set via the "\code{onesdm_outlier_dist_km}"
+option. See \link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf} for details. Optional.}
 
-\item{outlier_resolution}{Numeric. Spatial resolution for outlier detection
-calculations. Can be set via the "\code{onesdm_outlier_resolution}" option. Only
-used if \code{outlier_dist_km} is greater than 0. A coarser resolution can speed
-up calculations. See \link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf} for more details. Default is
-0.125.}
+\item{outlier_resolution}{\emph{(numeric)}. Spatial resolution (in degrees) used
+for outlier detection calculations. This parameter is only applied when
+\code{outlier_dist_km} is greater than 0. A coarser resolution can speed up computation
+at the cost of spatial precision. Can also be set via the "\code{onesdm_outlier_resolution}"
+option. See \link[ecokit:nearest_dist_sf]{ecokit::nearest_dist_sf} for details. Default is "\code{0.125}".}
 
-\item{outlier_n_cores}{Integer. Number of CPU cores to use for outlier
-detection. Can be set via the "\code{onesdm_outlier_n_cores}" option. Only used
-if \code{outlier_dist_km} is greater than 0. Default is \code{6L}.}
+\item{outlier_n_cores}{\emph{(integer)}. Number of CPU cores to use for parallel
+outlier detection. This parameter is only applied when \code{outlier_dist_km} is
+greater than 0. Can also be set via the "\code{onesdm_outlier_n_cores}" option.
+Default is \code{6L}.}
 
-\item{plot_distribution}{Logical. If \code{TRUE} (default), generates a JPEG map
-of species distribution. Can be set via the "\code{onesdm_plot_distribution}"
-option.}
+\item{plot_distribution}{\emph{(logical)}. If \code{TRUE} (default), generates and
+saves a JPEG map of the final species distribution data. Can also be set via
+the "\code{onesdm_plot_distribution}" option.}
 }
 \value{
 Invisibly returns path to the final processed species data raster

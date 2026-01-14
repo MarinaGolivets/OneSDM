@@ -68,8 +68,8 @@ corresponding to approximate spatial resolutions of 5, 10, and 20 km (2.5,
 5, and 10 arc-minutes) respectively. This value can also be set via the
 "\code{onesdm_resolution}" option.}
 
-\item{verbose}{Logical. If \code{TRUE} (default), prints progress and information
-messages. Can be set via the "\code{onesdm_verbose}" option.}
+\item{verbose}{\emph{(logical)}. If \code{TRUE} (default), prints progress messages during
+execution. Can also be set via the "\code{onesdm_verbose}" option. Default is \code{"TRUE"}.}
 
 \item{easin_ids}{\emph{(character)} A vector of one or more EASIN species IDs, each
 starting with "R" followed by five digits (e.g., "R00544"). Species IDs can

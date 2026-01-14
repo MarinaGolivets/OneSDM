@@ -33,7 +33,7 @@
 #'   Must have exactly two columns. If `NULL` (default), the function attempts
 #'   to retrieve coordinates from the "`onesdm_coordinates`" option. See
 #'   [prepare_user_data()] for details. Optional.
-#' @param model_dir \emph{(character)}.Path to the directory where model outputs
+#' @param model_dir \emph{(character)}. Path to the directory where model outputs
 #'   will be saved. A subdirectory named `data` is automatically created within this
 #'   directory to store processed species data. When modelling multiple species,
 #'   it is recommended to use a separate directory for each run to avoid overwriting
@@ -44,34 +44,37 @@
 #'   mask layers matching the specified resolution. The same directory should be
 #'   used in case of modelling multiple species to ensure consistency. Default
 #'   is `NULL`.
-#' @param resolution Numeric. Spatial resolution. valid values are 5, 10, or 20
-#'   for resolutions of approximately 5, 10, and 20 km (2.5, 5, and 10
-#'   arc-minutes) respectively. Can be set via the "`onesdm_resolution`" option.
-#'   Default is `NULL`.
-#' @param verbose Logical. If `TRUE` (default), prints progress and information
-#'   messages. Can be set via the "`onesdm_verbose`" option.
-#' @param exclude_extents List. A list of `SpatExtent` objects (created using
-#'   [terra::ext] function), defining geographic areas to exclude from the
-#'   species data. Default is an empty list, meaning no areas are excluded. Can
-#'   be set via the "`onesdm_exclude_extents`" option.
-#' @param species_name Character. Name of the species for labelling outputs.
-#'   This will not be used to retrieve data from `GBIF` or `EASIN`. Can be set
-#'   via the "`onesdm_species_name`" option. Default is `"species"`.
-#' @param outlier_dist_km Numeric. Distance threshold in kilometres for
-#'   identifying spatial outliers. If `0L` (default), no outlier detection is
-#'   performed. Can be set via the "`onesdm_outlier_dist_km`" option. For more
-#'   details, see [ecokit::nearest_dist_sf].
-#' @param outlier_resolution Numeric. Spatial resolution for outlier detection
-#'   calculations. Can be set via the "`onesdm_outlier_resolution`" option. Only
-#'   used if `outlier_dist_km` is greater than 0. A coarser resolution can speed
-#'   up calculations. See [ecokit::nearest_dist_sf] for more details. Default is
-#'   0.125.
-#' @param outlier_n_cores Integer. Number of CPU cores to use for outlier
-#'   detection. Can be set via the "`onesdm_outlier_n_cores`" option. Only used
-#'   if `outlier_dist_km` is greater than 0. Default is `6L`.
-#' @param plot_distribution Logical. If `TRUE` (default), generates a JPEG map
-#'   of species distribution. Can be set via the "`onesdm_plot_distribution`"
-#'   option.
+#' @param resolution \emph{(numeric)}. Spatial resolution used to prepare data
+#'   for analysis. Acceptable values are \strong{5, 10, or 20}, corresponding to
+#'   approximate spatial resolutions of 5 km, 10 km, and 20 km (2.5, 5, and 10
+#'   arc-minutes), respectively. This value can also be set via "`onesdm_resolution`"
+#'   option. Default is `NULL`. \strong{Required}.
+#' @param verbose \emph{(logical)}. If `TRUE` (default), prints progress messages during
+#'   execution. Can also be set via the "`onesdm_verbose`" option. Default is `"TRUE"`.
+#' @param exclude_extents \emph{(list)}. A list of `SpatExtent` objects (created with
+#'   [terra::ext] function) defining geographic areas to exclude from the data.
+#'   An empty list (default) indicates that no areas are excluded. This argument can
+#'   also be set via the "`onesdm_exclude_extents`" option. Optional.
+#' @param species_name \emph{(character)}. Name of the species used for labelling
+#'   outputs, such as maps. This argument does \strong{not} affect data retrieval from
+#'   `GBIF` or `EASIN`. Can be set via the "`onesdm_species_name`" option.
+#'   Default is `"species"`.
+#' @param outlier_dist_km \emph{(numeric)}. Distance threshold (in kilometres) used
+#'   to identify spatial outliers. If set to `0L` (default), no outlier detection or
+#'   filtering is applied. This value can also be set via the "`onesdm_outlier_dist_km`"
+#'   option. See [ecokit::nearest_dist_sf] for details. Optional.
+#' @param outlier_resolution \emph{(numeric)}. Spatial resolution (in degrees) used
+#'   for outlier detection calculations. This parameter is only applied when
+#'   `outlier_dist_km` is greater than 0. A coarser resolution can speed up computation
+#'   at the cost of spatial precision. Can also be set via the "`onesdm_outlier_resolution`"
+#'   option. See [ecokit::nearest_dist_sf] for details. Default is "`0.125`".
+#' @param outlier_n_cores \emph{(integer)}. Number of CPU cores to use for parallel
+#'   outlier detection. This parameter is only applied when `outlier_dist_km` is
+#'   greater than 0. Can also be set via the "`onesdm_outlier_n_cores`" option.
+#'   Default is `6L`.
+#' @param plot_distribution \emph{(logical)}. If `TRUE` (default), generates and
+#' saves a JPEG map of the final species distribution data. Can also be set via
+#' the "`onesdm_plot_distribution`" option.
 #'
 #' @details
 #' - The function creates a `data` subdirectory in `model_dir` and saves
@@ -163,16 +166,16 @@ prepare_species_data <- function(
   # Check inputs ------
   # # ********************************************************************** #
 
-  easin_ids <- ecokit::assign_from_options(
-    easin_ids,
-    "onesdm_easin_ids",
-    "character",
-    allow_null = TRUE
-  )
   gbif_ids <- ecokit::assign_from_options(
     gbif_ids,
     "onesdm_gbif_ids",
     c("numeric", "character", "integer"),
+    allow_null = TRUE
+  )
+  easin_ids <- ecokit::assign_from_options(
+    easin_ids,
+    "onesdm_easin_ids",
+    "character",
     allow_null = TRUE
   )
   coordinates <- ecokit::assign_from_options(
@@ -225,18 +228,18 @@ prepare_species_data <- function(
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
 
-  ## easin_ids - gbif_ids - coordinates ----
+  ## gbif_ids - easin_ids - coordinates ----
 
   # at least one of easin_ids, gbif_ids, coordinates must be provided
-  if (is.null(easin_ids) && is.null(gbif_ids) && is.null(coordinates)) {
+  if (is.null(gbif_ids) && is.null(easin_ids) && is.null(coordinates)) {
     ecokit::stop_ctx(
       paste0(
-        "At least one of the arguments `easin_ids`, `gbif_ids`, ",
+        "At least one of the arguments `gbif_ids`, `easin_ids`, ",
         "or `coordinates` must be provided either directly or via the ",
         "corresponding options."
       ),
-      easin_ids = easin_ids,
       gbif_ids = gbif_ids,
+      easin_ids = easin_ids,
       coordinates = coordinates,
       cat_timestamp = FALSE
     )
