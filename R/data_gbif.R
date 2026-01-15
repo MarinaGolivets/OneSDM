@@ -9,44 +9,43 @@
 #'   spatial and temporal filters, coordinate uncertainty thresholds, and
 #'   geographic boundary constraints.
 #'
-#' @param gbif_ids \emph{(character or numeric)}. A vector of one or more GBIF
+#' @param gbif_ids \emph{(character or numeric)} A vector of one or more GBIF
 #'   taxon keys. When multiple IDs are supplied, data are combined across all keys.
 #'   If `NULL` (default), the function attempts to retrieve IDs from the
-#'   "`onesdm_gbif_ids`" option. \strong{Required}.
-#' @param model_dir \emph{(character)}. Path to the directory where model outputs
+#'   `onesdm_gbif_ids` option. \strong{Required}.
+#' @param model_dir \emph{(character)} Path to the directory where model outputs
 #'   will be saved. A subdirectory named `data` is automatically created within this
 #'   directory to store processed species data. When modelling multiple species,
 #'   it is recommended to use a separate directory for each run to avoid overwriting
-#'   or mixing data files. This path can also be set via the "`onesdm_model_dir`"
+#'   or mixing data files. This path can also be set via the `onesdm_model_dir`
 #'   option.  Default is `NULL`. \strong{Required}.
-#' @param r_environ \emph{(character)}. Path to `.Renviron` file containing GBIF
+#' @param r_environ \emph{(character)} Path to an `.Renviron` file containing GBIF
 #'   credentials (default: ".Renviron"). The function uses
-#'   [ecokit::check_gbif()] to validate the presence of GBIF credentials. If the
+#'   [ecokit::check_gbif()] to verify the presence of GBIF credentials. If the
 #'   `GBIF_USER`, `GBIF_PWD`, and `GBIF_EMAIL` environment variables are not set
-#'   in the current R session, `check_gbif` will attempt to read them from the
-#'   specified `.Renviron` file. See [ecokit::check_gbif()] for more details and
+#'   in the current R session, `check_gbif` attempts to read them from the
+#'   specified `.Renviron` file. See [ecokit::check_gbif()] and
 #'   this
-#'   [article](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
-#'   from `rgbif` documentation on how to set GBIF credentials. If `r_environ =
-#'   NULL`, the `prepare_gbif_data` function attempts to retrieve path to
-#'   `.Renviron` file from the "`onesdm_r_environ`" option.
-#' @param start_year \emph{(integer)}. Include only records from this year onward. The
+#'   [`rgbif` documentation](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
+#'   for details on setting GBIF credentials. If `r_environ = NULL`, the path to
+#'   the `.Renviron` file is retrieved from the "`onesdm_r_environ`" option.
+#' @param start_year \emph{(integer)} Include only records from this year onward. The
 #'   default is `1981L`, to match the temporal coverage of CHELSA climate data.
-#'   Can also be set via the "`onesdm_start_year`" option.
-#' @param boundaries \emph{(numeric vector of length 4)}. Spatial boundaries as (left,
-#'   right, bottom, top) in decimal degrees (default: `c(-180L, 180L, -90L,
-#'   90L)` for global extent). Can also be set via "`onesdm_gbif_boundaries`"
-#'   option.
-#' @param max_uncertainty \emph{(numeric)}. Maximum allowed spatial uncertainty in
+#'   Can also be set via the `onesdm_start_year` option.
+#' @param boundaries \emph{(numeric)} A vector of size 4 containing spatial boundaries
+#'   as (left, right, bottom, top) in decimal degrees (default:
+#'   `c(-180L, 180L, -90L, 90L)` for global extent). Can also be set via
+#'   `onesdm_gbif_boundaries` option.
+#' @param max_uncertainty \emph{(numeric)} Maximum allowed spatial uncertainty in
 #'   kilometres. Default is `10L`. Can also be set via
-#'   "`onesdm_gbif_max_uncertainty`" option.
-#' @param overwrite \emph{(logical)}. If `TRUE`, overwrites existing cleaned GBIF data
+#'   `onesdm_gbif_max_uncertainty` option.
+#' @param overwrite \emph{(logical)} If `TRUE`, overwrites existing cleaned GBIF data
 #'   file in the model directory. Default is `FALSE`. Can also be set via
-#'   "`onesdm_gbif_overwrite`" option.
-#' @param return_data \emph{(logical)}. If `TRUE`, returns the processed GBIF data as an
+#'   `onesdm_gbif_overwrite` option.
+#' @param return_data \emph{(logical)} If `TRUE`, returns the processed GBIF data as an
 #'   `sf` object in addition to saving it. Default is `FALSE`.
-#' @param verbose \emph{(logical)}. If `TRUE` (default), prints progress messages during
-#'   execution. Can also be set via the "`onesdm_verbose`" option. Default is `"TRUE"`.
+#' @param verbose \emph{(logical)} If `TRUE` (default), prints progress messages during
+#'   execution. Can also be set via the `onesdm_verbose` option. Default is `"TRUE"`.
 #'
 #' @details The function performs the following steps:
 #' - Validates input parameters and environment.
@@ -64,19 +63,14 @@
 #'   function. Users can set these options at the start of their R session to
 #'   avoid repeatedly specifying them in function calls. The following options
 #'   correspond to the function arguments:
-#'   - "`onesdm_gbif_ids`": Character vector of GBIF taxon keys.
-#'   - "`onesdm_model_dir`": Character. Path to the modelling directory.
-#'   - "`onesdm_gbif_verbose`": Logical. Verbosity of GBIF data extraction.
-#'   - "`onesdm_start_year`": Integer. Start year for GBIF records.
-#'   - "`onesdm_r_environ`": Character. Path to `.Renviron` file for GBIF
-#'   credentials.
-#'   - "`onesdm_gbif_boundaries`": Numeric vector of length 4 for spatial
-#'   boundaries of the data extraction in decimal degrees (left, right, bottom,
-#'   top).
-#'   - "`onesdm_gbif_max_uncertainty`": Numeric. Maximum allowed spatial
-#'   uncertainty in km.
-#'   - "`onesdm_gbif_overwrite`": Logical. Whether to overwrite existing GBIF
-#'   data.
+#'   - `onesdm_gbif_ids`: `gbif_ids`
+#'   - `onesdm_model_dir`: `model_dir`
+#'   - `onesdm_gbif_verbose`: `verbose`
+#'   - `onesdm_start_year`: `start_year`
+#'   - `onesdm_r_environ`: `r_environ`
+#'   - `onesdm_gbif_boundaries`: `boundaries`
+#'   - `onesdm_gbif_max_uncertainty`: `max_uncertainty`
+#'   - `onesdm_gbif_overwrite`: `overwrite`
 #' - Example of setting options:
 #'   ```r
 #'   options(
