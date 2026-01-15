@@ -792,11 +792,13 @@ prepare_gbif_data <- function(
       return(invisible(output_list))
     }
 
+    n_rows_discarded <- n_rows_raw - n_rows_cleaned
+
     ecokit::cat_time(
       paste0(
         "A total of ",
-        ecokit::format_number(n_rows_raw - n_rows_cleaned, underline = TRUE),
-        " observations were dicarded after data cleaning."
+        ecokit::format_number(n_rows_discarded, underline = TRUE),
+        " observations were discarded after cleaning the raw data."
       ),
       cat_timestamp = FALSE,
       level = 1L,
