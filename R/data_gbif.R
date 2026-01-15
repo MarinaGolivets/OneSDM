@@ -449,7 +449,8 @@ prepare_gbif_data <- function(
           cat_timestamp = FALSE,
           verbose = verbose
         )
-        return(invisible(ecokit::load_as(path_gbif_data)))
+        gbif_data <- ecokit::load_as(path_gbif_data)
+        return(gbif_data)
       } else {
         return(invisible(output_list))
       }
@@ -806,7 +807,7 @@ prepare_gbif_data <- function(
     )
 
     # # ||||||||||||||||||||||||||||||||||||||||| #
-    # Convert to sf object ------
+    # Convert to an sf object ------
     # # ||||||||||||||||||||||||||||||||||||||||| #
 
     gbif_data <- sf::st_as_sf(
@@ -864,7 +865,7 @@ prepare_gbif_data <- function(
   # # ********************************************************************** #
 
   if (return_data) {
-    return(invisible(gbif_data))
+    return(gbif_data)
   } else {
     return(invisible(output_list))
   }
