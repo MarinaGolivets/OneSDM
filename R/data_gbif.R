@@ -450,7 +450,7 @@ prepare_gbif_data <- function(
           verbose = verbose
         )
         gbif_data <- ecokit::load_as(path_gbif_data)
-        return(gbif_data)
+        return(invisible(gbif_data))
       } else {
         return(invisible(output_list))
       }
@@ -865,7 +865,7 @@ prepare_gbif_data <- function(
   # # ********************************************************************** #
 
   if (return_data) {
-    return(gbif_data)
+    return(invisible(gbif_data))
   } else {
     return(invisible(output_list))
   }
