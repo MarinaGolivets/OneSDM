@@ -40,9 +40,9 @@ this
 for details on setting GBIF credentials. If \code{r_environ = NULL}, the path to
 the \code{.Renviron} file is retrieved from the "\code{onesdm_r_environ}" option.}
 
-\item{start_year}{\emph{(integer)} Include only records from this year onward. The
-default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
-Can also be set via the \code{onesdm_start_year} option.}
+\item{start_year}{\emph{(integer)} The starting year from which records are included.
+The default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
+Can also be set via the "\code{onesdm_start_year}" option.}
 
 \item{boundaries}{\emph{(numeric)} A vector of size 4 containing spatial boundaries
 as (left, right, bottom, top) in decimal degrees (default:

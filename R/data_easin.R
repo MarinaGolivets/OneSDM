@@ -1,47 +1,53 @@
-#' @title Download and Clean EASIN Occurrence Data for Given Species IDs
+# prepare_easin_data -------
+#
+#' @title Download and Clean EASIN Occurrence Data
 #'
 #' @description Downloads, combines, cleans, and saves occurrence data for given
 #'   EASIN species IDs from the [EASIN](https://alien.jrc.ec.europa.eu/easin)
 #'   (European Alien Species Information Network) API.
 #'
-#' @param easin_ids Character vector. One or more EASIN species IDs. Each ID
-#'   should start with 'R' followed by five digits (e.g. "R00544"). This cannot
-#'   be `NULL`. Species IDs can be found on the [EASIN
-#'   website](https://easin.jrc.ec.europa.eu/spexplorer/search/) by searching
-#'   for a species and locating the "EASIN ID" in the species details section.
-#'   Can also be set via the "`onesdm_easin_ids`" option.
-#' @param model_dir Character. Path to the modelling directory where data and
-#'   fitted models will be saved. This cannot be `NULL` and must the same
-#'   directory used for the same species data. This can also be set via the
-#'   "`onesdm_model_dir`" option.
-#' @param timeout Integer. Timeout (in seconds) for each download attempt.
+#' @param easin_ids \emph{(character)} A vector of one or more EASIN species IDs,
+#'   each starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
+#'   be obtained from the
+#'   [EASIN website](https://easin.jrc.ec.europa.eu/spexplorer/search/)
+#'   by searching for a species and checking its EASIN ID in the species details
+#'   section. When multiple IDs are provided, data are collated across all IDs.
+#'   If `NULL`(default), the function attempts to retrieve IDs from the
+#'   "`onesdm_easin_ids`" option option and skips the EASIN download if no IDs
+#'   are found. \strong{Required}.
+#' @param model_dir \emph{(character)} Path to the directory where model outputs
+#'   will be saved. A subdirectory named `data` is automatically created within this
+#'   directory to store processed species data. When modelling multiple species,
+#'   it is recommended to use a separate directory for each run to avoid overwriting
+#'   or mixing data files. This path can also be set via the `onesdm_model_dir`
+#'   option.  Default is `NULL`.
+#' @param timeout \emph{(integer)} Timeout (in seconds) for each download attempt.
 #'   Default is `600L`. Can also be set via the "`onesdm_easin_timeout`" option.
-#'   Note: This timeout only applies to the download of each chunk, not the
-#'   entire download process.
-#' @param n_search Integer. Number of records to request per API call (chunk
+#'   Note: This timeout applies to each download chunk separately and does not
+#'   limit the total duration of the full download process.
+#' @param n_search \emph{(integer)} Number of records requested per API call (chunk
 #'   size). Default is `1000L`, which is the maximum allowed by the EASIN API.
 #'   Can also be set via the "`onesdm_easin_n_search`" option.
-#' @param n_attempts Integer. Maximum number of download attempts per chunk.
+#' @param n_attempts \emph{(integer)} Maximum number of download attempts per chunk.
 #'   Default is `10L`. Can also be set via the "`onesdm_easin_n_attempts`"
 #'   option.
-#' @param sleep_time Integer. Seconds to wait between chunk downloads. This
-#'   helps avoid overwhelming the EASIN server. Default is 5L. Can also be set
-#'   via the "`onesdm_easin_sleep_time`" option.
-#' @param exclude_gbif Logical. If `TRUE` (default), exclude
-#'   [GBIF](https://www.gbif.org/) — the Global Biodiversity Information
-#'   Facility — records from the download. Can also be set via the
-#'   "`onesdm_easin_exclude_gbif`" option.
-#' @param verbose Logical. If `TRUE` (default), print progress and information
-#'   messages, including the URL of the currently processed chunk. Can also be
-#'   set via the "`onesdm_easin_verbose`" option.
-#' @param start_year Integer. Include only records from this year onward. The
-#'   default is `1981L`, to match the temporal coverage of CHELSA climate data.
+#' @param sleep_time \emph{(integer)} Time to wait (in seconds) between successive
+#'   chunk downloads. This delay helps prevent overloading the EASIN server.
+#'   Default is `5L`. Can also be set via the "`onesdm_easin_sleep_time`" option.
+#' @param exclude_gbif \emph{(logical)} If `TRUE` (default),
+#'   [GBIF](https://www.gbif.org/) records are omitted from the download.
+#'   Can also be set via the "`onesdm_easin_exclude_gbif`" option.
+#' @param start_year \emph{(integer)} The starting year from which records are included.
+#'   The default is `1981L`, to match the temporal coverage of CHELSA climate data.
 #'   Can also be set via the "`onesdm_start_year`" option.
-#' @param overwrite Logical. If `TRUE`, overwrite existing cleaned EASIN data
-#'   file in the model directory. Default is `FALSE`. Can also be set via
+#' @param overwrite \emph{(logical)} If `TRUE`, overwrites existing cleaned EASIN data
+#'   in the modelling directory. Default is `FALSE`. Can also be set via
 #'   "`onesdm_easin_overwrite`" option.
-#' @param return_data Logical. If `TRUE`, returns the processed EASIN data as an
+#' @param return_data \emph{(logical)} If `TRUE`, returns the processed EASIN data as an
 #'   `sf` object in addition to saving it. Default is `FALSE`.
+#'   #' @param verbose \emph{(logical)} If `TRUE` (default), progress and information
+#'   messages are printed, including the URL of the currently processed chunk.
+#'   Can also be set via the "`onesdm_easin_verbose`" option.
 #'
 #' @details
 #' - The function supports chunked downloads, multiple attempts, and
@@ -118,29 +124,43 @@
 #'   <https://easin.jrc.ec.europa.eu/apixg/home/geoqueries/>
 
 prepare_easin_data <- function(
-    easin_ids = NULL,
-    model_dir = NULL,
-    timeout = 600L,
-    n_search = 1000L,
-    n_attempts = 10L,
-    sleep_time = 5L,
-    exclude_gbif = TRUE,
-    verbose = TRUE,
-    start_year = 1981L,
-    overwrite = FALSE,
-    return_data = FALSE
+  easin_ids = NULL,
+  model_dir = NULL,
+  timeout = 600L,
+  n_search = 1000L,
+  n_attempts = 10L,
+  sleep_time = 5L,
+  exclude_gbif = TRUE,
+  verbose = TRUE,
+  start_year = 1981L,
+  overwrite = FALSE,
+  return_data = FALSE
 ) {
   .start_easin_time <- lubridate::now(tzone = "CET")
 
   WKT <- Year <- EASINID <- Name <- SpeciesId <- longitude <- latitude <- #nolint
     point_coords <- n_dec_long <- n_dec_lat <- n_obs <- matched <-
-    species_fact_sheet <- matched_species <- NULL
+      species_fact_sheet <- matched_species <- NULL
 
   ecokit::check_packages(
     c(
-      "cli", "CoordinateCleaner", "crayon", "fs", "httr", "jsonlite",
-      "lubridate", "purrr", "RCurl", "sf", "stringr", "tibble", "tidyr",
-      "tidyselect", "withr"))
+      "cli",
+      "CoordinateCleaner",
+      "crayon",
+      "fs",
+      "httr",
+      "jsonlite",
+      "lubridate",
+      "purrr",
+      "RCurl",
+      "sf",
+      "stringr",
+      "tibble",
+      "tidyr",
+      "tidyselect",
+      "withr"
+    )
+  )
 
   # # ********************************************************************** #
   # Assigning function arguments from options if not provided directly ------
@@ -181,11 +201,6 @@ prepare_easin_data <- function(
     "onesdm_easin_exclude_gbif",
     "logical"
   )
-  verbose <- ecokit::assign_from_options(
-    verbose,
-    "onesdm_easin_verbose",
-    "logical"
-  )
   start_year <- ecokit::assign_from_options(
     start_year,
     "onesdm_start_year",
@@ -194,6 +209,11 @@ prepare_easin_data <- function(
   overwrite <- ecokit::assign_from_options(
     overwrite,
     "onesdm_easin_overwrite",
+    "logical"
+  )
+  verbose <- ecokit::assign_from_options(
+    verbose,
+    "onesdm_easin_verbose",
     "logical"
   )
 
@@ -208,7 +228,8 @@ prepare_easin_data <- function(
       cat_timestamp = FALSE
     )
   }
-  if (!all(stringr::str_detect(easin_ids, "^R\\d{5}$"))) { #nolint
+  if (!all(stringr::str_detect(easin_ids, "^R\\d{5}$"))) {
+    #nolint
     ecokit::stop_ctx(
       "All easin_ids must be in the format 'RXXXXX', where X is an integer.",
       easin_ids = easin_ids,
@@ -226,7 +247,6 @@ prepare_easin_data <- function(
   matched_taxa <- purrr::map_dfr(
     .x = easin_ids,
     .f = ~ {
-
       easin_taxon_only_url <- "https://easin.jrc.ec.europa.eu/apixg/catxg"
       # Extract species data as tibble
       url <- stringr::str_glue("{easin_taxon_only_url}/easinid/{.x}") #nolint
@@ -240,34 +260,46 @@ prepare_easin_data <- function(
             EASINID = .x,
             matched_species = NA_character_,
             species_fact_sheet = NA_character_
-          ))
+          )
+        )
       }
       taxa_data <- jsonlite::fromJSON(taxa_data, flatten = TRUE) %>%
         dplyr::tibble() %>%
         dplyr::mutate(matched_species = paste0(Name, " ", Authorship)) %>%
         dplyr::select(
-          tidyselect::all_of(c("Name", "EASINID", "matched_species")))
+          tidyselect::all_of(c("Name", "EASINID", "matched_species"))
+        )
 
       species_fact_sheet <- paste0(
-        "https://easin.jrc.ec.europa.eu/spexplorer/species/factsheet/", .x)
+        "https://easin.jrc.ec.europa.eu/spexplorer/species/factsheet/",
+        .x
+      )
       # Check that URL is valid
-      if (httr::http_error(species_fact_sheet) ||
-          !ecokit::check_url(species_fact_sheet)) {
+      if (
+        httr::http_error(species_fact_sheet) ||
+          !ecokit::check_url(species_fact_sheet)
+      ) {
         taxa_data <- dplyr::mutate(
-          taxa_data, species_fact_sheet = NA_character_)
+          taxa_data,
+          species_fact_sheet = NA_character_
+        )
       } else {
         taxa_data <- dplyr::mutate(
-          taxa_data, species_fact_sheet = species_fact_sheet)
+          taxa_data,
+          species_fact_sheet = species_fact_sheet
+        )
       }
       taxa_data
-    }) %>%
+    }
+  ) %>%
     dplyr::mutate(
       matched = paste0(
         EASINID,
         dplyr::if_else(
           is.na(Name),
           ": not matched with EASIN database",
-          paste0(": ", matched_species)),
+          paste0(": ", matched_species)
+        ),
 
         dplyr::if_else(
           is.na(species_fact_sheet),
@@ -279,7 +311,8 @@ prepare_easin_data <- function(
               url = species_fact_sheet
             ),
             ")"
-          ))
+          )
+        )
       )
     )
 
@@ -287,8 +320,10 @@ prepare_easin_data <- function(
     ecokit::cat_time(
       paste0(
         "All provided EASIN IDs were not matched with the EASIN database.\n",
-        "No EASIN data will be downloaded."),
-      cat_timestamp = FALSE, level = 1L
+        "No EASIN data will be downloaded."
+      ),
+      cat_timestamp = FALSE,
+      level = 1L
     )
     return(invisible(NULL))
   }
@@ -302,8 +337,10 @@ prepare_easin_data <- function(
       paste0(
         "Some provided EASIN ID(s) were not matched with the EASIN database.\n",
         "  >>>  These EASIN ID(s) will be skipped: ",
-        crayon::red(skipped_ids)),
-      cat_timestamp = FALSE, level = 1L
+        crayon::red(skipped_ids)
+      ),
+      cat_timestamp = FALSE,
+      level = 1L
     )
   }
 
@@ -312,7 +349,6 @@ prepare_easin_data <- function(
     dplyr::pull(matched) %>%
     paste(collapse = "\n  >>>  ") %>%
     ecokit::cat_time(cat_timestamp = FALSE, level = 1L)
-
 
   if (is.null(model_dir)) {
     ecokit::stop_ctx(
@@ -332,17 +368,26 @@ prepare_easin_data <- function(
       ecokit::cat_time(
         paste0(
           "\nEASIN data file already exists at: ",
-          crayon::blue(path_easin_data)),
-        cat_timestamp = FALSE, verbose = verbose)
+          crayon::blue(path_easin_data)
+        ),
+        cat_timestamp = FALSE,
+        verbose = verbose
+      )
       ecokit::cat_time(
         paste0(
           "  >>>  Use overwrite = TRUE to re-download ",
-          "and re-process the data."),
-        cat_timestamp = FALSE, verbose = verbose)
+          "and re-process the data."
+        ),
+        cat_timestamp = FALSE,
+        verbose = verbose
+      )
 
       if (return_data) {
         ecokit::cat_time(
-          "Loading EASIN data file", cat_timestamp = FALSE, verbose = verbose)
+          "Loading EASIN data file",
+          cat_timestamp = FALSE,
+          verbose = verbose
+        )
         return(invisible(ecokit::load_as(path_easin_data)))
       } else {
         return(invisible(path_easin_data))
@@ -351,9 +396,12 @@ prepare_easin_data <- function(
 
     ecokit::cat_time(
       crayon::blue(
-        "\nEASIN data file already exists and will be overwritten"),
-      cat_timestamp = FALSE, cat_bold = TRUE, verbose = verbose)
-
+        "\nEASIN data file already exists and will be overwritten"
+      ),
+      cat_timestamp = FALSE,
+      cat_bold = TRUE,
+      verbose = verbose
+    )
   }
 
   fs::dir_create(path_data)
@@ -371,19 +419,28 @@ prepare_easin_data <- function(
     )
     ecokit::cat_time(
       paste0(
-        crayon::italic("EASIN ID(s): "), crayon::blue(toString(easin_ids))),
+        crayon::italic("EASIN ID(s): "),
+        crayon::blue(toString(easin_ids))
+      ),
       level = 1L,
       cat_timestamp = FALSE
     )
     ecokit::cat_time(
       paste0(
-        crayon::italic("Modelling directory: "), crayon::blue(model_dir)),
-      level = 1L, cat_timestamp = FALSE)
+        crayon::italic("Modelling directory: "),
+        crayon::blue(model_dir)
+      ),
+      level = 1L,
+      cat_timestamp = FALSE
+    )
     ecokit::cat_time(
       paste0(
         crayon::italic("Modelling directory (absolute): "),
-        crayon::blue(fs::path_abs(model_dir))),
-      level = 1L, cat_timestamp = FALSE)
+        crayon::blue(fs::path_abs(model_dir))
+      ),
+      level = 1L,
+      cat_timestamp = FALSE
+    )
     ecokit::cat_time(
       paste0(crayon::italic("Timeout: "), crayon::blue(timeout)),
       level = 1L,
@@ -392,14 +449,16 @@ prepare_easin_data <- function(
     ecokit::cat_time(
       paste0(
         crayon::italic("Number of search results per chunk: "),
-        ecokit::format_number(n_search)),
+        ecokit::format_number(n_search)
+      ),
       level = 1L,
       cat_timestamp = FALSE
     )
     ecokit::cat_time(
       paste0(
         crayon::italic("Number of download attempts: "),
-        ecokit::format_number(n_attempts)),
+        ecokit::format_number(n_attempts)
+      ),
       level = 1L,
       cat_timestamp = FALSE
     )
@@ -425,13 +484,18 @@ prepare_easin_data <- function(
     )
     ecokit::cat_time(
       paste0(
-        crayon::italic("Return processed data: "), crayon::blue(return_data)),
+        crayon::italic("Return processed data: "),
+        crayon::blue(return_data)
+      ),
       level = 1L,
       cat_timestamp = FALSE
     )
     ecokit::cat_time(
       "\nExtracting EASIN data",
-      cat_timestamp = FALSE, cat_bold = TRUE, cat_red = TRUE)
+      cat_timestamp = FALSE,
+      cat_bold = TRUE,
+      cat_red = TRUE
+    )
   }
 
   # Temporarily set download time out only within the function
@@ -444,7 +508,6 @@ prepare_easin_data <- function(
   file_data_raw <- fs::path(path_data, "easin_data_raw.RData")
 
   if (!ecokit::check_data(file_data_raw, warning = FALSE) || overwrite) {
-
     # Download EASIN data for each provided EASIN ID
     easin_data <- purrr::map_dfr(
       .x = easin_ids,
@@ -463,7 +526,8 @@ prepare_easin_data <- function(
       ecokit::cat_time(
         "\nNo EASIN data were downloaded for the provided EASIN IDs.",
         cat_timestamp = FALSE,
-        verbose = verbose)
+        verbose = verbose
+      )
 
       if (return_data) {
         return(tibble::tibble())
@@ -475,11 +539,15 @@ prepare_easin_data <- function(
     # Save raw EASIN data before filtering
     ecokit::cat_time(
       paste0("Saving raw EASIN data to: `", crayon::blue(file_data_raw), "`"),
-      cat_timestamp = FALSE, verbose = verbose, level = 1L)
+      cat_timestamp = FALSE,
+      verbose = verbose,
+      level = 1L
+    )
     ecokit::save_as(
-      object = easin_data, object_name = "easin_data_raw",
-      out_path = file_data_raw)
-
+      object = easin_data,
+      object_name = "easin_data_raw",
+      out_path = file_data_raw
+    )
   } else {
     easin_data <- ecokit::load_as(file_data_raw)
   }
@@ -489,8 +557,12 @@ prepare_easin_data <- function(
   # # ********************************************************************** #
 
   ecokit::cat_time(
-    "\nCleaning EASIN data", cat_timestamp = FALSE,
-    cat_bold = TRUE, cat_red = TRUE, verbose = verbose)
+    "\nCleaning EASIN data",
+    cat_timestamp = FALSE,
+    cat_bold = TRUE,
+    cat_red = TRUE,
+    verbose = verbose
+  )
 
   n_rows_raw <- nrow(easin_data)
 
@@ -500,7 +572,9 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0("Discarding empty coordinates and data older than ", start_year),
-    cat_timestamp = FALSE, verbose = verbose)
+    cat_timestamp = FALSE,
+    verbose = verbose
+  )
 
   easin_data <- easin_data %>%
     dplyr::mutate(Year = as.integer(Year)) %>%
@@ -510,7 +584,10 @@ prepare_easin_data <- function(
   if (n_rows_1 == 0L) {
     ecokit::cat_time(
       "No EASIN data were extracted after filtering.",
-      cat_timestamp = FALSE, level = 1L, verbose = verbose)
+      cat_timestamp = FALSE,
+      level = 1L,
+      verbose = verbose
+    )
 
     if (return_data) {
       return(tibble::tibble())
@@ -521,9 +598,16 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "Filtered out ", ecokit::format_number(n_rows_raw - n_rows_1),
-      " records with empty coordinates or older than ", start_year, "."),
-    cat_timestamp = FALSE, level = 1L, verbose = verbose)
+      "Filtered out ",
+      ecokit::format_number(n_rows_raw - n_rows_1),
+      " records with empty coordinates or older than ",
+      start_year,
+      "."
+    ),
+    cat_timestamp = FALSE,
+    level = 1L,
+    verbose = verbose
+  )
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   # Extracting coordinates from WKT strings and filtering observations without
@@ -533,8 +617,11 @@ prepare_easin_data <- function(
   ecokit::cat_time(
     paste0(
       "Extracting coordinates from WKT strings and filtering ",
-      "observations without coordinates"),
-    cat_timestamp = FALSE, verbose = verbose)
+      "observations without coordinates"
+    ),
+    cat_timestamp = FALSE,
+    verbose = verbose
+  )
 
   easin_data <- easin_data %>%
     dplyr::mutate(
@@ -568,7 +655,10 @@ prepare_easin_data <- function(
   if (n_rows_2 == 0L) {
     ecokit::cat_time(
       "No EASIN data were extracted after filtering.",
-      cat_timestamp = FALSE, level = 1L, verbose = verbose)
+      cat_timestamp = FALSE,
+      level = 1L,
+      verbose = verbose
+    )
 
     if (return_data) {
       return(tibble::tibble())
@@ -579,9 +669,14 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "filtered out ", ecokit::format_number(n_rows_1 - n_rows_2),
-      " records with invalid coordinates."),
-    cat_timestamp = FALSE, level = 1L, verbose = verbose)
+      "filtered out ",
+      ecokit::format_number(n_rows_1 - n_rows_2),
+      " records with invalid coordinates."
+    ),
+    cat_timestamp = FALSE,
+    level = 1L,
+    verbose = verbose
+  )
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   # Exclude observations with low coordinate precision
@@ -589,7 +684,9 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     "Exclude observations with low coordinate precision",
-    cat_timestamp = FALSE, verbose = verbose)
+    cat_timestamp = FALSE,
+    verbose = verbose
+  )
 
   easin_data <- easin_data %>%
     dplyr::mutate(
@@ -608,7 +705,10 @@ prepare_easin_data <- function(
   if (n_rows_3 == 0L) {
     ecokit::cat_time(
       "No EASIN data were extracted after filtering.",
-      cat_timestamp = FALSE, level = 1L, verbose = verbose)
+      cat_timestamp = FALSE,
+      level = 1L,
+      verbose = verbose
+    )
 
     if (return_data) {
       return(tibble::tibble())
@@ -619,9 +719,14 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "filtered out ", ecokit::format_number(n_rows_2 - n_rows_3),
-      " records with low spatial precision or equal longitude and latitude."),
-    cat_timestamp = FALSE, level = 1L, verbose = verbose)
+      "filtered out ",
+      ecokit::format_number(n_rows_2 - n_rows_3),
+      " records with low spatial precision or equal longitude and latitude."
+    ),
+    cat_timestamp = FALSE,
+    level = 1L,
+    verbose = verbose
+  )
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   # Further cleaning of EASIN data using CoordinateCleaner package
@@ -629,7 +734,9 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     "cleaning using `CoordinateCleaner` package",
-    cat_timestamp = FALSE, verbose = verbose)
+    cat_timestamp = FALSE,
+    verbose = verbose
+  )
 
   easin_data <- easin_data %>%
     # Clean coordinates further using CoordinateCleaner package
@@ -670,7 +777,10 @@ prepare_easin_data <- function(
   if (n_rows_4 == 0L) {
     ecokit::cat_time(
       "No EASIN data were extracted after filtering.",
-      cat_timestamp = FALSE, level = 1L, verbose = verbose)
+      cat_timestamp = FALSE,
+      level = 1L,
+      verbose = verbose
+    )
 
     if (return_data) {
       return(tibble::tibble())
@@ -681,9 +791,14 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "filtered out ", ecokit::format_number(n_rows_3 - n_rows_4),
-      " records using `CoordinateCleaner`."),
-    cat_timestamp = FALSE, level = 1L, verbose = verbose)
+      "filtered out ",
+      ecokit::format_number(n_rows_3 - n_rows_4),
+      " records using `CoordinateCleaner`."
+    ),
+    cat_timestamp = FALSE,
+    level = 1L,
+    verbose = verbose
+  )
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   # Converting to sf object
@@ -692,7 +807,10 @@ prepare_easin_data <- function(
   easin_data <- easin_data %>%
     # convert to sf object, while keeping original coordinates as columns
     sf::st_as_sf(
-      coords = c("longitude", "latitude"), crs = 4326L, remove = FALSE)
+      coords = c("longitude", "latitude"),
+      crs = 4326L,
+      remove = FALSE
+    )
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   # Printing summary of extracted EASIN data
@@ -708,10 +826,14 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "A total of ", ecokit::format_number(n_rows_4),
+      "A total of ",
+      ecokit::format_number(n_rows_4),
       " filtered observations were extracted for EASIN ID(s): ",
-      crayon::blue(n_obs_per_id)),
-    cat_timestamp = FALSE, verbose = verbose)
+      crayon::blue(n_obs_per_id)
+    ),
+    cat_timestamp = FALSE,
+    verbose = verbose
+  )
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
   # Saving EASIN data
@@ -719,8 +841,13 @@ prepare_easin_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "Saving EASIN data to: `", crayon::blue(path_easin_data), "`"),
-    cat_timestamp = FALSE, verbose = verbose)
+      "Saving EASIN data to: `",
+      crayon::blue(path_easin_data),
+      "`"
+    ),
+    cat_timestamp = FALSE,
+    verbose = verbose
+  )
   save(easin_data, file = path_easin_data)
 
   # # ********************************************************************** #
@@ -728,7 +855,9 @@ prepare_easin_data <- function(
 
   ecokit::cat_diff(
     init_time = .start_easin_time,
-    prefix = "\nExtracting EASIN data was finished in ", verbose = verbose)
+    prefix = "\nExtracting EASIN data was finished in ",
+    verbose = verbose
+  )
 
   # # ********************************************************************** #
   # # ********************************************************************** #
@@ -738,9 +867,7 @@ prepare_easin_data <- function(
   } else {
     return(invisible(path_easin_data))
   }
-
 }
-
 
 
 # Internal function to download EASIN chunk data
@@ -749,16 +876,15 @@ prepare_easin_data <- function(
 #' @keywords internal
 
 get_easin_internal <- function(
-    easin_id = NULL,
-    path_data = NULL,
-    timeout = 300L,
-    n_search = 1000L,
-    n_attempts = 10L,
-    sleep_time = 5L,
-    exclude_gbif = TRUE,
-    verbose = TRUE
+  easin_id = NULL,
+  path_data = NULL,
+  timeout = 300L,
+  n_search = 1000L,
+  n_attempts = 10L,
+  sleep_time = 5L,
+  exclude_gbif = TRUE,
+  verbose = TRUE
 ) {
-
   SpeciesId <- NULL #nolint
   ecokit::check_args(args_to_check = "easin_id", args_type = "character")
 
@@ -781,7 +907,7 @@ get_easin_internal <- function(
     if (exclude_gbif) {
       # `exclude/dps/1` to excludes GBIF observations
       url <- stringr::str_glue(
-        "{easin_url}/{easin_id}/exclude/dps/1/{skip}/{n_search}"  #nolint
+        "{easin_url}/{easin_id}/exclude/dps/1/{skip}/{n_search}" #nolint
       )
     } else {
       url <- stringr::str_glue("{easin_url}/{easin_id}/{skip}/{n_search}") #nolint
@@ -796,21 +922,33 @@ get_easin_internal <- function(
       ecokit::cat_time(
         paste0(
           cli::style_hyperlink(
-            text = crayon::blue(paste0("chunk ", chunk_n)), url = url),
-          " (attempt ", download_try, ")"),
-        level = 2L, cat_timestamp = FALSE, verbose = verbose)
+            text = crayon::blue(paste0("chunk ", chunk_n)),
+            url = url
+          ),
+          " (attempt ",
+          download_try,
+          ")"
+        ),
+        level = 2L,
+        cat_timestamp = FALSE,
+        verbose = verbose
+      )
 
       if (ecokit::check_data(chunk_file, warning = FALSE)) {
         ecokit::cat_time(
           "loading chunk data from disk",
-          level = 3L, cat_timestamp = FALSE, verbose = verbose)
+          level = 3L,
+          cat_timestamp = FALSE,
+          verbose = verbose
+        )
         easin_data_sub[[chunk_n]] <- chunk_data <- ecokit::load_as(chunk_file)
         break
       }
 
       chunk_data <- try(
         RCurl::getURL(url, .mapUnicode = FALSE, timeout = timeout),
-        silent = TRUE)
+        silent = TRUE
+      )
 
       if (inherits(chunk_data, "try-error")) {
         chunk_data <- tibble::tibble()
@@ -834,7 +972,10 @@ get_easin_internal <- function(
       if (inherits(chunk_data, "data.frame")) {
         easin_data_sub[[chunk_n]] <- chunk_data
         ecokit::save_as(
-          object = chunk_data, object_name = chunk_name, out_path = chunk_file)
+          object = chunk_data,
+          object_name = chunk_name,
+          out_path = chunk_file
+        )
         break
       }
     }
@@ -858,9 +999,15 @@ get_easin_internal <- function(
 
   ecokit::cat_time(
     paste0(
-      "A total of ", ecokit::format_number(nrow(easin_data_sub)),
-      " observations were extracted for EASIN ID: ", crayon::blue(easin_id)),
-    cat_timestamp = FALSE, level = 2L, verbose = verbose)
+      "A total of ",
+      ecokit::format_number(nrow(easin_data_sub)),
+      " observations were extracted for EASIN ID: ",
+      crayon::blue(easin_id)
+    ),
+    cat_timestamp = FALSE,
+    level = 2L,
+    verbose = verbose
+  )
 
   return(easin_data_sub)
 }

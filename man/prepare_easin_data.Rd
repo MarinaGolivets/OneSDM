@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_easin.R
 \name{prepare_easin_data}
 \alias{prepare_easin_data}
-\title{Download and Clean EASIN Occurrence Data for Given Species IDs}
+\title{Download and Clean EASIN Occurrence Data}
 \usage{
 prepare_easin_data(
   easin_ids = NULL,
@@ -19,53 +19,57 @@ prepare_easin_data(
 )
 }
 \arguments{
-\item{easin_ids}{Character vector. One or more EASIN species IDs. Each ID
-should start with 'R' followed by five digits (e.g. "R00544"). This cannot
-be \code{NULL}. Species IDs can be found on the \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website} by searching
-for a species and locating the "EASIN ID" in the species details section.
-Can also be set via the "\code{onesdm_easin_ids}" option.}
+\item{easin_ids}{\emph{(character)} A vector of one or more EASIN species IDs,
+each starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
+be obtained from the
+\href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website}
+by searching for a species and checking its EASIN ID in the species details
+section. When multiple IDs are provided, data are collated across all IDs.
+If \code{NULL}(default), the function attempts to retrieve IDs from the
+"\code{onesdm_easin_ids}" option option and skips the EASIN download if no IDs
+are found. \strong{Required}.}
 
-\item{model_dir}{Character. Path to the modelling directory where data and
-fitted models will be saved. This cannot be \code{NULL} and must the same
-directory used for the same species data. This can also be set via the
-"\code{onesdm_model_dir}" option.}
+\item{model_dir}{\emph{(character)} Path to the directory where model outputs
+will be saved. A subdirectory named \code{data} is automatically created within this
+directory to store processed species data. When modelling multiple species,
+it is recommended to use a separate directory for each run to avoid overwriting
+or mixing data files. This path can also be set via the \code{onesdm_model_dir}
+option.  Default is \code{NULL}.}
 
-\item{timeout}{Integer. Timeout (in seconds) for each download attempt.
+\item{timeout}{\emph{(integer)} Timeout (in seconds) for each download attempt.
 Default is \code{600L}. Can also be set via the "\code{onesdm_easin_timeout}" option.
-Note: This timeout only applies to the download of each chunk, not the
-entire download process.}
+Note: This timeout applies to each download chunk separately and does not
+limit the total duration of the full download process.}
 
-\item{n_search}{Integer. Number of records to request per API call (chunk
+\item{n_search}{\emph{(integer)} Number of records requested per API call (chunk
 size). Default is \code{1000L}, which is the maximum allowed by the EASIN API.
 Can also be set via the "\code{onesdm_easin_n_search}" option.}
 
-\item{n_attempts}{Integer. Maximum number of download attempts per chunk.
+\item{n_attempts}{\emph{(integer)} Maximum number of download attempts per chunk.
 Default is \code{10L}. Can also be set via the "\code{onesdm_easin_n_attempts}"
 option.}
 
-\item{sleep_time}{Integer. Seconds to wait between chunk downloads. This
-helps avoid overwhelming the EASIN server. Default is 5L. Can also be set
-via the "\code{onesdm_easin_sleep_time}" option.}
+\item{sleep_time}{\emph{(integer)} Time to wait (in seconds) between successive
+chunk downloads. This delay helps prevent overloading the EASIN server.
+Default is \code{5L}. Can also be set via the "\code{onesdm_easin_sleep_time}" option.}
 
-\item{exclude_gbif}{Logical. If \code{TRUE} (default), exclude
-\href{https://www.gbif.org/}{GBIF} — the Global Biodiversity Information
-Facility — records from the download. Can also be set via the
-"\code{onesdm_easin_exclude_gbif}" option.}
+\item{exclude_gbif}{\emph{(logical)} If \code{TRUE} (default),
+\href{https://www.gbif.org/}{GBIF} records are omitted from the download.
+Can also be set via the "\code{onesdm_easin_exclude_gbif}" option.}
 
-\item{verbose}{Logical. If \code{TRUE} (default), print progress and information
-messages, including the URL of the currently processed chunk. Can also be
-set via the "\code{onesdm_easin_verbose}" option.}
-
-\item{start_year}{Integer. Include only records from this year onward. The
-default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
+\item{start_year}{\emph{(integer)} The starting year from which records are included.
+The default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
 Can also be set via the "\code{onesdm_start_year}" option.}
 
-\item{overwrite}{Logical. If \code{TRUE}, overwrite existing cleaned EASIN data
-file in the model directory. Default is \code{FALSE}. Can also be set via
+\item{overwrite}{\emph{(logical)} If \code{TRUE}, overwrites existing cleaned EASIN data
+in the modelling directory. Default is \code{FALSE}. Can also be set via
 "\code{onesdm_easin_overwrite}" option.}
 
-\item{return_data}{Logical. If \code{TRUE}, returns the processed EASIN data as an
-\code{sf} object in addition to saving it. Default is \code{FALSE}.}
+\item{return_data}{\emph{(logical)} If \code{TRUE}, returns the processed EASIN data as an
+\code{sf} object in addition to saving it. Default is \code{FALSE}.
+#' @param verbose \emph{(logical)} If \code{TRUE} (default), progress and information
+messages are printed, including the URL of the currently processed chunk.
+Can also be set via the "\code{onesdm_easin_verbose}" option.}
 }
 \value{
 Invisibly returns the file path to the saved cleaned EASIN data

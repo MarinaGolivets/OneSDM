@@ -29,9 +29,9 @@
 #'   [`rgbif` documentation](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
 #'   for details on setting GBIF credentials. If `r_environ = NULL`, the path to
 #'   the `.Renviron` file is retrieved from the "`onesdm_r_environ`" option.
-#' @param start_year \emph{(integer)} Include only records from this year onward. The
-#'   default is `1981L`, to match the temporal coverage of CHELSA climate data.
-#'   Can also be set via the `onesdm_start_year` option.
+#' @param start_year \emph{(integer)} The starting year from which records are included.
+#'   The default is `1981L`, to match the temporal coverage of CHELSA climate data.
+#'   Can also be set via the "`onesdm_start_year`" option.
 #' @param boundaries \emph{(numeric)} A vector of size 4 containing spatial boundaries
 #'   as (left, right, bottom, top) in decimal degrees (default:
 #'   `c(-180L, 180L, -90L, 90L)` for global extent). Can also be set via
