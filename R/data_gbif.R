@@ -320,7 +320,7 @@ prepare_gbif_data <- function(
 
   if (verbose) {
     ecokit::cat_time(
-      crayon::italic("\nGBIF data extraction parameters:"),
+      crayon::italic("\nGBIF data extraction parameters"),
       cat_timestamp = FALSE,
       cat_bold = TRUE,
       cat_red = TRUE
@@ -403,7 +403,7 @@ prepare_gbif_data <- function(
       cat_timestamp = FALSE
     )
     ecokit::cat_time(
-      "\nExtracting GBIF data",
+      "\nGBIF data extraction",
       cat_timestamp = FALSE,
       cat_bold = TRUE,
       cat_red = TRUE
@@ -488,7 +488,7 @@ prepare_gbif_data <- function(
     .start_time_request <- lubridate::now(tzone = "CET")
 
     ecokit::cat_time(
-      "Requesting GBIF data (this may take some time, depending on the data volume)",
+      "Request GBIF data (this may take some time, depending on the data volume)",
       verbose = verbose,
       cat_timestamp = FALSE
     )
@@ -565,7 +565,7 @@ prepare_gbif_data <- function(
     save(gbif_status, file = fs::path(path_data, "gbif_status.RData"))
 
     ecokit::cat_time(
-      "Data are ready - status summary:",
+      "Data are ready for download",
       ... = "\n",
       level = 1L,
       verbose = verbose,
@@ -619,7 +619,7 @@ prepare_gbif_data <- function(
 
   if (!ecokit::check_data(path_gbif_data, warning = FALSE) || overwrite) {
     ecokit::cat_time(
-      "Preparing GBIF data as an `sf` object",
+      "\nPrepare GBIF data as an `sf` object",
       verbose = verbose,
       cat_timestamp = FALSE
     )
@@ -796,7 +796,7 @@ prepare_gbif_data <- function(
       paste0(
         "A total of ",
         ecokit::format_number(n_rows_cleaned, underline = TRUE),
-        " observations were kept after cleaning from the initial ",
+        " observations were kept after cleaning the initial ",
         ecokit::format_number(n_rows_raw, underline = TRUE),
         " observations."
       ),
@@ -821,7 +821,7 @@ prepare_gbif_data <- function(
     # # ||||||||||||||||||||||||||||||||||||||||| #
 
     ecokit::cat_time(
-      paste0("Saving GBIF data to: ", crayon::blue(path_gbif_data)),
+      paste0("Saving processed GBIF data to: ", crayon::blue(path_gbif_data)),
       verbose = verbose,
       level = 1L,
       cat_timestamp = FALSE
@@ -830,7 +830,7 @@ prepare_gbif_data <- function(
 
     ecokit::cat_diff(
       init_time = .start_time_download,
-      prefix = "\nDownloading GBIF data took ",
+      prefix = "Downloading GBIF data took ",
       verbose = verbose,
       level = 1L,
       cat_timestamp = FALSE
@@ -843,7 +843,7 @@ prepare_gbif_data <- function(
 
   ecokit::cat_diff(
     init_time = .start_gbif_time,
-    prefix = "\nExtracting GBIF data took ",
+    prefix = "Extracting GBIF data took ",
     verbose = verbose,
     level = 1L,
     cat_timestamp = FALSE
@@ -851,7 +851,7 @@ prepare_gbif_data <- function(
 
   ecokit::cat_time(
     paste0(
-      "A total of ",
+      "\nDONE! A total of ",
       ecokit::format_number(nrow(gbif_data), underline = TRUE),
       " filtered observations were extracted for GBIF ID(s): ",
       crayon::blue(toString(sort(unique(gbif_data$speciesKey))))
