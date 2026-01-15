@@ -697,7 +697,11 @@ prepare_gbif_data <- function(
         verbose = verbose
       )
       save(gbif_data, file = path_gbif_data)
-      return(invisible(output_list))
+      if (return_data) {
+        return(invisible(gbif_data))
+      } else {
+        return(invisible(output_list))
+      }
     }
 
     # # ||||||||||||||||||||||||||||||||||||||||| #
@@ -790,7 +794,11 @@ prepare_gbif_data <- function(
         verbose = verbose
       )
       save(gbif_data, file = path_gbif_data)
-      return(invisible(output_list))
+      if (return_data) {
+        return(invisible(gbif_data))
+      } else {
+        return(invisible(output_list))
+      }
     }
 
     n_rows_discarded <- n_rows_raw - n_rows_cleaned
