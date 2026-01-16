@@ -7,7 +7,7 @@
 #' (climate and land use), handling spatial sampling bias, variable selection
 #' (collinearity filtering via VIF), building spatial-blocks for
 #' cross-validation (CV), assembling modelling datasets, fitting multiple SDMs
-#' using different methods with repetitions across CV folds, generating current and 
+#' using different methods with repetitions across CV folds, generating current and
 #' future projections, and producing comprehensive summaries at repetition, CV-fold,
 #' and overall levels. All intermediate artefacts and summaries are saved to a
 #' structured output directory.
@@ -2302,6 +2302,7 @@ process_models <- function(
                 sdm_packages = sdm_packages, proj_mask_file = proj_mask_file),
               "The following object is masked from",
               "Attaching package: ", "Loading required package",
+              "Using formula.+ is deprecated",
               "Loaded ", "This version of "))
         })
     },

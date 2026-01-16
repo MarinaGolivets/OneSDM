@@ -841,6 +841,34 @@ fit_predict <- function(
       formula = model_formula,
       train = as.data.frame(train_data), test = as.data.frame(test_data))
 
+
+    # Adjust GAM settings based on data ------
+
+    # For GAM models fitted with small datasets, models may fail due to
+    # insufficient unique covariate combinations for the specified degrees of
+    # freedom (k). To address this, we check the minimum number of unique values
+    # across all predictors in the training data. If this number is less than
+    # 10, we reduce the k value in the GAM settings accordingly to prevent model
+    # fitting errors.
+    #
+    # This solves the following issue:
+    # https://github.com/MarinaGolivets/OneSDM/issues/6
+    #
+    # "Error in smooth.construct.tp.smooth.spec(object, dk$data, dk$knots) :
+    # A term has fewer unique covariate combinations than specified maximum
+    # degrees of freedom"
+
+    if (sdm_method == "gam") {
+      min_unique <- train_data %>%
+        dplyr::select(-tidyselect::all_of("species")) %>%
+        sapply(function(x) length(unique(x))) %>%
+        min()
+
+      if (min_unique < 10) {
+        sdm_setting$gam$k <- max(3, floor(min_unique / 3))
+      }
+    }
+
     # Model fitting ------
     fitted_m <- ecokit::quietly(
       sdm::sdm(
