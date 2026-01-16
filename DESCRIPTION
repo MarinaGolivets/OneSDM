@@ -7,7 +7,7 @@ Date: 2026-01-16
 Authors@R: c(
     person("Ahmed", "El-Gabbas", , "elgabbas@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2225-088X")),
-    person("Marina", "Golivetes", , "marina.golivetes@ufz.de", role = "aut",
+    person("Marina", "Golivetes", , "maryna.golivetes@ufz.de", role = "aut",
            comment = c(ORCID = "0000-0003-1278-2663"))
   )
 Maintainer: Ahmed El-Gabbas <elgabbas@outlook.com>
@@ -15,7 +15,7 @@ Description: Automated workflows for species distribution modelling under
     environmental change scenarios.
 License: MIT + file LICENSE
 URL: https://github.com/marinaGolivets/OneSDM
-BugReports: https://github.com/marinaGolivets/OneSDM/issues
+BugReports: https://github.com/MarinaGolivets/OneSDM/issues
 Depends: 
     magrittr (>= 2.0),
     R (>= 4.0.4)
