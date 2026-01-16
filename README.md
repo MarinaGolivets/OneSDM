@@ -38,7 +38,7 @@ functionality. For a complete list of dependencies, please refer to the
 One of the key dependencies is the
 <a href="https://github.com/elgabbas/ecokit" target="_blank">`ecokit`</a>
 package, which is used for ecological data handling and analysis. Please
-ensure that it is installaled/updated before using `OneSDM`:
+ensure that it is installed/updated before using `OneSDM`:
 
 ``` r
 if (!require("ecokit")) remotes::install_github("elgabbas/ecokit", dependencies = TRUE)

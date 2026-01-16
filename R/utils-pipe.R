@@ -28,5 +28,6 @@ NULL
 
   # Display the startup message
   packageStartupMessage(
-    "OneSDM v", package_version_info, " - Last updated on ", package_date_info)
+    "OneSDM v", package_version_info,
+    " - Last updated on ", package_date_info, "\n")
 }

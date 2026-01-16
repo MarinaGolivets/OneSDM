@@ -3,7 +3,7 @@ Package: OneSDM
 Title: Automated workflows for species distribution modelling under
     environmental change scenarios
 Version: 0.1.0
-Date: 2025-12-10
+Date: 2026-01-16
 Authors@R: c(
     person("Ahmed", "El-Gabbas", , "elgabbas@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2225-088X")),

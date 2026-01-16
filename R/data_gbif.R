@@ -252,14 +252,17 @@ prepare_gbif_data <- function(
   ## Check model_dir ------
   # # ||||||||||||||||||||||||||||||||||||||||| #
 
-  if (is.null(model_dir)) {
+  if (!is.character(model_dir) || length(model_dir) != 1L || is.na(model_dir)) {
     ecokit::stop_ctx(
-      paste0(
-        "The model_dir argument must be provided either directly or via the ",
-        "onesdm_model_dir option."
-      ),
+      "The `model_dir` argument must be a single character string.",
+      model_dir = model_dir,
       cat_timestamp = FALSE
     )
+  }
+
+  # Try to create the directory if it does not exist
+  if (!fs::dir_exists(model_dir)) {
+    fs::dir_create(model_dir)
   }
 
   # # ||||||||||||||||||||||||||||||||||||||||| #
@@ -379,7 +382,7 @@ prepare_gbif_data <- function(
     )
     ecokit::cat_time(
       paste0(
-        crayon::italic("Overwrite exisiting data: "),
+        crayon::italic("Overwrite existing data: "),
         crayon::blue(overwrite)
       ),
       level = 1L,

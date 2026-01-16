@@ -845,7 +845,8 @@ fit_predict <- function(
     fitted_m <- ecokit::quietly(
       sdm::sdm(
         formula = model_formula, data = sdm_data,
-        methods = sdm_method, modelSettings = sdm_setting))
+        methods = sdm_method, modelSettings = sdm_setting),
+      "Using formula.+ is deprecated")
 
     # Reduce models objects -------
     fitted_m <- reduce_sdm_formulas(obj = fitted_m)
@@ -898,7 +899,8 @@ fit_predict <- function(
                 terra::mask(pred_input_r[[1L]])
             }
             pred2 <- ecokit::quietly(
-              predict(object = fitted_m, newdata = pred_input_r)) %>%
+              predict(object = fitted_m, newdata = pred_input_r),
+              "Using formula.+ is deprecated") %>%
               stats::setNames(proj_name)
 
             rm(pred_input_r, proj_extent_r_0, envir = environment())
