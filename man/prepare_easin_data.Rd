@@ -25,8 +25,8 @@ be obtained from the
 \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website}
 by searching for a species and checking its EASIN ID in the species details
 section. When multiple IDs are provided, data are collated across all IDs.
-If \code{NULL}(default), the function attempts to retrieve IDs from the
-"\code{onesdm_easin_ids}" option option and skips the EASIN download if no IDs
+If \code{NULL} (default), the function attempts to retrieve IDs from the
+"\code{onesdm_easin_ids}" option and skips the EASIN download if no IDs
 are found. \strong{Required}.}
 
 \item{model_dir}{\emph{(character)} Path to the directory where model outputs
@@ -38,7 +38,7 @@ option.  Default is \code{NULL}.}
 
 \item{timeout}{\emph{(integer)} Timeout (in seconds) for each download attempt.
 Default is \code{600L}. Can also be set via the "\code{onesdm_easin_timeout}" option.
-Note: This timeout applies to each download chunk separately and does not
+This timeout applies to each download chunk separately and does not
 limit the total duration of the full download process.}
 
 \item{n_search}{\emph{(integer)} Number of records requested per API call (chunk
@@ -57,6 +57,10 @@ Default is \code{5L}. Can also be set via the "\code{onesdm_easin_sleep_time}" o
 \href{https://www.gbif.org/}{GBIF} records are omitted from the download.
 Can also be set via the "\code{onesdm_easin_exclude_gbif}" option.}
 
+\item{verbose}{\emph{(logical)} If \code{TRUE} (default), progress and information
+messages are printed, including the URL of the currently processed chunk.
+Can also be set via the "\code{onesdm_easin_verbose}" option.}
+
 \item{start_year}{\emph{(integer)} The starting year from which records are included.
 The default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
 Can also be set via the "\code{onesdm_start_year}" option.}
@@ -66,10 +70,7 @@ in the modelling directory. Default is \code{FALSE}. Can also be set via
 "\code{onesdm_easin_overwrite}" option.}
 
 \item{return_data}{\emph{(logical)} If \code{TRUE}, returns the processed EASIN data as an
-\code{sf} object in addition to saving it. Default is \code{FALSE}.
-#' @param verbose \emph{(logical)} If \code{TRUE} (default), progress and information
-messages are printed, including the URL of the currently processed chunk.
-Can also be set via the "\code{onesdm_easin_verbose}" option.}
+\code{sf} object in addition to saving it. Default is \code{FALSE}.}
 }
 \value{
 Invisibly returns the file path to the saved cleaned EASIN data
@@ -79,8 +80,8 @@ an \code{sf} object.
 }
 \description{
 Downloads, combines, cleans, and saves occurrence data for given
-EASIN species IDs from the \href{https://alien.jrc.ec.europa.eu/easin}{EASIN}
-(European Alien Species Information Network) API.
+EASIN species IDs from the \href{https://easin.jrc.ec.europa.eu/easin}{EASIN}
+(European Alien Species Information Network) Geo Database.
 }
 \details{
 \itemize{

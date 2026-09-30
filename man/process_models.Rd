@@ -164,16 +164,16 @@ screening (see below).
 multicollinearity screening. Predictors with VIF larger than this value are
 excluded. Default is \code{10}.
 \itemize{
-\item This argument refers to the \code{th} parameter of the \link[usdm:vif]{usdm::vifstep}
+\item This argument refers to the \code{th} parameter of the \link[usdm:vifstep]{usdm::vifstep}
 function. This can also be set via the "\code{onesdm_vif_th}" option.
 \item The function checks if the option "\code{onesdm_vif_sample}" is set in the
 current R session; if so, its value (numeric integer) is used as the
-\code{sample} argument of \link[usdm:vif]{usdm::vifstep}. This option controls the number of
+\code{sample} argument of \link[usdm:vifstep]{usdm::vifstep}. This option controls the number of
 random sample points drawn from the study area raster stack. If not set,
 the default value is used (5000).
 \item Similarly, if the option "\code{onesdm_vif_keep}" is set in the current R
 session, its value (a character vector of predictor names) is used as the
-\code{exclude} argument of \link[usdm:vif]{usdm::vifstep}. This option allows specifying
+\code{exclude} argument of \link[usdm:vifstep]{usdm::vifstep}. This option allows specifying
 predictors that should always be retained regardless of their VIF values.
 If not set, no predictors are forced to be kept. If a valid \code{bias_group} is
 provided, the corresponding \code{bias} predictor is always included in this
@@ -417,7 +417,7 @@ each requested scenario \eqn{\times} model \eqn{\times} year combination
 masks them to the study area.
 \item Optionally adds a sampling-effort (bias) predictor when \code{bias_group}
 is valid.
-\item Performs VIF-based predictor selection (using \link[usdm:vif]{usdm::vifstep}) and
+\item Performs VIF-based predictor selection (using \link[usdm:vifstep]{usdm::vifstep}) and
 excludes highly collinear variables. The \code{bias} predictor, if used, is
 always retained.
 \item Creates spatial cross-validation blocks either with a simple random-block

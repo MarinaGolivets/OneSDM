@@ -12,7 +12,7 @@ Automated workflows for species distribution modelling under environmental chang
 Useful links:
 \itemize{
   \item \url{https://github.com/marinaGolivets/OneSDM}
-  \item Report bugs at \url{https://github.com/marinaGolivets/OneSDM/issues}
+  \item Report bugs at \url{https://github.com/MarinaGolivets/OneSDM/issues}
 }
 
 }
@@ -21,7 +21,8 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Marina Golivetes \email{marina.golivetes@ufz.de} (\href{https://orcid.org/0000-0003-1278-2663}{ORCID})
+  \item Ahmed El-Gabbas \email{elgabbas@outlook.com} (\href{https://orcid.org/0000-0003-2225-088X}{ORCID})
+  \item Marina Golivetes \email{maryna.golivetes@ufz.de} (\href{https://orcid.org/0000-0003-1278-2663}{ORCID})
 }
 
 }

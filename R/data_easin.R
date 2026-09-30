@@ -3,8 +3,8 @@
 #' @title Download and Clean EASIN Occurrence Data
 #'
 #' @description Downloads, combines, cleans, and saves occurrence data for given
-#'   EASIN species IDs from the [EASIN](https://alien.jrc.ec.europa.eu/easin)
-#'   (European Alien Species Information Network) API.
+#'   EASIN species IDs from the [EASIN](https://easin.jrc.ec.europa.eu/easin)
+#'   (European Alien Species Information Network) Geo Database.
 #'
 #' @param easin_ids \emph{(character)} A vector of one or more EASIN species IDs,
 #'   each starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
@@ -12,8 +12,8 @@
 #'   [EASIN website](https://easin.jrc.ec.europa.eu/spexplorer/search/)
 #'   by searching for a species and checking its EASIN ID in the species details
 #'   section. When multiple IDs are provided, data are collated across all IDs.
-#'   If `NULL`(default), the function attempts to retrieve IDs from the
-#'   "`onesdm_easin_ids`" option option and skips the EASIN download if no IDs
+#'   If `NULL` (default), the function attempts to retrieve IDs from the
+#'   "`onesdm_easin_ids`" option and skips the EASIN download if no IDs
 #'   are found. \strong{Required}.
 #' @param model_dir \emph{(character)} Path to the directory where model outputs
 #'   will be saved. A subdirectory named `data` is automatically created within this
@@ -23,7 +23,7 @@
 #'   option.  Default is `NULL`.
 #' @param timeout \emph{(integer)} Timeout (in seconds) for each download attempt.
 #'   Default is `600L`. Can also be set via the "`onesdm_easin_timeout`" option.
-#'   Note: This timeout applies to each download chunk separately and does not
+#'   This timeout applies to each download chunk separately and does not
 #'   limit the total duration of the full download process.
 #' @param n_search \emph{(integer)} Number of records requested per API call (chunk
 #'   size). Default is `1000L`, which is the maximum allowed by the EASIN API.
@@ -45,7 +45,7 @@
 #'   "`onesdm_easin_overwrite`" option.
 #' @param return_data \emph{(logical)} If `TRUE`, returns the processed EASIN data as an
 #'   `sf` object in addition to saving it. Default is `FALSE`.
-#'   #' @param verbose \emph{(logical)} If `TRUE` (default), progress and information
+#' @param verbose \emph{(logical)} If `TRUE` (default), progress and information
 #'   messages are printed, including the URL of the currently processed chunk.
 #'   Can also be set via the "`onesdm_easin_verbose`" option.
 #'
