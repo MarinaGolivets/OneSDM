@@ -120,7 +120,7 @@
 #'
 #' @export
 #' @author Ahmed El-Gabbas
-#' @references  EASIN geospatial Web service:
+#' @references  EASIN Geospatial Web Service:
 #'   <https://easin.jrc.ec.europa.eu/apixg/home/geoqueries/>
 
 prepare_easin_data <- function(
@@ -231,7 +231,8 @@ prepare_easin_data <- function(
   if (!all(stringr::str_detect(easin_ids, "^R\\d{5}$"))) {
     #nolint
     ecokit::stop_ctx(
-      "All easin_ids must be in the format 'RXXXXX', where X is an integer.",
+      "Incorrect input data format:\n
+      easin_ids must be in the format 'RXXXXX', where X is an integer.",
       easin_ids = easin_ids,
       cat_timestamp = FALSE
     )
@@ -263,9 +264,9 @@ prepare_easin_data <- function(
           )
         )
       }
-      taxa_data <- jsonlite::fromJSON(taxa_data, flatten = TRUE) %>%
-        dplyr::tibble() %>%
-        dplyr::mutate(matched_species = paste0(Name, " ", Authorship)) %>%
+      taxa_data <- jsonlite::fromJSON(taxa_data, flatten = TRUE) |>
+        dplyr::tibble() |>
+        dplyr::mutate(matched_species = paste0(Name, " ", Authorship)) |>
         dplyr::select(
           tidyselect::all_of(c("Name", "EASINID", "matched_species"))
         )
@@ -291,7 +292,7 @@ prepare_easin_data <- function(
       }
       taxa_data
     }
-  ) %>%
+  ) |>
     dplyr::mutate(
       matched = paste0(
         EASINID,
@@ -319,7 +320,7 @@ prepare_easin_data <- function(
   if (all(is.na(matched_taxa$matched_species))) {
     ecokit::cat_time(
       paste0(
-        "All provided EASIN IDs were not matched with the EASIN database.\n",
+        "None of provided EASIN IDs could be matched to EASIN Geodatabase.\n",
         "No EASIN data will be downloaded."
       ),
       cat_timestamp = FALSE,
@@ -335,7 +336,7 @@ prepare_easin_data <- function(
       toString()
     ecokit::cat_time(
       paste0(
-        "Some provided EASIN ID(s) were not matched with the EASIN database.\n",
+        "Some of the provided EASIN ID(s) could not be matched to EASIN Geodatabase.\n",
         "  >>>  These EASIN ID(s) will be skipped: ",
         crayon::red(skipped_ids)
       ),
@@ -344,10 +345,10 @@ prepare_easin_data <- function(
     )
   }
 
-  matched_taxa %>%
-    dplyr::filter(!is.na(matched_species)) %>%
-    dplyr::pull(matched) %>%
-    paste(collapse = "\n  >>>  ") %>%
+  matched_taxa |>
+    dplyr::filter(!is.na(matched_species)) |>
+    dplyr::pull(matched) |>
+    paste(collapse = "\n  >>  ") |>
     ecokit::cat_time(cat_timestamp = FALSE, level = 1L)
 
   if (is.null(model_dir)) {

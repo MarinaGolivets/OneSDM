@@ -153,7 +153,7 @@ cleaned data.
 
 }
 \references{
-EASIN geospatial Web service:
+EASIN Geospatial Web Service:
 \url{https://easin.jrc.ec.europa.eu/apixg/home/geoqueries/}
 }
 \author{
