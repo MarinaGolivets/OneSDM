@@ -19,19 +19,19 @@ prepare_easin_data(
 )
 }
 \arguments{
-\item{easin_ids}{\emph{(character)} A vector of one or more EASIN species IDs,
-each starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
+\item{easin_ids}{\emph{(character)} A vector of one or more EASIN IDs,
+each starting with "R" followed by five digits (e.g., "R00544"). EASIN IDs can
 be obtained from the
 \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website}
-by searching for a species and checking its EASIN ID in the species details
-section. When multiple IDs are provided, data are collated across all IDs.
+by searching for a taxon name. When multiple EASIN IDs are provided, data
+are downloaded for each ID and then collated.
 If \code{NULL} (default), the function attempts to retrieve IDs from the
 "\code{onesdm_easin_ids}" option and skips the EASIN download if no IDs
 are found. \strong{Required}.}
 
 \item{model_dir}{\emph{(character)} Path to the directory where model outputs
 will be saved. A subdirectory named \code{data} is automatically created within this
-directory to store processed species data. When modelling multiple species,
+directory to store processed taxon data. When modelling multiple taxa,
 it is recommended to use a separate directory for each run to avoid overwriting
 or mixing data files. This path can also be set via the \code{onesdm_model_dir}
 option.  Default is \code{NULL}.}
@@ -79,9 +79,9 @@ Invisibly returns the file path to the saved cleaned EASIN data
 an \code{sf} object.
 }
 \description{
-Downloads, combines, cleans, and saves occurrence data for given
-EASIN species IDs from the \href{https://easin.jrc.ec.europa.eu/easin}{EASIN}
-(European Alien Species Information Network) Geo Database.
+Downloads, combines, cleans, and saves taxon occurrence data for given
+EASIN IDs from the \href{https://easin.jrc.ec.europa.eu/easin}{EASIN}
+(European Alien Species Information Network) Geodatabase.
 }
 \details{
 \itemize{
@@ -99,7 +99,7 @@ function. Users can set these options at the start of their R session to
 avoid repeatedly specifying them in function calls. The following options
 correspond to the function arguments:
 \itemize{
-\item "\code{onesdm_easin_ids}": Character vector of EASIN species IDs.
+\item "\code{onesdm_easin_ids}": Character vector of EASIN taxon IDs.
 \item "\code{onesdm_model_dir}": Character. Path to the modelling directory.
 \item "\code{onesdm_easin_timeout}": Integer. Timeout (in seconds) for each download
 attempt.
@@ -157,5 +157,5 @@ EASIN Geospatial Web Service:
 \url{https://easin.jrc.ec.europa.eu/apixg/home/geoqueries/}
 }
 \author{
-Ahmed El-Gabbas
+Ahmed El-Gabbas, Maryna Golivets
 }

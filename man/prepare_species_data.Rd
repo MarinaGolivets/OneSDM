@@ -29,8 +29,9 @@ skipped. To request data from GBIF, GBIF credentials must be set for the
 current session. See
 \href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{article}
 from \code{rgbif} R package documentation on how to set the GBIF credentials. See
-\link{prepare_gbif_data} for details. Optional.
-#' @param easin_ids \emph{(character)} A vector of one or more EASIN species IDs,
+\link{prepare_gbif_data} for details. Optional.}
+
+\item{easin_ids}{\emph{(character)} A vector of one or more EASIN species IDs,
 each starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
 be obtained from the
 \href{https://easin.jrc.ec.europa.eu/spexplorer/search/}{EASIN website}

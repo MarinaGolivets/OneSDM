@@ -19,7 +19,7 @@
 #'   [article](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
 #'   from `rgbif` R package documentation on how to set the GBIF credentials. See
 #'   [prepare_gbif_data] for details. Optional.
-#'   #' @param easin_ids \emph{(character)} A vector of one or more EASIN species IDs,
+#' @param easin_ids \emph{(character)} A vector of one or more EASIN species IDs,
 #'   each starting with "R" followed by five digits (e.g., "R00544"). Species IDs can
 #'   be obtained from the
 #'   [EASIN website](https://easin.jrc.ec.europa.eu/spexplorer/search/)

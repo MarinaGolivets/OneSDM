@@ -22,7 +22,7 @@ Useful links:
 Authors:
 \itemize{
   \item Ahmed El-Gabbas \email{elgabbas@outlook.com} (\href{https://orcid.org/0000-0003-2225-088X}{ORCID})
-  \item Marina Golivetes \email{maryna.golivetes@ufz.de} (\href{https://orcid.org/0000-0003-1278-2663}{ORCID})
+  \item Maryna Golivets \email{maryna.golivetes@ufz.de} (\href{https://orcid.org/0000-0003-1278-2663}{ORCID})
 }
 
 }
