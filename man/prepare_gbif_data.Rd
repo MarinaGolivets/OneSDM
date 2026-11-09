@@ -9,17 +9,17 @@ prepare_gbif_data(
   model_dir = NULL,
   r_environ = ".Renviron",
   start_year = 1981L,
-  boundaries = c(-180L, 180L, -90L, 90L),
-  max_uncertainty = 10L,
+  boundaries = c(-180, 180, -90, 90),
+  max_uncertainty = 10,
   overwrite = FALSE,
   return_data = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{gbif_ids}{\emph{(character or numeric)} A vector of one or more GBIF
-taxon keys. When multiple IDs are supplied, data are combined across all keys.
-If \code{NULL} (default), the function attempts to retrieve IDs from the
+\item{gbif_ids}{\emph{(character or numeric)} A vector of one or more GBIF IDs
+(taxon keys). When multiple IDs are supplied, downloaded for each ID and
+then collated. If \code{NULL} (default), the function attempts to retrieve IDs from the
 \code{onesdm_gbif_ids} option. \strong{Required}.}
 
 \item{model_dir}{\emph{(character)} Path to the directory where model outputs
@@ -35,7 +35,7 @@ credentials (default: ".Renviron"). The function uses
 \code{GBIF_USER}, \code{GBIF_PWD}, and \code{GBIF_EMAIL} environment variables are not set
 in the current R session, \code{check_gbif} attempts to read them from the
 specified \code{.Renviron} file. See \code{\link[ecokit:check_gbif]{ecokit::check_gbif()}} and
-this
+here
 \href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{\code{rgbif} documentation}
 for details on setting GBIF credentials. If \code{r_environ = NULL}, the path to
 the \code{.Renviron} file is retrieved from the "\code{onesdm_r_environ}" option.}
@@ -50,7 +50,7 @@ as (left, right, bottom, top) in decimal degrees (default:
 \code{onesdm_gbif_boundaries} option.}
 
 \item{max_uncertainty}{\emph{(numeric)} Maximum allowed spatial uncertainty in
-kilometres. Default is \code{10L}. Can also be set via
+kilometers. Default is \code{10L}. Can also be set via
 \code{onesdm_gbif_max_uncertainty} option.}
 
 \item{overwrite}{\emph{(logical)} If \code{TRUE}, overwrites existing cleaned GBIF data
@@ -61,7 +61,7 @@ file in the model directory. Default is \code{FALSE}. Can also be set via
 \code{sf} object in addition to saving it. Default is \code{FALSE}.}
 
 \item{verbose}{\emph{(logical)} If \code{TRUE} (default), prints progress messages during
-execution. Can also be set via the \code{onesdm_verbose} option. Default is \code{"TRUE"}.}
+execution. Can also be set via the \code{onesdm_verbose} option.}
 }
 \value{
 If \code{return_data} is \code{TRUE}, return the cleaned GBIF data as an \code{sf}
@@ -79,31 +79,29 @@ GBIF data files:
 }
 }
 \description{
-Downloads, filters, and processes occurrence records from the
+Downloads, combines, cleans, and saves occurrence records from the
 Global Biodiversity Information Facility (\href{https://gbif.org/}{GBIF}) for
-specified taxon keys (GBIF IDs). The function handles data requests,
-downloading, cleaning, and conversion to an \code{sf} object, with optional
-spatial and temporal filters, coordinate uncertainty thresholds, and
-geographic boundary constraints.
+the supplied GBIF IDs (taxon keys).
 }
 \details{
 The function performs the following steps:
 \itemize{
 \item Validates input parameters and environment.
-\item Checks for existing processed data to avoid redundant downloads/requests.
+\item Checks whether a previously cleaned GBIF data file already exists and,
+if so, skips the download and reuses the existing file.
 \item Requests occurrence data from GBIF using the \code{rgbif} package, applying
 filters for coordinates, geospatial issues, year, occurrence status, basis
 of record, and spatial boundaries.
 \item Downloads and reads the raw data, applying further cleaning:
 \itemize{
 \item Removes records with missing or low-precision coordinates.
-\item Filters by spatial uncertainty and accepted taxonomic ranks.
+\item Filters by spatial uncertainty.
 \item Applies additional cleaning using the \code{CoordinateCleaner} package.
 }
 \item Converts the cleaned data to an \code{sf} object and saves it.
-\item Function default arguments can be set globally using the \code{options()}
-function. Users can set these options at the start of their R session to
-avoid repeatedly specifying them in function calls. The following options
+\item Allows default function arguments to be configured globally using
+\code{\link[base:options]{base::options()}} at the beginning of an R session, avoiding the need to
+repeatedly specify them in individual function calls. The following options
 correspond to the function arguments:
 \itemize{
 \item \code{onesdm_gbif_ids}: \code{gbif_ids}
@@ -138,5 +136,5 @@ prepare_gbif_data(
 
 }
 \author{
-Ahmed El-Gabbas
+Ahmed El-Gabbas, Maryna Golivets
 }
