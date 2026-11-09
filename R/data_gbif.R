@@ -733,7 +733,7 @@ prepare_gbif_data <- function(
       ecokit::cat_time(
         paste0(
           "Coordinate validity: removed ",
-          ecokit::format_number(n_before - nrow(gbif_data)),
+          ecokit::format_number(n_rows_raw - nrow(gbif_data)),
           " records; ",
           ecokit::format_number(nrow(gbif_data)),
           " remain."
