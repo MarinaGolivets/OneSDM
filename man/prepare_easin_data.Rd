@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_easin.R
 \name{prepare_easin_data}
 \alias{prepare_easin_data}
-\title{Download and Clean EASIN Occurrence Data}
+\title{Download and Process EASIN Occurrence Data}
 \usage{
 prepare_easin_data(
   easin_ids = NULL,
@@ -26,20 +26,19 @@ be obtained from the
 by searching for a taxon name. When multiple EASIN IDs are provided, data
 are downloaded for each ID and then collated.
 If \code{NULL} (default), the function attempts to retrieve IDs from the
-"\code{onesdm_easin_ids}" option and skips the EASIN download if no IDs
-are found. \strong{Required}.}
+"\code{onesdm_easin_ids}" option. \strong{Required}.}
 
 \item{model_dir}{\emph{(character)} Path to the directory where model outputs
 will be saved. A subdirectory named \code{data} is automatically created within this
 directory to store processed taxon data. When modelling multiple taxa,
 it is recommended to use a separate directory for each run to avoid overwriting
 or mixing data files. This path can also be set via the \code{onesdm_model_dir}
-option.  Default is \code{NULL}.}
+option.  Default is \code{NULL}. \strong{Required}.}
 
 \item{timeout}{\emph{(integer)} Timeout (in seconds) for each download attempt.
-Default is \code{600L}. Can also be set via the "\code{onesdm_easin_timeout}" option.
-This timeout applies to each download chunk separately and does not
-limit the total duration of the full download process.}
+Default is \code{600L}. This timeout applies to each download chunk separately
+and does not limit the total duration of the full download process.
+Can also be set via the "\code{onesdm_easin_timeout}" option.}
 
 \item{n_search}{\emph{(integer)} Number of records requested per API call (chunk
 size). Default is \code{1000L}, which is the maximum allowed by the EASIN API.
@@ -79,25 +78,25 @@ Invisibly returns the file path to the saved cleaned EASIN data
 an \code{sf} object.
 }
 \description{
-Downloads, combines, cleans, and saves taxon occurrence data for given
-EASIN IDs from the \href{https://easin.jrc.ec.europa.eu/easin}{EASIN}
-(European Alien Species Information Network) Geodatabase.
+Downloads, combines, cleans, and saves occurrence records
+from the European Alien Species Information Network
+(\href{https://easin.jrc.ec.europa.eu/easin}{EASIN}) Geodatabase for the
+supplied EASIN IDs.
 }
 \details{
 \itemize{
-\item The function supports chunked downloads, multiple attempts, and
-extensive data cleaning, including coordinate precision checks and spatial
-filtering using the \code{CoordinateCleaner} package. The cleaned data is saved as
-an \code{.RData} file in the specified model directory.
-\item The function checks for an existing cleaned EASIN data file and skips
-download if found.
-\item The function applies several cleaning steps; e.g. filtering out records
-with low coordinate precision, equal longitude / latitude, or near centroids,
+\item Supports chunked downloads and multiple download attempts. The cleaned
+data are saved as an \code{.RData} file in the specified model directory.
+\item Applies comprehensive data-cleaning procedures, including filtering out
+records with low coordinate precision, identical longitude and latitude
+values, and coordinates located near geographic centroids, country
 capitals, biodiversity institutions, and GBIF headquarters.
-\item Function default arguments can be set globally using the \link[base:options]{base::options}
-function. Users can set these options at the start of their R session to
-avoid repeatedly specifying them in function calls. The following options
-correspond to the function arguments:
+\item Checks whether a previously cleaned EASIN data file already exists and,
+if so, skips the download and reuses the existing file.
+\item Allows default function arguments to be configured globally using
+\code{\link[base:options]{base::options()}} at the beginning of an R session, avoiding the need to
+repeatedly specify them in individual function calls. The following
+options correspond to the function arguments:
 \itemize{
 \item "\code{onesdm_easin_ids}": Character vector of EASIN taxon IDs.
 \item "\code{onesdm_model_dir}": Character. Path to the modelling directory.

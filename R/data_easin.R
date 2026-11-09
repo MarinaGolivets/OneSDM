@@ -1,10 +1,11 @@
 # prepare_easin_data -------
 #
-#' @title Download and Clean EASIN Occurrence Data
+#' @title Download and Process EASIN Occurrence Data
 #'
-#' @description Downloads, combines, cleans, and saves taxon occurrence data for given
-#'   EASIN IDs from the [EASIN](https://easin.jrc.ec.europa.eu/easin)
-#'   (European Alien Species Information Network) Geodatabase.
+#' @description Downloads, combines, cleans, and saves occurrence records
+#'   from the European Alien Species Information Network
+#'   ([EASIN](https://easin.jrc.ec.europa.eu/easin)) Geodatabase for the
+#'   supplied EASIN IDs.
 #'
 #' @param easin_ids \emph{(character)} A vector of one or more EASIN IDs,
 #'   each starting with "R" followed by five digits (e.g., "R00544"). EASIN IDs can
@@ -13,18 +14,17 @@
 #'   by searching for a taxon name. When multiple EASIN IDs are provided, data
 #'   are downloaded for each ID and then collated.
 #'   If `NULL` (default), the function attempts to retrieve IDs from the
-#'   "`onesdm_easin_ids`" option and skips the EASIN download if no IDs
-#'   are found. \strong{Required}.
+#'   "`onesdm_easin_ids`" option. \strong{Required}.
 #' @param model_dir \emph{(character)} Path to the directory where model outputs
 #'   will be saved. A subdirectory named `data` is automatically created within this
 #'   directory to store processed taxon data. When modelling multiple taxa,
 #'   it is recommended to use a separate directory for each run to avoid overwriting
 #'   or mixing data files. This path can also be set via the `onesdm_model_dir`
-#'   option.  Default is `NULL`.
+#'   option.  Default is `NULL`. \strong{Required}.
 #' @param timeout \emph{(integer)} Timeout (in seconds) for each download attempt.
-#'   Default is `600L`. Can also be set via the "`onesdm_easin_timeout`" option.
-#'   This timeout applies to each download chunk separately and does not
-#'   limit the total duration of the full download process.
+#'   Default is `600L`. This timeout applies to each download chunk separately
+#'   and does not limit the total duration of the full download process.
+#'   Can also be set via the "`onesdm_easin_timeout`" option.
 #' @param n_search \emph{(integer)} Number of records requested per API call (chunk
 #'   size). Default is `1000L`, which is the maximum allowed by the EASIN API.
 #'   Can also be set via the "`onesdm_easin_n_search`" option.
@@ -50,19 +50,18 @@
 #'   Can also be set via the "`onesdm_easin_verbose`" option.
 #'
 #' @details
-#' - The function supports chunked downloads, multiple attempts, and
-#' extensive data cleaning, including coordinate precision checks and spatial
-#' filtering using the `CoordinateCleaner` package. The cleaned data is saved as
-#' an `.RData` file in the specified model directory.
-#' - The function checks for an existing cleaned EASIN data file and skips
-#' download if found.
-#' - The function applies several cleaning steps; e.g. filtering out records
-#' with low coordinate precision, equal longitude / latitude, or near centroids,
-#' capitals, biodiversity institutions, and GBIF headquarters.
-#' - Function default arguments can be set globally using the [base::options]
-#' function. Users can set these options at the start of their R session to
-#' avoid repeatedly specifying them in function calls. The following options
-#' correspond to the function arguments:
+#' - Supports chunked downloads and multiple download attempts. The cleaned
+#'   data are saved as an `.RData` file in the specified model directory.
+#' - Applies comprehensive data-cleaning procedures, including filtering out
+#'   records with low coordinate precision, identical longitude and latitude
+#'   values, and coordinates located near geographic centroids, country
+#'   capitals, biodiversity institutions, and GBIF headquarters.
+#' - Checks whether a previously cleaned EASIN data file already exists and,
+#'   if so, skips the download and reuses the existing file.
+#' - Allows default function arguments to be configured globally using
+#'   [base::options()] at the beginning of an R session, avoiding the need to
+#'   repeatedly specify them in individual function calls. The following
+#'   options correspond to the function arguments:
 #'   - "`onesdm_easin_ids`": Character vector of EASIN taxon IDs.
 #'   - "`onesdm_model_dir`": Character. Path to the modelling directory.
 #'   - "`onesdm_easin_timeout`": Integer. Timeout (in seconds) for each download
@@ -237,7 +236,12 @@ prepare_easin_data <- function(
   # Validate arguments
   # ---------------------------------------------------------------------------
 
-  if (is.null(model_dir)) {
+  if (
+    is.null(model_dir) ||
+      length(model_dir) != 1L ||
+      is.na(model_dir) ||
+      !nzchar(trimws(model_dir))
+  ) {
     ecokit::stop_ctx(
       paste0(
         "The model_dir argument must be provided either directly or via the ",
@@ -247,7 +251,15 @@ prepare_easin_data <- function(
     )
   }
 
-  if (is.null(easin_ids) || length(easin_ids) == 0L) {
+  if (is.null(easin_ids)) {
+    ecokit::stop_ctx(
+      "easin_ids must contain at least one EASIN ID.",
+      cat_timestamp = FALSE
+    )
+  }
+
+  easin_ids <- easin_ids[!is.na(easin_ids)]
+  if (length(easin_ids) == 0L) {
     ecokit::stop_ctx(
       "easin_ids must contain at least one EASIN ID.",
       cat_timestamp = FALSE
@@ -264,6 +276,23 @@ prepare_easin_data <- function(
       cat_timestamp = FALSE
     )
   }
+
+  if (
+    !is.numeric(start_year) ||
+      length(start_year) != 1L ||
+      is.na(start_year) ||
+      !is.finite(start_year) ||
+      start_year != floor(start_year) ||
+      start_year < 1900 ||
+      start_year > lubridate::year(lubridate::now())
+  ) {
+    ecokit::stop_ctx(
+      "start_year must be one integer between 1900 and the current year.",
+      start_year = start_year,
+      cat_timestamp = FALSE
+    )
+  }
+  start_year <- as.integer(start_year)
 
   if (timeout <= 0) {
     ecokit::stop_ctx(
@@ -291,6 +320,16 @@ prepare_easin_data <- function(
       "sleep_time cannot be negative.",
       cat_timestamp = FALSE
     )
+  }
+
+  for (arg in c("overwrite", "return_data", "verbose")) {
+    value <- get(arg)
+    if (!is.logical(value) || length(value) != 1L || is.na(value)) {
+      ecokit::stop_ctx(
+        paste0(arg, " must be one non-missing logical value."),
+        cat_timestamp = FALSE
+      )
+    }
   }
 
   # ---------------------------------------------------------------------------
