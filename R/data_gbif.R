@@ -645,9 +645,9 @@ prepare_gbif_data <- function(
       species = readr::col_character(),
       infraspecificEpithet = readr::col_character(),
       taxonRank = readr::col_character(),
-      scientific_name = readr::col_character(),
-      verbatimscientific_name = readr::col_character(),
-      verbatimscientific_nameAuthorship = readr::col_character(),
+      ScientificName = readr::col_character(),
+      verbatimScientificName = readr::col_character(),
+      verbatimScientificNameAuthorship = readr::col_character(),
       countryCode = readr::col_character(),
       locality = readr::col_character(),
       stateProvince = readr::col_character(),
@@ -829,8 +829,8 @@ prepare_gbif_data <- function(
         paste0(
           "CoordinateCleaner: removed ",
           ecokit::format_number(n_before - nrow(gbif_data)),
-          " records due to their proximity to capitals, centroids of countries/provinces,
-          and biodiversity institutions; ",
+          " records due to their proximity to capitals,\n
+          centroids of countries/provinces, and biodiversity institutions; ",
           ecokit::format_number(nrow(gbif_data)),
           " remain."
         ),
