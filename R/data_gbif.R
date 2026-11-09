@@ -307,7 +307,7 @@ prepare_gbif_data <- function(
 
   is_valid_gbif_id <- function(id) {
     result <- tryCatch(
-      rcol::col_usage(key = id),
+      rcol::col_usage(id = id),
       error = function(e) NULL
     )
     !is.null(result) &&
