@@ -17,7 +17,7 @@ prepare_gbif_data(
 )
 }
 \arguments{
-\item{gbif_ids}{\emph{(character or numeric)} A vector of one or more GBIF IDs
+\item{gbif_ids}{\emph{(character)} A vector of one or more GBIF/CoL IDs
 (taxon keys). When multiple IDs are supplied, downloaded for each ID and
 then collated. If \code{NULL} (default), the function attempts to retrieve IDs from the
 \code{onesdm_gbif_ids} option. \strong{Required}.}

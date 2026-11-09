@@ -26,6 +26,7 @@ Imports:
     fs (>= 1.6),
     future (>= 1.67),
     future.apply (>= 1.20),
+    rcol (>= 1.0.0),
     rgbif (>= 3.8),
     rlang (>= 1.1),
     sdm (>= 1.2),

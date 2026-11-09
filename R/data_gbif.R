@@ -6,7 +6,7 @@
 #'   Global Biodiversity Information Facility ([GBIF](https://gbif.org/)) for
 #'   the supplied GBIF IDs (taxon keys).
 #'
-#' @param gbif_ids \emph{(character or numeric)} A vector of one or more GBIF IDs
+#' @param gbif_ids \emph{(character)} A vector of one or more GBIF/CoL IDs
 #'   (taxon keys). When multiple IDs are supplied, downloaded for each ID and
 #'   then collated. If `NULL` (default), the function attempts to retrieve IDs from the
 #'   `onesdm_gbif_ids` option. \strong{Required}.
@@ -120,7 +120,7 @@ prepare_gbif_data <- function(
   latitude <- longitude <- n_dec_long <- n_dec_lat <- NULL
   decimalLongitude <- decimalLatitude <- n_obs <- NULL
   year <- uncertain_km <- NULL
-  key <- speciesKey <- matched_name <- scientificName <- NULL
+  id <- speciesKey <- matched_name <- scientific_name <- NULL
   occurrenceStatus <- coordinatePrecision <- coordinateUncertaintyInMeters <- NULL
 
   # ---------------------------------------------------------------------------
@@ -150,7 +150,7 @@ prepare_gbif_data <- function(
   gbif_ids <- ecokit::assign_from_options(
     gbif_ids,
     "onesdm_gbif_ids",
-    c("character", "numeric", "integer")
+    "character"
   )
   model_dir <- ecokit::assign_from_options(
     model_dir,
@@ -209,7 +209,7 @@ prepare_gbif_data <- function(
 
   if (is.null(gbif_ids)) {
     ecokit::stop_ctx(
-      "gbif_ids must contain at least one non-missing GBIF taxon key.",
+      "gbif_ids must contain at least one non-missing GBIF/CoL taxon key.",
       gbif_ids = gbif_ids,
       cat_timestamp = FALSE
     )
@@ -218,38 +218,11 @@ prepare_gbif_data <- function(
   gbif_ids <- gbif_ids[!is.na(gbif_ids)]
   if (length(gbif_ids) == 0L) {
     ecokit::stop_ctx(
-      "gbif_ids must contain at least one non-missing GBIF taxon key.",
+      "gbif_ids must contain at least one non-missing GBIF/CoL taxon key.",
       gbif_ids = gbif_ids,
       cat_timestamp = FALSE
     )
   }
-
-  gbif_ids_chr <- trimws(as.character(gbif_ids))
-  if (
-    any(!nzchar(gbif_ids_chr)) ||
-      any(!stringr::str_detect(gbif_ids_chr, "^[0-9]+$"))
-  ) {
-    ecokit::stop_ctx(
-      "Each gbif_id must be a positive integer represented by digits only.",
-      gbif_ids = gbif_ids,
-      cat_timestamp = FALSE
-    )
-  }
-
-  gbif_ids_num <- suppressWarnings(as.numeric(gbif_ids_chr))
-  if (
-    any(!is.finite(gbif_ids_num)) ||
-      any(gbif_ids_num < 1) ||
-      any(gbif_ids_num > .Machine$integer.max) ||
-      any(gbif_ids_num != floor(gbif_ids_num))
-  ) {
-    ecokit::stop_ctx(
-      "Each gbif_id must be a positive integer within the supported range.",
-      gbif_ids = gbif_ids,
-      cat_timestamp = FALSE
-    )
-  }
-  gbif_ids <- unique(as.integer(gbif_ids_num))
 
   if (
     !is.numeric(start_year) ||
@@ -334,12 +307,12 @@ prepare_gbif_data <- function(
 
   is_valid_gbif_id <- function(id) {
     result <- tryCatch(
-      rgbif::name_usage(key = as.numeric(id)),
+      rcol::col_usage(key = id),
       error = function(e) NULL
     )
     !is.null(result) &&
-      !is.null(result$key) &&
-      identical(as.numeric(result$key), as.numeric(id))
+      !is.null(result$id) &&
+      identical(result$id, id)
   }
 
   gbif_ids_valid <- purrr::map_lgl(gbif_ids, is_valid_gbif_id)
@@ -357,26 +330,26 @@ prepare_gbif_data <- function(
   gbif_taxa <- purrr::map_dfr(
     sort(gbif_ids),
     function(id) {
-      x <- rgbif::name_usage(id)$data
+      x <- rcol::col_usage(id)
       if (is.null(x) || nrow(x) == 0L) {
-        return(tibble::tibble(key = id, scientificName = NA_character_))
+        return(tibble::tibble(id = id, scientific_name = NA_character_))
       }
-      if (!"key" %in% names(x)) {
-        x$key <- id
+      if (!"id" %in% names(x)) {
+        x$id <- id
       }
-      if (!"scientificName" %in% names(x)) {
-        x$scientificName <- NA_character_
+      if (!"scientific_name" %in% names(x)) {
+        x$scientific_name <- NA_character_
       }
       tibble::tibble(
-        key = as.numeric(x$key[1L]),
-        scientificName = as.character(x$scientificName[1L])
+        id = as.character(x$id[1L]),
+        scientific_name = as.character(x$scientific_name[1L])
       )
     }
   )
 
   gbif_ids_names <- gbif_taxa |>
     dplyr::mutate(
-      matched_name = paste0(key, " (", scientificName, ")")
+      matched_name = paste0(id, " (", scientific_name, ")")
     ) |>
     dplyr::pull(matched_name) |>
     toString()
@@ -672,9 +645,9 @@ prepare_gbif_data <- function(
       species = readr::col_character(),
       infraspecificEpithet = readr::col_character(),
       taxonRank = readr::col_character(),
-      scientificName = readr::col_character(),
-      verbatimScientificName = readr::col_character(),
-      verbatimScientificNameAuthorship = readr::col_character(),
+      scientific_name = readr::col_character(),
+      verbatimscientific_name = readr::col_character(),
+      verbatimscientific_nameAuthorship = readr::col_character(),
       countryCode = readr::col_character(),
       locality = readr::col_character(),
       stateProvince = readr::col_character(),
