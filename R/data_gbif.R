@@ -4,62 +4,50 @@
 #'
 #' @description Downloads, combines, cleans, and saves occurrence records from the
 #'   Global Biodiversity Information Facility ([GBIF](https://gbif.org/)) for
-#'   the supplied GBIF IDs (taxon keys).
+#'   the supplied taxon keys.
 #'
-#' @param gbif_ids \emph{(character)} A vector of one or more GBIF/CoL IDs
-#'   (taxon keys). When multiple IDs are supplied, downloaded for each ID and
-#'   then collated. If `NULL` (default), the function attempts to retrieve IDs from the
-#'   `onesdm_gbif_ids` option. \strong{Required}.
-#' @param model_dir \emph{(character)} Path to the directory where model outputs
-#'   will be saved. A subdirectory named `data` is automatically created within this
-#'   directory to store processed species data. When modelling multiple species,
-#'   it is recommended to use a separate directory for each run to avoid overwriting
-#'   or mixing data files. This path can also be set via the `onesdm_model_dir`
-#'   option.  Default is `NULL`. \strong{Required}.
-#' @param r_environ \emph{(character)} Path to an `.Renviron` file containing GBIF
-#'   credentials (default: ".Renviron"). The function uses
-#'   [ecokit::check_gbif()] to verify the presence of GBIF credentials. If the
-#'   `GBIF_USER`, `GBIF_PWD`, and `GBIF_EMAIL` environment variables are not set
-#'   in the current R session, `check_gbif` attempts to read them from the
-#'   specified `.Renviron` file. See [ecokit::check_gbif()] and
-#'   here
-#'   [`rgbif` documentation](https://docs.ropensci.org/rgbif/articles/gbif_credentials.html)
-#'   for details on setting GBIF credentials. If `r_environ = NULL`, the path to
-#'   the `.Renviron` file is retrieved from the "`onesdm_r_environ`" option.
-#' @param start_year \emph{(integer)} The starting year from which records are included.
-#'   The default is `1981L`, to match the temporal coverage of CHELSA climate data.
-#'   Can also be set via the "`onesdm_start_year`" option.
-#' @param boundaries \emph{(numeric)} A vector of size 4 containing spatial boundaries
-#'   as (left, right, bottom, top) in decimal degrees (default:
-#'   `c(-180L, 180L, -90L, 90L)` for global extent). Can also be set via
+#' @param gbif_ids (character) Vector of one or more COL XR taxon keys.
+#'   Data for multiple keys are combined. If `NULL` (default),
+#'   keys are retrieved from the `onesdm_gbif_ids` option. \strong{Required}.
+#' @param model_dir (character) Directory for saving model outputs.
+#'   A `data` subdirectory is created automatically to store raw and processed data.
+#'   If `NULL` (default), path is retrieved from the `onesdm_model_dir` option.
+#'   \strong{Required}.
+#' @param r_environ (character) Path to an `.Renviron` file containing GBIF
+#'   credentials. If `GBIF_USER`, `GBIF_PWD`, and `GBIF_EMAIL` are not set in the
+#'   current R session, values are read from this file. If `NULL`, path is retrieved
+#'   from the `onesdm_r_environ` option. Defaults to \emph{.Renviron}.
+#' @param start_year (integer) Earliest year for which records are included.
+#'   Defaults to `1981L`. Can also be set via the `onesdm_start_year` option.
+#' @param boundaries (numeric) Vector of four spatial boundaries in decimal
+#'   degrees, specified as (left, right, bottom, top). Defaults to
+#'   \emph{c(-180L, 180L, -90L, 90L)} (global extent). Can also be set via the
 #'   `onesdm_gbif_boundaries` option.
-#' @param max_uncertainty \emph{(numeric)} Maximum allowed spatial uncertainty in
-#'   kilometers. Default is `10L`. Can also be set via
+#' @param max_uncertainty (numeric) Maximum allowed spatial uncertainty in
+#'   kilometers. Defaults to `10L`. Can also be set via the
 #'   `onesdm_gbif_max_uncertainty` option.
-#' @param overwrite \emph{(logical)} If `TRUE`, overwrites existing cleaned GBIF data
-#'   file in the model directory. Default is `FALSE`. Can also be set via
-#'   `onesdm_gbif_overwrite` option.
-#' @param return_data \emph{(logical)} If `TRUE`, returns the processed GBIF data as an
-#'   `sf` object in addition to saving it. Default is `FALSE`.
-#' @param verbose \emph{(logical)} If `TRUE` (default), prints progress messages during
+#' @param overwrite (logical) If `TRUE`, overwrites existing GBIF data file.
+#'    Defaults to `FALSE`. Can also be set via `onesdm_gbif_overwrite` option.
+#' @param return_data (logical) If `TRUE`, returns processed GBIF data as an
+#'   `sf` object in addition to saving it. Defaults to `FALSE`.
+#' @param verbose (logical) If `TRUE` (default), prints progress messages during
 #'   execution. Can also be set via the `onesdm_verbose` option.
 #'
 #' @details The function performs the following steps:
-#' - Validates input parameters and environment.
-#' - Checks whether a previously cleaned GBIF data file already exists and,
-#'   if so, skips the download and reuses the existing file.
+#' - Validates input parameters and environment variables.
+#' - Checks for existing cleaned GBIF data and reuses it if available,
+#'   unless `overwrite = TRUE`.
 #' - Requests occurrence data from GBIF using the `rgbif` package, applying
 #'   filters for coordinates, geospatial issues, year, occurrence status, basis
 #'   of record, and spatial boundaries.
-#' - Downloads and reads the raw data, applying further cleaning:
-#'   - Removes records with missing or low-precision coordinates.
-#'   - Filters by spatial uncertainty.
-#'   - Applies additional cleaning using the `CoordinateCleaner` package.
-#' - Converts the cleaned data to an `sf` object and saves it.
-#' - Allows default function arguments to be configured globally using
-#'   [base::options()] at the beginning of an R session, avoiding the need to
-#'   repeatedly specify them in individual function calls. The following options
-#'   correspond to the function arguments:
+#' - Cleans downloaded data by:
+#'   - Removing records with missing or low-precision coordinates.
+#'   - Excluding records exceeding maximum spatial uncertainty.
+#'   - Applying additional checks using the CoordinateCleaner package.
+#' - Converts cleaned records to an `sf` object and saves it as an `.RData` file.
+#' - Supports global configuration of default arguments via [base::options()]
+#'   at the beginning of an R session, avoiding repeated specification in
+#'   function calls. Available options and corresponding arguments:
 #'   - `onesdm_gbif_ids`: `gbif_ids`
 #'   - `onesdm_model_dir`: `model_dir`
 #'   - `onesdm_gbif_verbose`: `verbose`
@@ -68,10 +56,11 @@
 #'   - `onesdm_gbif_boundaries`: `boundaries`
 #'   - `onesdm_gbif_max_uncertainty`: `max_uncertainty`
 #'   - `onesdm_gbif_overwrite`: `overwrite`
-#' - Example of setting options:
+#'
+#' Example of setting [base::options()]:
 #'   ```r
 #'   options(
-#'     onesdm_gbif_ids = c("1234567", "7654321"),
+#'     onesdm_gbif_ids = c("793ZB", "6WRZD"),
 #'     onesdm_model_dir = "path/to/model_dir",
 #'     onesdm_gbif_verbose = TRUE,
 #'     onesdm_start_year = 1981L,
@@ -82,22 +71,19 @@
 #'   )
 #'   ```
 #'
-#' @return If `return_data` is `TRUE`, return the cleaned GBIF data as an `sf`
-#'   object. Otherwise, returns (invisibly) a named list with paths to the saved
-#'   GBIF data files:
-#' - `gbif_request`: Path to the saved GBIF request object
-#'   (`data/gbif_request.RData`).
-#' - `gbif_status`: Path to the saved GBIF status object
-#'   (`data/gbif_status.RData`).
-#' - `gbif_data_raw`: Path to the downloaded raw GBIF data
-#'   (`data/gbif_data_raw.zip`).
-#' - `gbif_data`: Path to the processed and cleaned GBIF data
-#'   (`data/gbif_data.RData`).
+#' @return If `return_data = TRUE`, returns cleaned GBIF data as an sf
+#'   object. Otherwise, invisibly returns a named list of paths to saved files:
+#' - `gbif_request`: GBIF request object (`data/gbif_request.RData`)
+#' - `gbif_status`: GBIF download status (`data/gbif_status.RData`)
+#' - `gbif_data_raw`: Raw GBIF download (`data/gbif_data_raw.zip`)
+#' - `gbif_data`: Processed and cleaned GBIF data (`data/gbif_data.RData`).
 #'
 #' @examples
 #' \dontrun{
 #' prepare_gbif_data(
-#'   gbif_ids = c("1234567", "7654321"), model_dir = "path/to/model_dir")
+#'   gbif_ids = c("793ZB", "6WRZD"),
+#'   model_dir = "path/to/model_dir"
+#' )
 #' }
 #'
 #' @export
@@ -129,6 +115,7 @@ prepare_gbif_data <- function(
 
   ecokit::check_packages(c(
     "CoordinateCleaner",
+    "colr",
     "crayon",
     "curl",
     "fs",
@@ -216,6 +203,7 @@ prepare_gbif_data <- function(
   }
 
   gbif_ids <- gbif_ids[!is.na(gbif_ids)]
+
   if (length(gbif_ids) == 0L) {
     ecokit::stop_ctx(
       "gbif_ids must contain at least one non-missing GBIF/CoL taxon key.",
@@ -316,10 +304,11 @@ prepare_gbif_data <- function(
   }
 
   gbif_ids_valid <- purrr::map_lgl(gbif_ids, is_valid_gbif_id)
+
   if (!all(gbif_ids_valid)) {
     ecokit::stop_ctx(
       paste0(
-        "The following GBIF taxon keys do not exist: ",
+        "The following COL XR taxon keys do not exist: ",
         toString(gbif_ids[!gbif_ids_valid])
       ),
       gbif_ids = gbif_ids[!gbif_ids_valid],
@@ -355,7 +344,7 @@ prepare_gbif_data <- function(
     toString()
 
   ecokit::cat_time(
-    "The following GBIF ID(s) will be processed:",
+    "The following COL XR taxon key(s) will be processed:",
     cat_timestamp = FALSE,
     level = 1L,
     verbose = verbose
@@ -484,8 +473,6 @@ prepare_gbif_data <- function(
       verbose = verbose
     )
   } else {
-    # A raw archive from a previous request must not be paired with this new
-    # request. Remove it before creating the new request
     if (file.exists(path_gbif_data_raw)) {
       fs::file_delete(path_gbif_data_raw)
     }
@@ -903,7 +890,7 @@ prepare_gbif_data <- function(
     paste0(
       "DONE! A total of ",
       ecokit::format_number(nrow(gbif_data), underline = TRUE),
-      " filtered observations were extracted for GBIF taxon key(s): ",
+      " filtered observations were extracted for COL XT taxon key(s): ",
       crayon::blue(n_obs_per_species)
     ),
     cat_timestamp = FALSE,

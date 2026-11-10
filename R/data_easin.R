@@ -7,114 +7,98 @@
 #'   ([EASIN](https://easin.jrc.ec.europa.eu/easin)) Geodatabase for the
 #'   supplied EASIN IDs.
 #'
-#' @param easin_ids \emph{(character)} A vector of one or more EASIN IDs,
-#'   each starting with "R" followed by five digits (e.g., "R00544"). EASIN IDs can
-#'   be obtained from the
+#' @param easin_ids (character) Vector of one or more EASIN IDs,
+#'   each starting with "R" followed by five digits (e.g., "R00544"). IDs can
+#'   be obtained by searching for a taxon name on the
 #'   [EASIN website](https://easin.jrc.ec.europa.eu/spexplorer/search/)
-#'   by searching for a taxon name. When multiple EASIN IDs are provided, data
-#'   are downloaded for each ID and then collated.
-#'   If `NULL` (default), the function attempts to retrieve IDs from the
-#'   "`onesdm_easin_ids`" option. \strong{Required}.
-#' @param model_dir \emph{(character)} Path to the directory where model outputs
-#'   will be saved. A subdirectory named `data` is automatically created within this
-#'   directory to store processed taxon data. When modelling multiple taxa,
-#'   it is recommended to use a separate directory for each run to avoid overwriting
-#'   or mixing data files. This path can also be set via the `onesdm_model_dir`
-#'   option.  Default is `NULL`. \strong{Required}.
-#' @param timeout \emph{(integer)} Timeout (in seconds) for each download attempt.
-#'   Default is `600L`. This timeout applies to each download chunk separately
-#'   and does not limit the total duration of the full download process.
-#'   Can also be set via the "`onesdm_easin_timeout`" option.
-#' @param n_search \emph{(integer)} Number of records requested per API call (chunk
-#'   size). Default is `1000L`, which is the maximum allowed by the EASIN API.
-#'   Can also be set via the "`onesdm_easin_n_search`" option.
-#' @param n_attempts \emph{(integer)} Maximum number of download attempts per chunk.
-#'   Default is `10L`. Can also be set via the "`onesdm_easin_n_attempts`"
+#'   by searching for a taxon name. Data for multiple IDs are combined.
+#'   If `NULL` (default), IDs are retrieved from the `onesdm_easin_ids` option.
+#'   \strong{Required}.
+#' @param model_dir (character) Directory for saving model outputs.
+#'   A `data` subdirectory is created automatically to store raw and processed data.
+#'   If `NULL` (default), path is retrieved from the `onesdm_model_dir` option.
+#'   \strong{Required}.
+#' @param timeout (integer) Timeout (seconds) per download attempt and chunk.
+#'   Default is `600L`. Does not limit total download duration. Can also be set via
+#'   the `onesdm_easin_timeout` option.
+#' @param n_search (integer) Number of records requested per API call (chunk
+#'   size). Defaults to `1000L` (EASIN API maximum). Can also be set via the
+#'   `onesdm_easin_n_search` option.
+#' @param n_attempts (integer) Maximum number of download attempts per chunk.
+#'   Defaults to `10L`. Can also be set via the `onesdm_easin_n_attempts`
 #'   option.
-#' @param sleep_time \emph{(integer)} Time to wait (in seconds) between successive
-#'   chunk downloads. This delay helps prevent overloading the EASIN server.
-#'   Default is `5L`. Can also be set via the "`onesdm_easin_sleep_time`" option.
-#' @param exclude_gbif \emph{(logical)} If `TRUE` (default),
-#'   [GBIF](https://www.gbif.org/) records are omitted from the download.
-#'   Can also be set via the "`onesdm_easin_exclude_gbif`" option.
-#' @param start_year \emph{(integer)} The starting year from which records are included.
-#'   The default is `1981L`, to match the temporal coverage of CHELSA climate data.
-#'   Can also be set via the "`onesdm_start_year`" option.
-#' @param overwrite \emph{(logical)} If `TRUE`, overwrites existing cleaned EASIN data
-#'   in the modelling directory. Default is `FALSE`. Can also be set via
-#'   "`onesdm_easin_overwrite`" option.
-#' @param return_data \emph{(logical)} If `TRUE`, returns the processed EASIN data as an
-#'   `sf` object in addition to saving it. Default is `FALSE`.
-#' @param verbose \emph{(logical)} If `TRUE` (default), progress and information
-#'   messages are printed, including the URL of the currently processed chunk.
-#'   Can also be set via the "`onesdm_easin_verbose`" option.
+#' @param sleep_time (integer) Delay (seconds) between successive
+#'   chunk downloads to prevent overloading the EASIN server.
+#'   Defaults to `5L`. Can also be set via the `onesdm_easin_sleep_time` option.
+#' @param exclude_gbif (logical) If `TRUE` (default), excludes records
+#'   originating from [GBIF](https://www.gbif.org/). Can also be set via the
+#'   `onesdm_easin_exclude_gbif` option.
+#' @param start_year (integer) Earliest year for which records are included.
+#'   Defaults to `1981L`. Can also be set via the `onesdm_start_year` option.
+#' @param overwrite (logical) If `TRUE`, overwrites existing cleaned EASIN data.
+#'   Defaults to `FALSE`. Can also be set via `onesdm_easin_overwrite` option.
+#' @param return_data (logical) If `TRUE`, returns the processed EASIN data as an
+#'   `sf` object in addition to saving it. Defaults to `FALSE`.
+#' @param verbose (logical) If `TRUE` (default), prints progress and
+#'   informational messages, including URL of currently processed chunk.
+#'   Can also be set via the `onesdm_easin_verbose` option.
 #'
 #' @details
-#' - Supports chunked downloads and multiple download attempts. The cleaned
-#'   data are saved as an `.RData` file in the specified model directory.
-#' - Applies comprehensive data-cleaning procedures, including filtering out
-#'   records with low coordinate precision, identical longitude and latitude
-#'   values, and coordinates located near geographic centroids, country
-#'   capitals, biodiversity institutions, and GBIF headquarters.
-#' - Checks whether a previously cleaned EASIN data file already exists and,
-#'   if so, skips the download and reuses the existing file.
-#' - Allows default function arguments to be configured globally using
-#'   [base::options()] at the beginning of an R session, avoiding the need to
-#'   repeatedly specify them in individual function calls. The following
-#'   options correspond to the function arguments:
-#'   - "`onesdm_easin_ids`": Character vector of EASIN taxon IDs.
-#'   - "`onesdm_model_dir`": Character. Path to the modelling directory.
-#'   - "`onesdm_easin_timeout`": Integer. Timeout (in seconds) for each download
-#' attempt.
-#'   - "`onesdm_easin_n_search`": Integer. Number of records to request per API
-#' call.
-#'   - "`onesdm_easin_n_attempts`": Integer. Maximum number of download attempts
-#' per chunk.
-#'   - "`onesdm_easin_sleep_time`": Integer. Seconds to wait between chunk
-#' downloads.
-#'   - "`onesdm_easin_exclude_gbif`": Logical. Whether to exclude GBIF records.
-#'   - "`onesdm_easin_verbose`": Logical. Whether to print progress messages.
-#'   - "`onesdm_start_year`": Integer. Minimum year for records to include.
-#'   - "`onesdm_easin_overwrite`": Logical. Whether to overwrite existing
-#'   cleaned data.
-#' - Example of setting options:
+#' - Validates input parameters.
+#' - Supports chunked downloads and retries.
+#' - Checks for existing cleaned EASIN data and reuses it if available,
+#'   unless `overwrite = TRUE`.
+#' - Cleans downloaded data by:
+#'   - Removing records with missing or low-precision coordinates.
+#'   - Excluding records exceeding maximum spatial uncertainty.
+#'   - Applying additional checks using the CoordinateCleaner package.
+#' - Converts cleaned records to an `sf` object and saves it as an `.RData` file.
+#' - Supports global configuration of default arguments via [base::options()]
+#'   at the beginning of an R session, avoiding repeated specification in
+#'   function calls. Available options and corresponding arguments:
+#'   - `onesdm_easin_ids`: `easin_ids`
+#'   - `onesdm_model_dir`: `model_dir`
+#'   - `onesdm_easin_timeout`: `timeout`
+#'   - `onesdm_easin_n_search`: `n_search`
+#'   - `onesdm_easin_n_attempts`: `n_attempts`
+#'   - `onesdm_easin_sleep_time`: `sleep_time`
+#'   - `onesdm_easin_exclude_gbif`: `exclude_gbif`
+#'   - `onesdm_start_year`: `start_year`
+#'   - `onesdm_easin_verbose`: `verbose`
+#'   - `onesdm_easin_overwrite`: `overwrite`
+#'
+#' Example of setting [base::options()]:
 #'   ```r
+#'   options(
+#'     onesdm_easin_ids = c("R00042", "R00544"),
+#'     onesdm_model_dir = "path/to/model_dir",
+#'     onesdm_easin_exclude_gbif = TRUE,
+#'     onesdm_easin_overwrite = TRUE
+#'   )
+#'   ```
+#'
+#' @return Invisibly returns path to saved cleaned EASIN data (`data/easin_data.RData`
+#'   within `model_dir`). If `return_data = TRUE`, returns cleaned EASIN data as an
+#'   `sf` object instead.
+#'
+#' @examples
+#' \dontrun{
+#'   temp_model_dir_1 <- fs::path_temp("onesdm_model_dir")
+#'   easin_data <- prepare_easin_data(
+#'     easin_ids = "R00042",
+#'     model_dir = temp_model_dir,
+#'     return_data = TRUE
+#'   )
+#'   print(easin_data)
+#'
+#'   temp_model_dir_2 <- fs::path_temp("onesdm_model_dir")
 #'   options(
 #'     onesdm_easin_ids = c("R00042", "R00544"),
 #'     onesdm_easin_exclude_gbif = TRUE,
 #'     onesdm_easin_overwrite = TRUE,
-#'     onesdm_model_dir = "path/to/model_dir"
+#'     onesdm_model_dir = temp_model_dir_2
 #'   )
-#'   ```
-#'
-#' @return Invisibly returns the file path to the saved cleaned EASIN data
-#'   `easin_data.RData` file in the `data` subdirectory of `model_dir`, unless
-#'   `return_data` is `TRUE`, in which case it returns the cleaned EASIN data as
-#'   an `sf` object.
-#'
-#' @examples
-#' \dontrun{
-#'  require(fs)
-#'
-#'  # Prepare EASIN data for species with EASIN ID "R00042": Acacia karroo Hayne
-#'  temp_model_dir <- fs::path_temp("onesdm_model_dir")
-#'  easin_data <- prepare_easin_data(
-#'    easin_ids = "R00042", model_dir = temp_model_dir, return_data = TRUE)
-#'
-#'  print(easin_data)
-#'
-#'  # # ||||||||||||||||||||||||||||||||||||||||||||||||||| #
-#'
-#'  # Prepare EASIN data, using argument values from `options`
-#'  temp_model_dir_2 <- fs::path_temp("onesdm_model_dir")
-#'  options(
-#'     onesdm_easin_ids = c("R00042", "R00544"),
-#'     onesdm_easin_exclude_gbif = TRUE,
-#'     onesdm_easin_overwrite = TRUE,
-#'     onesdm_model_dir = temp_model_dir_2)
-#'
-#'  prepare_easin_data()
-#'
+#'   prepare_easin_data()
 #' }
 #'
 #' @export
@@ -259,6 +243,7 @@ prepare_easin_data <- function(
   }
 
   easin_ids <- easin_ids[!is.na(easin_ids)]
+
   if (length(easin_ids) == 0L) {
     ecokit::stop_ctx(
       "easin_ids must contain at least one EASIN ID.",
@@ -540,14 +525,8 @@ prepare_easin_data <- function(
   # ---------------------------------------------------------------------------
 
   path_data <- fs::path(model_dir, "data")
-  path_easin_data <- fs::path(
-    path_data,
-    "easin_data.RData"
-  )
-  path_data_raw <- fs::path(
-    path_data,
-    "easin_data_raw.RData"
-  )
+  path_easin_data <- fs::path(path_data, "easin_data.RData")
+  path_easin_data_raw <- fs::path(path_data, "easin_data_raw.RData")
 
   # ---------------------------------------------------------------------------
   # Existing processed data
@@ -654,7 +633,7 @@ prepare_easin_data <- function(
   # Download raw EASIN data
   # ---------------------------------------------------------------------------
 
-  if (!ecokit::check_data(path_data_raw, warning = FALSE) || overwrite) {
+  if (!ecokit::check_data(path_easin_data_raw, warning = FALSE) || overwrite) {
     easin_data <- purrr::map_dfr(
       easin_ids_matched,
       get_easin_internal,

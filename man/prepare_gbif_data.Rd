@@ -17,92 +17,75 @@ prepare_gbif_data(
 )
 }
 \arguments{
-\item{gbif_ids}{\emph{(character)} A vector of one or more GBIF/CoL IDs
-(taxon keys). When multiple IDs are supplied, downloaded for each ID and
-then collated. If \code{NULL} (default), the function attempts to retrieve IDs from the
-\code{onesdm_gbif_ids} option. \strong{Required}.}
+\item{gbif_ids}{(character) Vector of one or more COL XR taxon keys.
+Data for multiple keys are combined. If \code{NULL} (default),
+keys are retrieved from the \code{onesdm_gbif_ids} option. \strong{Required}.}
 
-\item{model_dir}{\emph{(character)} Path to the directory where model outputs
-will be saved. A subdirectory named \code{data} is automatically created within this
-directory to store processed species data. When modelling multiple species,
-it is recommended to use a separate directory for each run to avoid overwriting
-or mixing data files. This path can also be set via the \code{onesdm_model_dir}
-option.  Default is \code{NULL}. \strong{Required}.}
+\item{model_dir}{(character) Directory for saving model outputs.
+A \code{data} subdirectory is created automatically to store raw and processed data.
+If \code{NULL} (default), path is retrieved from the \code{onesdm_model_dir} option.
+\strong{Required}.}
 
-\item{r_environ}{\emph{(character)} Path to an \code{.Renviron} file containing GBIF
-credentials (default: ".Renviron"). The function uses
-\code{\link[ecokit:check_gbif]{ecokit::check_gbif()}} to verify the presence of GBIF credentials. If the
-\code{GBIF_USER}, \code{GBIF_PWD}, and \code{GBIF_EMAIL} environment variables are not set
-in the current R session, \code{check_gbif} attempts to read them from the
-specified \code{.Renviron} file. See \code{\link[ecokit:check_gbif]{ecokit::check_gbif()}} and
-here
-\href{https://docs.ropensci.org/rgbif/articles/gbif_credentials.html}{\code{rgbif} documentation}
-for details on setting GBIF credentials. If \code{r_environ = NULL}, the path to
-the \code{.Renviron} file is retrieved from the "\code{onesdm_r_environ}" option.}
+\item{r_environ}{(character) Path to an \code{.Renviron} file containing GBIF
+credentials. If \code{GBIF_USER}, \code{GBIF_PWD}, and \code{GBIF_EMAIL} are not set in the
+current R session, values are read from this file. If \code{NULL}, path is retrieved
+from the \code{onesdm_r_environ} option. Defaults to \emph{.Renviron}.}
 
-\item{start_year}{\emph{(integer)} The starting year from which records are included.
-The default is \code{1981L}, to match the temporal coverage of CHELSA climate data.
-Can also be set via the "\code{onesdm_start_year}" option.}
+\item{start_year}{(integer) Earliest year for which records are included.
+Defaults to \code{1981L}. Can also be set via the \code{onesdm_start_year} option.}
 
-\item{boundaries}{\emph{(numeric)} A vector of size 4 containing spatial boundaries
-as (left, right, bottom, top) in decimal degrees (default:
-\code{c(-180L, 180L, -90L, 90L)} for global extent). Can also be set via
+\item{boundaries}{(numeric) Vector of four spatial boundaries in decimal
+degrees, specified as (left, right, bottom, top). Defaults to
+\emph{c(-180L, 180L, -90L, 90L)} (global extent). Can also be set via the
 \code{onesdm_gbif_boundaries} option.}
 
-\item{max_uncertainty}{\emph{(numeric)} Maximum allowed spatial uncertainty in
-kilometers. Default is \code{10L}. Can also be set via
+\item{max_uncertainty}{(numeric) Maximum allowed spatial uncertainty in
+kilometers. Defaults to \code{10L}. Can also be set via the
 \code{onesdm_gbif_max_uncertainty} option.}
 
-\item{overwrite}{\emph{(logical)} If \code{TRUE}, overwrites existing cleaned GBIF data
-file in the model directory. Default is \code{FALSE}. Can also be set via
-\code{onesdm_gbif_overwrite} option.}
+\item{overwrite}{(logical) If \code{TRUE}, overwrites existing GBIF data file.
+Defaults to \code{FALSE}. Can also be set via \code{onesdm_gbif_overwrite} option.}
 
-\item{return_data}{\emph{(logical)} If \code{TRUE}, returns the processed GBIF data as an
-\code{sf} object in addition to saving it. Default is \code{FALSE}.}
+\item{return_data}{(logical) If \code{TRUE}, returns processed GBIF data as an
+\code{sf} object in addition to saving it. Defaults to \code{FALSE}.}
 
-\item{verbose}{\emph{(logical)} If \code{TRUE} (default), prints progress messages during
+\item{verbose}{(logical) If \code{TRUE} (default), prints progress messages during
 execution. Can also be set via the \code{onesdm_verbose} option.}
 }
 \value{
-If \code{return_data} is \code{TRUE}, return the cleaned GBIF data as an \code{sf}
-object. Otherwise, returns (invisibly) a named list with paths to the saved
-GBIF data files:
+If \code{return_data = TRUE}, returns cleaned GBIF data as an sf
+object. Otherwise, invisibly returns a named list of paths to saved files:
 \itemize{
-\item \code{gbif_request}: Path to the saved GBIF request object
-(\code{data/gbif_request.RData}).
-\item \code{gbif_status}: Path to the saved GBIF status object
-(\code{data/gbif_status.RData}).
-\item \code{gbif_data_raw}: Path to the downloaded raw GBIF data
-(\code{data/gbif_data_raw.zip}).
-\item \code{gbif_data}: Path to the processed and cleaned GBIF data
-(\code{data/gbif_data.RData}).
+\item \code{gbif_request}: GBIF request object (\code{data/gbif_request.RData})
+\item \code{gbif_status}: GBIF download status (\code{data/gbif_status.RData})
+\item \code{gbif_data_raw}: Raw GBIF download (\code{data/gbif_data_raw.zip})
+\item \code{gbif_data}: Processed and cleaned GBIF data (\code{data/gbif_data.RData}).
 }
 }
 \description{
 Downloads, combines, cleans, and saves occurrence records from the
 Global Biodiversity Information Facility (\href{https://gbif.org/}{GBIF}) for
-the supplied GBIF IDs (taxon keys).
+the supplied taxon keys.
 }
 \details{
 The function performs the following steps:
 \itemize{
-\item Validates input parameters and environment.
-\item Checks whether a previously cleaned GBIF data file already exists and,
-if so, skips the download and reuses the existing file.
+\item Validates input parameters and environment variables.
+\item Checks for existing cleaned GBIF data and reuses it if available,
+unless \code{overwrite = TRUE}.
 \item Requests occurrence data from GBIF using the \code{rgbif} package, applying
 filters for coordinates, geospatial issues, year, occurrence status, basis
 of record, and spatial boundaries.
-\item Downloads and reads the raw data, applying further cleaning:
+\item Cleans downloaded data by:
 \itemize{
-\item Removes records with missing or low-precision coordinates.
-\item Filters by spatial uncertainty.
-\item Applies additional cleaning using the \code{CoordinateCleaner} package.
+\item Removing records with missing or low-precision coordinates.
+\item Excluding records exceeding maximum spatial uncertainty.
+\item Applying additional checks using the CoordinateCleaner package.
 }
-\item Converts the cleaned data to an \code{sf} object and saves it.
-\item Allows default function arguments to be configured globally using
-\code{\link[base:options]{base::options()}} at the beginning of an R session, avoiding the need to
-repeatedly specify them in individual function calls. The following options
-correspond to the function arguments:
+\item Converts cleaned records to an \code{sf} object and saves it as an \code{.RData} file.
+\item Supports global configuration of default arguments via \code{\link[base:options]{base::options()}}
+at the beginning of an R session, avoiding repeated specification in
+function calls. Available options and corresponding arguments:
 \itemize{
 \item \code{onesdm_gbif_ids}: \code{gbif_ids}
 \item \code{onesdm_model_dir}: \code{model_dir}
@@ -113,10 +96,12 @@ correspond to the function arguments:
 \item \code{onesdm_gbif_max_uncertainty}: \code{max_uncertainty}
 \item \code{onesdm_gbif_overwrite}: \code{overwrite}
 }
-\item Example of setting options:
+}
+
+Example of setting \code{\link[base:options]{base::options()}}:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{options(
-  onesdm_gbif_ids = c("1234567", "7654321"),
+  onesdm_gbif_ids = c("793ZB", "6WRZD"),
   onesdm_model_dir = "path/to/model_dir",
   onesdm_gbif_verbose = TRUE,
   onesdm_start_year = 1981L,
@@ -127,11 +112,12 @@ correspond to the function arguments:
 )
 }\if{html}{\out{</div>}}
 }
-}
 \examples{
 \dontrun{
 prepare_gbif_data(
-  gbif_ids = c("1234567", "7654321"), model_dir = "path/to/model_dir")
+  gbif_ids = c("793ZB", "6WRZD"),
+  model_dir = "path/to/model_dir"
+)
 }
 
 }
