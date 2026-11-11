@@ -497,7 +497,7 @@ prepare_gbif_data <- function(
       rgbif::pred("hasCoordinate", TRUE),
       rgbif::pred("hasGeospatialIssue", FALSE),
       rgbif::pred_gte("year", start_year),
-      rgbif::pred("occurrenceStatus", "PRESENT"),
+      rgbif::pred("occurrenceStatus", "DETECTED"),
       rgbif::pred_not(
         rgbif::pred_in("BASIS_OF_RECORD", excluded_basis_of_record)
       ),
@@ -653,8 +653,8 @@ prepare_gbif_data <- function(
       day = readr::col_integer(),
       month = readr::col_integer(),
       year = readr::col_integer(),
-      taxonKey = readr::col_double(),
-      speciesKey = readr::col_double(),
+      taxonKey = readr::col_character(),
+      speciesKey = readr::col_character(),
       basisOfRecord = readr::col_character(),
       institutionCode = readr::col_character(),
       collectionCode = readr::col_character(),
@@ -769,13 +769,6 @@ prepare_gbif_data <- function(
         gbif_data,
         "Year",
         !is.na(year) & year >= start_year
-      )
-    }
-    if (nrow(gbif_data) > 0L) {
-      gbif_data <- report_filter(
-        gbif_data,
-        "Occurrence status",
-        is.na(occurrenceStatus) | occurrenceStatus == "PRESENT"
       )
     }
 
