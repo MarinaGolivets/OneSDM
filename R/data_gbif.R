@@ -802,8 +802,8 @@ prepare_gbif_data <- function(
         paste0(
           "CoordinateCleaner: removed ",
           ecokit::format_number(n_before - nrow(gbif_data)),
-          " records due to their proximity to capitals,\n
-          centroids of countries/provinces, and biodiversity institutions; ",
+          " records due to their proximity to capitals, ",
+          "centroids of countries/provinces, and biodiversity institutions; ",
           ecokit::format_number(nrow(gbif_data)),
           " remain."
         ),
