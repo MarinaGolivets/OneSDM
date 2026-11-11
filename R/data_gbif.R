@@ -115,12 +115,12 @@ prepare_gbif_data <- function(
 
   ecokit::check_packages(c(
     "CoordinateCleaner",
-    "colr",
     "crayon",
     "curl",
     "fs",
     "lubridate",
     "purrr",
+    "rcol",
     "readr",
     "rgbif",
     "sf",
