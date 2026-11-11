@@ -17,7 +17,7 @@ prepare_gbif_data(
 )
 }
 \arguments{
-\item{gbif_ids}{(character) Vector of one or more COL XR taxon keys.
+\item{gbif_ids}{(character) Vector of one or more GBIF (COL XR) taxon keys.
 Data for multiple keys are combined. If \code{NULL} (default),
 keys are retrieved from the \code{onesdm_gbif_ids} option. \strong{Required}.}
 

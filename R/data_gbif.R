@@ -6,7 +6,7 @@
 #'   Global Biodiversity Information Facility ([GBIF](https://gbif.org/)) for
 #'   the supplied taxon keys.
 #'
-#' @param gbif_ids (character) Vector of one or more COL XR taxon keys.
+#' @param gbif_ids (character) Vector of one or more GBIF (COL XR) taxon keys.
 #'   Data for multiple keys are combined. If `NULL` (default),
 #'   keys are retrieved from the `onesdm_gbif_ids` option. \strong{Required}.
 #' @param model_dir (character) Directory for saving model outputs.
@@ -196,7 +196,7 @@ prepare_gbif_data <- function(
 
   if (is.null(gbif_ids)) {
     ecokit::stop_ctx(
-      "gbif_ids must contain at least one non-missing GBIF/CoL taxon key.",
+      "gbif_ids must contain at least one non-missing GBIF taxon key.",
       gbif_ids = gbif_ids,
       cat_timestamp = FALSE
     )
@@ -206,7 +206,7 @@ prepare_gbif_data <- function(
 
   if (length(gbif_ids) == 0L) {
     ecokit::stop_ctx(
-      "gbif_ids must contain at least one non-missing GBIF/CoL taxon key.",
+      "gbif_ids must contain at least one non-missing GBIF taxon key.",
       gbif_ids = gbif_ids,
       cat_timestamp = FALSE
     )
@@ -308,7 +308,7 @@ prepare_gbif_data <- function(
   if (!all(gbif_ids_valid)) {
     ecokit::stop_ctx(
       paste0(
-        "The following COL XR taxon keys do not exist: ",
+        "The following GBIF taxon keys do not exist: ",
         toString(gbif_ids[!gbif_ids_valid])
       ),
       gbif_ids = gbif_ids[!gbif_ids_valid],
@@ -344,7 +344,7 @@ prepare_gbif_data <- function(
     toString()
 
   ecokit::cat_time(
-    "The following COL XR taxon key(s) will be processed:",
+    "The following GBIF taxon keys will be processed:",
     cat_timestamp = FALSE,
     level = 1L,
     verbose = verbose
@@ -423,7 +423,7 @@ prepare_gbif_data <- function(
     parameters <- c(
       "GBIF account" = if (nzchar(gbif_user)) gbif_user else "(not available)",
       "GBIF email" = if (nzchar(gbif_email)) gbif_email else "(not available)",
-      "GBIF ID(s)" = gbif_ids_names,
+      "GBIF taxon key(s)" = gbif_ids_names,
       "Modelling directory" = model_dir,
       "Modelling directory (absolute)" = fs::path_abs(model_dir),
       "Start year" = as.character(start_year),
@@ -764,13 +764,6 @@ prepare_gbif_data <- function(
         is.na(uncertain_km) | uncertain_km <= max_uncertainty
       )
     }
-    if (nrow(gbif_data) > 0L) {
-      gbif_data <- report_filter(
-        gbif_data,
-        "Year",
-        !is.na(year) & year >= start_year
-      )
-    }
 
     # -------------------------------------------------------------------------
     # CoordinateCleaner additional filters
@@ -883,7 +876,7 @@ prepare_gbif_data <- function(
     paste0(
       "DONE! A total of ",
       ecokit::format_number(nrow(gbif_data), underline = TRUE),
-      " filtered observations were extracted for COL XT taxon key(s): ",
+      " filtered observations were extracted for GBIF taxon key(s): ",
       crayon::blue(n_obs_per_species)
     ),
     cat_timestamp = FALSE,
