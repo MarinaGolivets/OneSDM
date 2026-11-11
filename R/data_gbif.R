@@ -106,7 +106,7 @@ prepare_gbif_data <- function(
   latitude <- longitude <- n_dec_long <- n_dec_lat <- NULL
   decimalLongitude <- decimalLatitude <- n_obs <- NULL
   year <- uncertain_km <- NULL
-  id <- speciesKey <- matched_name <- scientific_name <- NULL
+  id <- speciesKey <- name <- matched_name <- NULL
   occurrenceStatus <- coordinatePrecision <- coordinateUncertaintyInMeters <- NULL
 
   # ---------------------------------------------------------------------------
@@ -321,24 +321,24 @@ prepare_gbif_data <- function(
     function(id) {
       x <- rcol::col_usage(id)
       if (is.null(x) || nrow(x) == 0L) {
-        return(tibble::tibble(id = id, scientific_name = NA_character_))
+        return(tibble::tibble(id = id, name = NA_character_))
       }
       if (!"id" %in% names(x)) {
         x$id <- id
       }
-      if (!"scientific_name" %in% names(x)) {
-        x$scientific_name <- NA_character_
+      if (!"label" %in% names(x)) {
+        x$name <- NA_character_
       }
       tibble::tibble(
         id = as.character(x$id[1L]),
-        scientific_name = as.character(x$scientific_name[1L])
+        name = as.character(x$label[1L])
       )
     }
   )
 
   gbif_ids_names <- gbif_taxa |>
     dplyr::mutate(
-      matched_name = paste0(id, " (", scientific_name, ")")
+      matched_name = paste0(id, " (", name, ")")
     ) |>
     dplyr::pull(matched_name) |>
     toString()
@@ -393,7 +393,7 @@ prepare_gbif_data <- function(
 
   if (ecokit::check_data(path_gbif_data, warning = FALSE) && overwrite) {
     ecokit::cat_time(
-      "Existing processed GBIF data will be overwritten.",
+      "Existing GBIF data will be overwritten.",
       cat_timestamp = FALSE,
       verbose = verbose
     )
@@ -632,7 +632,7 @@ prepare_gbif_data <- function(
       species = readr::col_character(),
       infraspecificEpithet = readr::col_character(),
       taxonRank = readr::col_character(),
-      ScientificName = readr::col_character(),
+      scientificName = readr::col_character(),
       verbatimScientificName = readr::col_character(),
       verbatimScientificNameAuthorship = readr::col_character(),
       countryCode = readr::col_character(),

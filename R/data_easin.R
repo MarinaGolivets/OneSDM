@@ -664,7 +664,7 @@ prepare_easin_data <- function(
     ecokit::cat_time(
       paste0(
         "Saving raw EASIN data to: `",
-        crayon::blue(path_data_raw),
+        crayon::blue(path_easin_data_raw),
         "`"
       ),
       cat_timestamp = FALSE,
@@ -675,10 +675,10 @@ prepare_easin_data <- function(
     ecokit::save_as(
       object = easin_data,
       object_name = "easin_data_raw",
-      out_path = path_data_raw
+      out_path = path_easin_data_raw
     )
   } else {
-    easin_data <- ecokit::load_as(path_data_raw)
+    easin_data <- ecokit::load_as(path_easin_data_raw)
   }
 
   # ---------------------------------------------------------------------------
