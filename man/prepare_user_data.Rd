@@ -2,53 +2,46 @@
 % Please edit documentation in R/data_user.R
 \name{prepare_user_data}
 \alias{prepare_user_data}
-\title{Process and Validate User Observation Coordinates}
+\title{Process and Validate User-Provided Occurrence Data}
 \usage{
 prepare_user_data(coordinates = NULL, model_dir = NULL, return_data = FALSE)
 }
 \arguments{
-\item{coordinates}{A data frame or matrix containing longitude and latitude
-values. Must have exactly two columns. If not provided directly, the
-function will attempt to retrieve it from the "\code{onesdm_coordinates}"
-option.}
+\item{coordinates}{#' @param coordinates (data.frame or matrix) Two-column object
+containing longitude and latitude values. If NULL, coordinates are retrieved from
+\code{onesdm_coordinates}option. \strong{Required}.}
 
-\item{model_dir}{Character. Path to the modelling directory where data and
-fitted models will be saved. This can not be \code{NULL} and should be the same
-directory used for the same species data. This can also be set via the
-"\code{onesdm_model_dir}" option.}
+\item{model_dir}{(character) Directory for saving model outputs.
+A \code{data} subdirectory is created automatically to store raw and processed data.
+If \code{NULL} (default), path is retrieved from the \code{onesdm_model_dir} option.
+\strong{Required}.}
 
-\item{return_data}{Logical. If \code{TRUE}, the function returns the processed
-spatial object instead of the file path. Default is \code{FALSE}.}
+\item{return_data}{(logical) If \code{TRUE}, returns processed GBIF data as an
+\code{sf} object in addition to saving it. Defaults to \code{FALSE}.}
 }
 \value{
-If \code{return_data} is \code{TRUE}, the function returns the processed
-spatial object of class \code{sf}. If \code{FALSE}, it returns the file path where
-the data is saved (invisible).
+If \code{return_data = TRUE}, returns processed coordinates as an \code{sf}
+object. Otherwise, invisibly returns path to the saved data file.
 }
 \description{
-This function processes a set of user-provided geographic coordinates,
-validates their structure and values, converts them into a spatial object,
-and saves the result to a specified model directory.
+Validates user-provided geographic coordinates, converts them to an \code{sf}
+object using WGS84 (EPSG:4326), and saves the result in the specified model directory.
 }
 \details{
 The function performs the following steps:
 \itemize{
-\item Validates that \code{coordinates} has at least one row and exactly two columns.
-\item Ensures that the columns represent numeric longitude and latitude values
-within valid ranges (longitude: \verb{[-180, 180]}, latitude: \verb{[-90, 90]}).
-\item Converts the coordinates to a tibble with standardized column names.
+\item Validates that \code{coordinates} contains at least one row and exactly two columns.
+\item Checks that longitude and latitude columns are numeric and within valid
+ranges (longitude: \verb{[-180, 180]}, latitude: \verb{[-90, 90]}).
+\item Converts input to a tibble with standardized column names.
 \item Removes rows with missing or out-of-range values.
-\item Converts the cleaned coordinates to an \code{sf} spatial object (WGS84,
-EPSG:4326).
-\item Saves the resulting spatial object as \code{data/user_coordinates.RData} in
-\code{model_dir}.
-\item Function default arguments can be set globally using the \link[base:options]{base::options}
-function. Users can set these options at the start of their R session to
-avoid repeatedly specifying them in function calls. The following options
-correspond to the function arguments:
+\item Converts cleaned coordinates to an \code{sf} object using WGS84 (EPSG:4326).
+\item Saves the spatial object as \code{data/user_coordinates.RData} in \code{model_dir}.
+\item Supports global configuration of default arguments via \link[base:options]{base::options}.
+Available options:
 \itemize{
-\item "\code{onesdm_coordinates}": for the \code{coordinates} argument.
-\item "\code{onesdm_model_dir}": for the \code{model_dir} argument.
+\item \code{onesdm_coordinates}: \code{coordinates}
+\item \code{onesdm_model_dir}: \code{model_dir}.
 }
 }
 }
@@ -60,5 +53,5 @@ correspond to the function arguments:
 
 }
 \author{
-Ahmed El-Gabbas
+Ahmed El-Gabbas, Maryna Golivets
 }
