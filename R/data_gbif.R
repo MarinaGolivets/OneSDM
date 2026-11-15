@@ -21,10 +21,10 @@
 #'   Defaults to `1981L`. Can also be set via the `onesdm_start_year` option.
 #' @param boundaries (numeric) Vector of four spatial boundaries in decimal
 #'   degrees, specified as (left, right, bottom, top). Defaults to
-#'   \emph{c(-180L, 180L, -90L, 90L)} (global extent). Can also be set via the
+#'   `c(-180L, 180L, -90L, 90L)` (global extent). Can also be set via the
 #'   `onesdm_gbif_boundaries` option.
 #' @param max_uncertainty (numeric) Maximum allowed spatial uncertainty in
-#'   kilometers. Defaults to `10L`. Can also be set via the
+#'   kilometres. Defaults to `10L`. Can also be set via the
 #'   `onesdm_gbif_max_uncertainty` option.
 #' @param overwrite (logical) If `TRUE`, overwrites existing GBIF data file.
 #'    Defaults to `FALSE`. Can also be set via `onesdm_gbif_overwrite` option.
@@ -71,7 +71,7 @@
 #'   )
 #'   ```
 #'
-#' @return If `return_data = TRUE`, returns cleaned GBIF data as an sf
+#' @return If `return_data = TRUE`, returns cleaned GBIF data as an `sf`
 #'   object. Otherwise, invisibly returns a named list of paths to saved files:
 #' - `gbif_request`: GBIF request object (`data/gbif_request.RData`)
 #' - `gbif_status`: GBIF download status (`data/gbif_status.RData`)
@@ -187,7 +187,7 @@ prepare_gbif_data <- function(
   ) {
     ecokit::stop_ctx(
       paste0(
-        "The model_dir argument must be provided either directly or via the ",
+        "model_dir must be provided either directly or via the ",
         "`onesdm_model_dir` option."
       ),
       cat_timestamp = FALSE

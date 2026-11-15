@@ -36,11 +36,11 @@ Defaults to \code{1981L}. Can also be set via the \code{onesdm_start_year} optio
 
 \item{boundaries}{(numeric) Vector of four spatial boundaries in decimal
 degrees, specified as (left, right, bottom, top). Defaults to
-\emph{c(-180L, 180L, -90L, 90L)} (global extent). Can also be set via the
+\code{c(-180L, 180L, -90L, 90L)} (global extent). Can also be set via the
 \code{onesdm_gbif_boundaries} option.}
 
 \item{max_uncertainty}{(numeric) Maximum allowed spatial uncertainty in
-kilometers. Defaults to \code{10L}. Can also be set via the
+kilometres. Defaults to \code{10L}. Can also be set via the
 \code{onesdm_gbif_max_uncertainty} option.}
 
 \item{overwrite}{(logical) If \code{TRUE}, overwrites existing GBIF data file.
@@ -53,7 +53,7 @@ Defaults to \code{FALSE}. Can also be set via \code{onesdm_gbif_overwrite} optio
 execution. Can also be set via the \code{onesdm_verbose} option.}
 }
 \value{
-If \code{return_data = TRUE}, returns cleaned GBIF data as an sf
+If \code{return_data = TRUE}, returns cleaned GBIF data as an \code{sf}
 object. Otherwise, invisibly returns a named list of paths to saved files:
 \itemize{
 \item \code{gbif_request}: GBIF request object (\code{data/gbif_request.RData})
