@@ -3,9 +3,9 @@
 #' @description Validates user-provided geographic coordinates, converts them to an `sf`
 #' object using WGS84 (EPSG:4326), and saves the result in the specified model directory.
 #'
-#' @param coordinates #' @param coordinates (data.frame or matrix) Two-column object
-#'   containing longitude and latitude values. If NULL, coordinates are retrieved from
-#'   `onesdm_coordinates`option. \strong{Required}.
+#' @param coordinates (data.frame or matrix) Two-column object containing
+#'   longitude and latitude values. If `NULL`, coordinates are retrieved from
+#'   `onesdm_coordinates` option. \strong{Required}.
 #' @param model_dir (character) Directory for saving model outputs.
 #'   A `data` subdirectory is created automatically to store raw and processed data.
 #'   If `NULL` (default), path is retrieved from the `onesdm_model_dir` option.
@@ -115,8 +115,8 @@ prepare_user_data <- function(
   ) {
     ecokit::stop_ctx(
       paste0(
-        "The `model_dir` argument must be provided as a non-empty character ",
-        "path, either directly or via the `onesdm_model_dir` option."
+        "model_dir must be provided either directly or via the ",
+        "`onesdm_model_dir` option."
       ),
       model_dir = model_dir,
       cat_timestamp = FALSE

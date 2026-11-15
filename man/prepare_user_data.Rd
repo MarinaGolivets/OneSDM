@@ -7,9 +7,9 @@
 prepare_user_data(coordinates = NULL, model_dir = NULL, return_data = FALSE)
 }
 \arguments{
-\item{coordinates}{#' @param coordinates (data.frame or matrix) Two-column object
-containing longitude and latitude values. If NULL, coordinates are retrieved from
-\code{onesdm_coordinates}option. \strong{Required}.}
+\item{coordinates}{(data.frame or matrix) Two-column object containing
+longitude and latitude values. If \code{NULL}, coordinates are retrieved from
+\code{onesdm_coordinates} option. \strong{Required}.}
 
 \item{model_dir}{(character) Directory for saving model outputs.
 A \code{data} subdirectory is created automatically to store raw and processed data.
